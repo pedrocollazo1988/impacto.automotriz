@@ -32,7 +32,8 @@ git push -u origin main
 
 ## Despliegue
 - **Vercel**: importar el repositorio, definir las variables de `.env.example` y ejecutar `npx prisma migrate deploy` contra la base de datos.
-  `vercel.json` programa la cola de correos cada minuto (requiere un plan que permita crons por minuto).
+  `vercel.json` programa la cola de correos una vez al día (plan Hobby). En plan Pro se puede bajar a cada minuto (`* * * * *`).
+  Si subes fotos/modelos, define `BLOB_READ_WRITE_TOKEN`: en Vercel el disco es de solo lectura y no persiste.
 - **Servidor propio**: `npm run build && npm start` + `crontab`:
   `* * * * * curl -s -H "Authorization: Bearer $CRON_SECRET" https://tudominio.com/api/cron/campaigns`
 

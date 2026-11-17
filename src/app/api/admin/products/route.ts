@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { audit, handle, requireAdmin } from "@/lib/auth";
 import { saveProduct } from "@/lib/catalog";
 
-export const ProductBody = z.object({
+const ProductBody = z.object({
   id: z.number().int().optional(), slug: z.string().max(80).optional(), sku: z.string().min(2).max(40), name: z.string().min(2).max(160),
   description: z.string().max(5000).default(""), priceUsd: z.number().min(0), compareAtUsd: z.number().min(0).nullish(),
   stock: z.number().int().min(0), lowStockAt: z.number().int().min(0).default(3), images: z.array(z.string().max(500)).max(10).default([]),

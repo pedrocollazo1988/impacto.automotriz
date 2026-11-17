@@ -1,7 +1,13 @@
 // Módulos: Geografía de Cuba + Logística/Entregas + Email marketing.
 // Los modelos Order/OrderDelivery enlazan con el núcleo de la tienda (catálogo, carrito, pagos).
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 // ───────── Geografía (15 provincias + Isla de la Juventud · 168 municipios) ─────────
 model Province {
@@ -23,8 +29,20 @@ model Municipality {
 }
 
 // ───────── Logística administrable ─────────
-enum DeliveryKind { HOME_DELIVERY STORE_PICKUP COURIER AGREED_POINT }
-enum DeliveryStatus { PENDING READY OUT_FOR_DELIVERY DELIVERED FAILED }
+enum DeliveryKind {
+  HOME_DELIVERY
+  STORE_PICKUP
+  COURIER
+  AGREED_POINT
+}
+
+enum DeliveryStatus {
+  PENDING
+  READY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+}
 
 model DeliveryMethod {
   id              Int            @id @default(autoincrement())
@@ -102,8 +120,21 @@ model StockAlert {
   @@unique([productId, email])
 }
 
-enum OrderStatus { PENDING_PAYMENT PAID PREPARING SHIPPED DELIVERED CANCELED }
-enum PaymentMethod { TROPIPAY QVAPAY TRANSFER CASH }
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PREPARING
+  SHIPPED
+  DELIVERED
+  CANCELED
+}
+
+enum PaymentMethod {
+  TROPIPAY
+  QVAPAY
+  TRANSFER
+  CASH
+}
 
 model Order {
   id            String        @id @default(cuid())
@@ -141,8 +172,19 @@ model OrderItem {
 }
 
 // ───────── Catálogo ─────────
-model Brand    { id Int @id @default(autoincrement()) slug String @unique name String products Product[] }
-model Category { id Int @id @default(autoincrement()) slug String @unique name String products Product[] }
+model Brand {
+  id       Int       @id @default(autoincrement())
+  slug     String    @unique
+  name     String
+  products Product[]
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  slug     String    @unique
+  name     String
+  products Product[]
+}
 model Product {
   id           Int          @id @default(autoincrement())
   slug         String       @unique
@@ -205,8 +247,19 @@ model OrderDelivery {
 }
 
 // ───────── Email marketing ─────────
-enum SubscriberStatus { PENDING ACTIVE UNSUBSCRIBED BOUNCED }
-enum CampaignStatus { DRAFT SENDING SENT CANCELED }
+enum SubscriberStatus {
+  PENDING
+  ACTIVE
+  UNSUBSCRIBED
+  BOUNCED
+}
+
+enum CampaignStatus {
+  DRAFT
+  SENDING
+  SENT
+  CANCELED
+}
 
 model EmailSettings {
   id          Int     @id @default(1)
@@ -338,7 +391,12 @@ model ProductVariant { // medida, color, versión...  Si un producto tiene varia
 }
 
 // ───────── Equipo, auditoría, límites ─────────
-enum StaffRole { ADMIN MANAGER SALES WAREHOUSE }
+enum StaffRole {
+  ADMIN
+  MANAGER
+  SALES
+  WAREHOUSE
+}
 model StaffUser {
   id           String    @id @default(cuid())
   email        String    @unique
