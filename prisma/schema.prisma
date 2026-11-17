@@ -1,0 +1,365 @@
+// Módulos: Geografía de Cuba + Logística/Entregas + Email marketing.
+// Los modelos Order/OrderDelivery enlazan con el núcleo de la tienda (catálogo, carrito, pagos).
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+
+// ───────── Geografía (15 provincias + Isla de la Juventud · 168 municipios) ─────────
+model Province {
+  id             Int            @id @default(autoincrement())
+  code           String         @unique // ISO 3166-2:CU
+  name           String
+  municipalities Municipality[]
+  rules          DeliveryRule[]
+  pickupPoints   PickupPoint[]
+  subscribers    Subscriber[]
+}
+model Municipality {
+  id         Int            @id @default(autoincrement())
+  name       String
+  provinceId Int
+  province   Province       @relation(fields: [provinceId], references: [id])
+  rules      DeliveryRule[]
+  @@unique([provinceId, name])
+}
+
+// ───────── Logística administrable ─────────
+enum DeliveryKind { HOME_DELIVERY STORE_PICKUP COURIER AGREED_POINT }
+enum DeliveryStatus { PENDING READY OUT_FOR_DELIVERY DELIVERED FAILED }
+
+model DeliveryMethod {
+  id              Int            @id @default(autoincrement())
+  code            String         @unique
+  name            String
+  kind            DeliveryKind
+  description     String?
+  active          Boolean        @default(true)
+  sortOrder       Int            @default(0)
+  baseFee         Decimal        @default(0) @db.Decimal(10, 2)
+  freeFromUsd     Decimal?       @db.Decimal(10, 2)
+  etaMinDays      Int            @default(1)
+  etaMaxDays      Int            @default(3)
+  requiresAddress Boolean        @default(true)
+  cashOnDelivery  Boolean        @default(false)
+  rules           DeliveryRule[]
+  slots           DeliverySlot[]
+}
+// Disponibilidad por método × provincia (municipalityId = null → toda la provincia).
+// Una regla de municipio tiene prioridad sobre la de su provincia. Sin regla = NO disponible.
+model DeliveryRule {
+  id             Int            @id @default(autoincrement())
+  methodId       Int
+  method         DeliveryMethod @relation(fields: [methodId], references: [id], onDelete: Cascade)
+  provinceId     Int
+  province       Province       @relation(fields: [provinceId], references: [id])
+  municipalityId Int?
+  municipality   Municipality?  @relation(fields: [municipalityId], references: [id])
+  scopeKey       String         // "<provinceId>:<municipalityId|*>"
+  available      Boolean        @default(true)
+  feeUsd         Decimal?       @db.Decimal(10, 2)
+  freeFromUsd    Decimal?       @db.Decimal(10, 2)
+  minOrderUsd    Decimal?       @db.Decimal(10, 2)
+  etaMinDays     Int?
+  etaMaxDays     Int?
+  note           String?
+  @@unique([methodId, scopeKey])
+}
+model PickupPoint {
+  id             Int      @id @default(autoincrement())
+  name           String
+  address        String
+  provinceId     Int
+  province       Province @relation(fields: [provinceId], references: [id])
+  municipalityId Int?
+  phone          String?
+  hours          String?
+  readyHours     Int      @default(24)
+  active         Boolean  @default(true)
+  sortOrder      Int      @default(0)
+}
+model DeliverySlot {
+  id        Int            @id @default(autoincrement())
+  methodId  Int
+  method    DeliveryMethod @relation(fields: [methodId], references: [id], onDelete: Cascade)
+  label     String
+  startMin  Int
+  maxOrders Int            @default(10)
+  active    Boolean        @default(true)
+}
+model ServiceAddon {
+  id          Int     @id @default(autoincrement())
+  code        String  @unique
+  name        String
+  description String?
+  priceUsd    Decimal @default(0) @db.Decimal(10, 2)
+  active      Boolean @default(true)
+}
+model StockAlert {
+  id         Int       @id @default(autoincrement())
+  productId  String
+  email      String
+  createdAt  DateTime  @default(now())
+  notifiedAt DateTime?
+  @@unique([productId, email])
+}
+
+enum OrderStatus { PENDING_PAYMENT PAID PREPARING SHIPPED DELIVERED CANCELED }
+enum PaymentMethod { TROPIPAY QVAPAY TRANSFER CASH }
+
+model Order {
+  id            String        @id @default(cuid())
+  number        Int           @unique @default(autoincrement())
+  status        OrderStatus   @default(PENDING_PAYMENT)
+  paymentMethod PaymentMethod
+  paid          Boolean       @default(false)
+  paymentRef    String?
+  providerRef   String?
+  paidAt        DateTime?
+  customerName  String
+  customerEmail String
+  customerPhone String
+  subtotalUsd   Decimal       @db.Decimal(10, 2)
+  shippingUsd   Decimal       @default(0) @db.Decimal(10, 2)
+  totalUsd      Decimal       @db.Decimal(10, 2)
+  discountUsd   Decimal       @default(0) @db.Decimal(10, 2)
+  couponCode    String?
+  customerId    String?
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  createdAt     DateTime      @default(now())
+  items         OrderItem[]
+  delivery      OrderDelivery?
+}
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  variantId Int?
+  name      String
+  unitUsd   Decimal @db.Decimal(10, 2)
+  qty       Int
+}
+
+// ───────── Catálogo ─────────
+model Brand    { id Int @id @default(autoincrement()) slug String @unique name String products Product[] }
+model Category { id Int @id @default(autoincrement()) slug String @unique name String products Product[] }
+model Product {
+  id           Int          @id @default(autoincrement())
+  slug         String       @unique
+  sku          String       @unique
+  name         String
+  description  String       @default("")
+  priceUsd     Decimal      @db.Decimal(10, 2)
+  compareAtUsd Decimal?     @db.Decimal(10, 2)
+  stock        Int          @default(0)
+  lowStockAt   Int          @default(3)
+  images       String[]
+  model3dUrl   String?      // archivo .glb (visor 3D / realidad aumentada)
+  specs        Json?        // { "Medida": "...", "Voltaje": "..." }
+  featured     Boolean      @default(false)
+  active       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  brandId      Int?
+  brand        Brand?       @relation(fields: [brandId], references: [id])
+  categoryId   Int
+  category     Category     @relation(fields: [categoryId], references: [id])
+  fits         ProductFit[]
+  orderItems   OrderItem[]
+  views        Int          @default(0)
+  wishlist     WishlistItem[]
+  reviews      Review[]
+  variants     ProductVariant[]
+}
+model ProductFit { // compatibilidad por vehículo
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  make      String
+  model     String
+  yearFrom  Int
+  yearTo    Int
+}
+
+model OrderDelivery {
+  id               Int            @id @default(autoincrement())
+  orderId          String         @unique
+  order            Order          @relation(fields: [orderId], references: [id])
+  methodId         Int
+  methodName       String
+  kind             DeliveryKind
+  provinceId       Int
+  municipalityId   Int
+  address          String?
+  reference        String?
+  recipientName    String
+  recipientPhone   String
+  recipientCi      String?
+  isGift           Boolean        @default(false)
+  slotId           Int?
+  scheduledDate    DateTime?      @db.Date
+  pickupPointId    Int?
+  feeUsd           Decimal        @db.Decimal(10, 2)
+  confirmationCode String
+  status           DeliveryStatus @default(PENDING)
+  deliveredAt      DateTime?
+}
+
+// ───────── Email marketing ─────────
+enum SubscriberStatus { PENDING ACTIVE UNSUBSCRIBED BOUNCED }
+enum CampaignStatus { DRAFT SENDING SENT CANCELED }
+
+model EmailSettings {
+  id          Int     @id @default(1)
+  fromName    String
+  fromEmail   String
+  replyTo     String?
+  smtpHost    String
+  smtpPort    Int     @default(587)
+  smtpSecure  Boolean @default(false)
+  smtpUser    String
+  smtpPassEnc String
+  perMinute   Int     @default(20)
+  dailyLimit  Int     @default(300)
+  companyInfo String  @default("Impacto Automotriz S.U.R.L.")
+}
+model Subscriber {
+  id         Int              @id @default(autoincrement())
+  email      String           @unique
+  name       String?
+  provinceId Int?
+  province   Province?        @relation(fields: [provinceId], references: [id])
+  tags       String[]
+  status     SubscriberStatus @default(ACTIVE)
+  consentAt  DateTime
+  source     String?
+  createdAt  DateTime         @default(now())
+  sends      CampaignSend[]
+}
+model Campaign {
+  id        Int            @id @default(autoincrement())
+  name      String
+  subject   String
+  html      String         @db.Text
+  segment   Json?
+  status    CampaignStatus @default(DRAFT)
+  createdAt DateTime       @default(now())
+  sentAt    DateTime?
+  sends     CampaignSend[]
+}
+model CampaignSend {
+  id           Int        @id @default(autoincrement())
+  campaignId   Int
+  campaign     Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  subscriberId Int
+  subscriber   Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  status       String
+  error        String?
+  sentAt       DateTime   @default(now())
+  @@unique([campaignId, subscriberId])
+}
+
+// ───────── Cuentas de cliente, cupones ─────────
+model Customer {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  name         String
+  phone        String?
+  passwordHash String?
+  emailVerified Boolean       @default(false)
+  googleId     String?         @unique
+  createdAt    DateTime        @default(now())
+  orders       Order[]
+  wishlist     WishlistItem[]
+  garage       GarageVehicle[]
+  reviews      Review[]
+  tokens       AuthToken[]
+}
+model WishlistItem {
+  id         Int      @id @default(autoincrement())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId  Int
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@unique([customerId, productId])
+}
+model GarageVehicle {
+  id         Int      @id @default(autoincrement())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  make       String
+  model      String
+  year       Int
+  alias      String?
+}
+model Review {
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  rating     Int
+  comment    String
+  visible    Boolean  @default(true) // compra verificada; el administrador puede ocultarla
+  createdAt  DateTime @default(now())
+  @@unique([productId, customerId])
+}
+model AuthToken {
+  id         Int       @id @default(autoincrement())
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  kind       String    // RESET | VERIFY
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+}
+model Coupon {
+  id             Int       @id @default(autoincrement())
+  code           String    @unique
+  percentOff     Int?
+  amountOffUsd   Decimal?  @db.Decimal(10, 2)
+  minSubtotalUsd Decimal?  @db.Decimal(10, 2)
+  maxUses        Int?
+  used           Int       @default(0)
+  startsAt       DateTime?
+  expiresAt      DateTime?
+  active         Boolean   @default(true)
+}
+
+model ProductVariant { // medida, color, versión...  Si un producto tiene variantes activas, se compra una variante.
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku       String   @unique
+  name      String
+  priceUsd  Decimal? @db.Decimal(10, 2) // vacío = precio del producto
+  stock     Int      @default(0)
+  image     String?
+  active    Boolean  @default(true)
+}
+
+// ───────── Equipo, auditoría, límites ─────────
+enum StaffRole { ADMIN MANAGER SALES WAREHOUSE }
+model StaffUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  role         StaffRole
+  passwordHash String
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  lastLoginAt  DateTime?
+}
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  staffId   String?
+  staffName String
+  action    String
+  detail    String?
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+}
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+}
