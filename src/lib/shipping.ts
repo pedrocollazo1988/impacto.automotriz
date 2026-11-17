@@ -39,7 +39,7 @@ export async function quoteDelivery(municipalityId: number, subtotalUsd: number)
     if (min != null && subtotalUsd < min) return { ...base, available: false, feeUsd: 0, reason: `Pedido mínimo: ${min} USD` };
     const freeFrom = num(rule.freeFromUsd) ?? num(m.freeFromUsd);
     const fee = freeFrom != null && subtotalUsd >= freeFrom ? 0 : num(rule.feeUsd) ?? Number(m.baseFee);
-    return { ...base, available: true, feeUsd: fee, etaMinDays: rule.etaMinDays ?? m.etaMinDays, etaMaxDays: rule.etaMaxDays ?? m.etaMaxDays };
+    return { ...base, available: true, feeUsd: fee, etaMinDays: rule.etaMinDays ?? m.etaMinDays, etaMaxDays: rule.etaMaxDays ?? m.etaMaxDays, reason: undefined };
   });
 }
 
