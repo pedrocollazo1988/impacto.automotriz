@@ -1,10 +1,11 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
-import { Archivo, Manrope, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 
-const archivo = Archivo({ subsets: ["latin"], weight: ["500", "600", "700", "800"], variable: "--font-archivo", display: "swap" });
-const manrope = Manrope({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-manrope", display: "swap" });
-const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-mono", display: "swap" });
+// Fuentes autoalojadas (variables) para que el build no dependa de la red de Google Fonts.
+const archivo = localFont({ src: "./fonts/archivo-latin.woff2", weight: "500 800", variable: "--font-archivo", display: "swap" });
+const manrope = localFont({ src: "./fonts/manrope-latin.woff2", weight: "400 700", variable: "--font-manrope", display: "swap" });
+const mono = localFont({ src: "./fonts/jetbrains-latin.woff2", weight: "500 600", variable: "--font-mono", display: "swap" });
 
 const site = process.env.PUBLIC_URL ?? "http://localhost:3000";
 
