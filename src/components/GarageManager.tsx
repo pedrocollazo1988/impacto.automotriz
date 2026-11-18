@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Icon from "@/components/brand/Icon";
 
 type V = { id: number; make: string; model: string; year: number; alias: string | null };
 export default function GarageManager({ vehicles }: { vehicles: V[] }) {
@@ -10,16 +11,26 @@ export default function GarageManager({ vehicles }: { vehicles: V[] }) {
     const r = await fetch("/api/account/garage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ make: f.make, model: f.model, year: Number(f.year) }) });
     if (!r.ok) return setErr((await r.json()).error ?? "Revisa los datos"); setF({ make: "", model: "", year: "" }); setErr(""); router.refresh();
   };
-  const i = "rounded border px-3 py-2 text-sm";
   return (
-    <div className="space-y-3">
-      {vehicles.map((v) => (
-        <div key={v.id} className="flex items-center justify-between rounded border p-3 text-sm">
-          <span><b>{v.make} {v.model}</b> ({v.year})</span>
-          <span className="space-x-3"><Link className="text-navy underline" href={`/catalogo?make=${encodeURIComponent(v.make)}&model=${encodeURIComponent(v.model)}&year=${v.year}`}>Ver piezas compatibles</Link>
-            <button className="text-red-600" onClick={async () => { await fetch(`/api/account/garage?id=${v.id}`, { method: "DELETE" }); router.refresh(); }}>Quitar</button></span>
-        </div>))}
-      <div className="flex flex-wrap gap-2"><input className={i} placeholder="Marca" value={f.make} onChange={(e) => setF({ ...f, make: e.target.value })} /><input className={i} placeholder="Modelo" value={f.model} onChange={(e) => setF({ ...f, model: e.target.value })} /><input className={`${i} w-24`} type="number" placeholder="Año" value={f.year} onChange={(e) => setF({ ...f, year: e.target.value })} /><button className="rounded bg-navy px-4 py-2 text-sm text-white" onClick={add}>Añadir vehículo</button></div>
+    <div className="space-y-4">
+      {vehicles.length ? (
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {vehicles.map((v) => (
+            <li key={v.id} className="card flex items-center gap-3 p-4">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-accent-deep)]"><Icon name="car" size={20} /></span>
+              <div className="min-w-0 flex-1"><p className="font-semibold text-slate-800">{v.make} {v.model}</p><p className="text-xs text-slate-400">{v.year}</p></div>
+              <Link href={`/catalogo?make=${encodeURIComponent(v.make)}&model=${encodeURIComponent(v.model)}&year=${v.year}`} className="btn btn-ghost h-9 px-3 text-xs">Ver piezas</Link>
+              <button aria-label="Quitar vehículo" className="grid h-9 w-9 place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600" onClick={async () => { await fetch(`/api/account/garage?id=${v.id}`, { method: "DELETE" }); router.refresh(); }}><Icon name="trash" size={16} /></button>
+            </li>
+          ))}
+        </ul>
+      ) : <p className="text-sm text-slate-500">Añade tu vehículo para ver solo las piezas compatibles.</p>}
+      <div className="flex flex-wrap gap-2">
+        <input className="input flex-1 min-w-32" placeholder="Marca" value={f.make} onChange={(e) => setF({ ...f, make: e.target.value })} />
+        <input className="input flex-1 min-w-32" placeholder="Modelo" value={f.model} onChange={(e) => setF({ ...f, model: e.target.value })} />
+        <input className="input w-28" type="number" placeholder="Año" value={f.year} onChange={(e) => setF({ ...f, year: e.target.value })} />
+        <button className="btn btn-primary" onClick={add}><Icon name="plus" size={16} /> Añadir</button>
+      </div>
       {err && <p className="text-sm text-red-600">{err}</p>}
     </div>);
 }

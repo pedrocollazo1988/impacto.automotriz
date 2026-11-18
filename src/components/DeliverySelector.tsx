@@ -43,7 +43,7 @@ export default function DeliverySelector({ subtotalUsd, onChange }: { subtotalUs
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, f, mun]);
 
-  const input = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
+  const input = "input";
   return (
     <section className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
@@ -52,7 +52,7 @@ export default function DeliverySelector({ subtotalUsd, onChange }: { subtotalUs
       </div>
 
       {quotes.map((x) => (
-        <label key={x.methodId} className={`flex cursor-pointer gap-3 rounded-xl border p-3 ${x.available ? "border-slate-300" : "opacity-50"} ${methodId === x.methodId ? "border-[#14213d] ring-2 ring-[#14213d]/20" : ""}`}>
+        <label key={x.methodId} className={`flex cursor-pointer gap-3 rounded-xl border p-3 ${x.available ? "border-slate-200 hover:border-slate-300" : "opacity-50"} ${methodId === x.methodId ? "border-[color:var(--color-accent)] ring-2 ring-[color:var(--color-accent)]/25 bg-[color:var(--color-accent)]/5" : ""}`}>
           <input type="radio" name="m" disabled={!x.available} checked={methodId === x.methodId} onChange={() => setMethodId(x.methodId)} />
           <span className="flex-1"><b>{x.name}</b><br /><small className="text-slate-500">{x.available ? `${x.etaMinDays}–${x.etaMaxDays} días` : x.reason}</small></span>
           {x.available && <b>{x.feeUsd === 0 ? "Gratis" : `${x.feeUsd.toFixed(2)} USD`}</b>}

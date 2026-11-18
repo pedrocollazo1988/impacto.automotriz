@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { searchProductIds } from "@/lib/catalog";
 
 // Catálogo de solo lectura para el agente de IA multicanal.
 // Autenticación: cabecera  Authorization: Bearer <AGENT_API_KEY>
@@ -12,10 +13,11 @@ export async function GET(req: Request) {
 
   const s = new URL(req.url).searchParams; const year = Number(s.get("year")) || undefined;
   const make = s.get("make"), model = s.get("model"), q = s.get("q"), cat = s.get("categoria");
+  const ids = q?.trim() ? await searchProductIds(q.trim()) : null;
   const items = await prisma.product.findMany({
     where: {
       active: true,
-      ...(q ? { OR: [{ name: { contains: q, mode: "insensitive" } }, { sku: { contains: q, mode: "insensitive" } }, { description: { contains: q, mode: "insensitive" } }] } : {}),
+      ...(ids ? { id: { in: ids.length ? ids : [-1] } } : {}),
       ...(cat ? { category: { slug: cat } } : {}),
       ...(make || model || year ? { fits: { some: { ...(make ? { make: { contains: make, mode: "insensitive" } } : {}), ...(model ? { model: { contains: model, mode: "insensitive" } } : {}), ...(year ? { yearFrom: { lte: year }, yearTo: { gte: year } } : {}) } } } : {}),
     },
