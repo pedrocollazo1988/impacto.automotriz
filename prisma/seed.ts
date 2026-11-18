@@ -1,4 +1,6 @@
 // Ejecutar: npx tsx prisma/seed.ts
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
@@ -64,7 +66,7 @@ async function main() {
     { slug: "alternador-12v-70a", sku: "EL-3002", name: "Alternador 12V 70A", cat: electrico.id, brand: "Bosch", price: 140, compareAt: 165, stock: 3, desc: "Alternador remanufacturado con regulador nuevo y garantía.", specs: { "Voltaje": "12 V", "Amperaje": "70 A" }, fits: [["Chevrolet", "Aveo", 2008, 2016]] },
     { slug: "motor-arranque", sku: "EL-3003", name: "Motor de arranque", cat: electrico.id, brand: "Bosch", price: 110, stock: 4, desc: "Motor de arranque de alto par, con piñón y bobinado reforzados.", specs: { "Voltaje": "12 V", "Potencia": "1.2 kW" } },
     { slug: "bujias-iridio-juego", sku: "EL-3004", name: "Bujías de iridio (juego 4)", cat: electrico.id, brand: "NGK", price: 32, stock: 20, desc: "Juego de 4 bujías de iridio: mejor arranque, consumo y durabilidad.", specs: { "Electrodo": "Iridio", "Piezas": "4" }, fits: [["Toyota", "Corolla", 2005, 2019]] },
-    { slug: "triciclo-electrico-cargo", sku: "TE-4001", name: "Triciclo eléctrico de carga", cat: triciclos.id, brand: "Impacto EV", price: 1200, compareAt: 1350, stock: 2, featured: true, desc: "Triciclo eléctrico de carga con caja trasera de 200 kg, ideal para reparto y transporte de mercancías.", specs: { "Autonomía": "80 km", "Carga útil": "200 kg", "Motor": "1000 W", "Batería": "60 V / 20 Ah" }, model3dUrl: "https://modelviewer.dev/shared-assets/models/Astronaut.glb" } as Demo,
+    { slug: "triciclo-electrico-cargo", sku: "TE-4001", name: "Triciclo eléctrico de carga", cat: triciclos.id, brand: "Impacto EV", price: 1200, compareAt: 1350, stock: 2, featured: true, desc: "Triciclo eléctrico de carga con caja trasera de 200 kg, ideal para reparto y transporte de mercancías.", specs: { "Autonomía": "80 km", "Carga útil": "200 kg", "Motor": "1000 W", "Batería": "60 V / 20 Ah" } },
     { slug: "bicicleta-electrica-plegable", sku: "TE-4002", name: "Bicicleta eléctrica plegable", cat: triciclos.id, brand: "Impacto EV", price: 680, stock: 5, desc: "Bicicleta eléctrica plegable con motor de 350 W y batería extraíble.", specs: { "Autonomía": "45 km", "Motor": "350 W", "Batería": "36 V / 10 Ah", "Plegable": "Sí" } },
     { slug: "patinete-electrico-urbano", sku: "TE-4003", name: "Patinete eléctrico urbano", cat: triciclos.id, brand: "Impacto EV", price: 420, compareAt: 480, stock: 7, desc: "Patinete eléctrico ligero para ciudad, con freno eléctrico y luces LED.", specs: { "Autonomía": "30 km", "Velocidad máx.": "25 km/h", "Peso": "12 kg" } },
     { slug: "motor-1-6-16v-completo", sku: "MO-5001", name: "Motor 1.6 16V completo", cat: motor.id, brand: "Marca demo", price: 1450, stock: 1, desc: "Motor 1.6 16V revisado, con garantía de funcionamiento.", specs: { "Cilindrada": "1.6 L", "Válvulas": "16V", "Combustible": "Gasolina" } },
@@ -85,17 +87,20 @@ async function main() {
   for (const d of DEMO) {
     const b = await brandOf(d.brand);
     const { fits, cat: catId, brand, price, compareAt, desc, specs, model3dUrl, featured, ...rest } = d;
+    // Cada producto demo trae su modelo 3D generado (npm run models:build). Si el
+    // archivo no existe todavía, se deja sin 3D para no enlazar a algo inexistente.
+    const model = model3dUrl ?? (existsSync(path.join(process.cwd(), "public", "models", `${d.slug}.glb`)) ? `/models/${d.slug}.glb` : null);
     const row = await prisma.product.upsert({
       where: { slug: d.slug },
       update: {
         categoryId: catId, brandId: b.id, priceUsd: price, compareAtUsd: compareAt ?? null,
         images: [`/products/${d.slug}.svg`], description: desc, specs: specs ?? undefined,
-        featured: featured ?? false, model3dUrl: model3dUrl ?? null,
+        featured: featured ?? false, model3dUrl: model,
       },
       create: {
         ...rest, categoryId: catId, brandId: b.id, priceUsd: price, compareAtUsd: compareAt ?? null,
         images: [`/products/${d.slug}.svg`], description: desc, specs: specs ?? undefined,
-        featured: featured ?? false, model3dUrl: model3dUrl ?? null,
+        featured: featured ?? false, model3dUrl: model,
       },
     });
     if (fits?.length && !(await prisma.productFit.count({ where: { productId: row.id } })))

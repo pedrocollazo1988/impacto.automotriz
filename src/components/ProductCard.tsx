@@ -4,7 +4,7 @@ import Icon from "@/components/brand/Icon";
 
 export type CardProduct = {
   slug: string; name: string; priceUsd: unknown; compareAtUsd?: unknown; stock: number; images: string[];
-  brand?: { name: string } | null; sku?: string; createdAt?: Date | string;
+  brand?: { name: string } | null; sku?: string; createdAt?: Date | string; model3dUrl?: string | null;
 };
 
 function discountPct(price: unknown, compare: unknown) {
@@ -26,6 +26,11 @@ export default function ProductCard({ p }: { p: CardProduct }) {
           {p.stock <= 0 && <span className="badge bg-slate-900/85 text-white">Agotado</span>}
           {low && <span className="badge bg-white/90 text-amber-700">Últimas {p.stock}</span>}
         </div>
+        {p.model3dUrl && (
+          <span className="badge absolute right-2 top-2 flex items-center gap-1 bg-[color:var(--color-navy)]/90 text-white shadow" title="Tiene vista 3D">
+            <Icon name="cube" size={12} /> 3D
+          </span>
+        )}
         <span className="pointer-events-none absolute inset-0 -translate-y-full bg-gradient-to-t from-navy/70 via-navy/10 to-transparent opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100" />
         <span className="absolute bottom-2 right-2 translate-y-3 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
           <span className="badge flex items-center gap-1 bg-white/95 text-navy shadow"><Icon name="cube" size={12} /> Ver ficha</span>

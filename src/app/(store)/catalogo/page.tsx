@@ -29,6 +29,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
     ...(s.marca ? { brand: { slug: s.marca } } : {}),
     ...(s.disponible === "1" ? { stock: { gt: 0 } } : {}),
     ...(s.oferta === "1" ? { compareAtUsd: { not: null } } : {}),
+    ...(s.vista3d === "1" ? { model3dUrl: { not: null } } : {}),
     ...(min !== undefined || max !== undefined ? { priceUsd: { ...(min !== undefined ? { gte: min } : {}), ...(max !== undefined ? { lte: max } : {}) } } : {}),
     ...(s.make || s.model || year ? { fits: { some: {
       ...(s.make ? { make: { contains: s.make, mode: "insensitive" as const } } : {}),
@@ -50,7 +51,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
     const qs = new URLSearchParams(Object.entries(merged).filter(([, v]) => v) as [string, string][]).toString();
     return `/catalogo${qs ? `?${qs}` : ""}`;
   };
-  const activeCount = ["categoria", "marca", "disponible", "oferta", "min", "max", "make", "model", "year", "q"].filter((k) => s[k]).length;
+  const activeCount = ["categoria", "marca", "disponible", "oferta", "vista3d", "min", "max", "make", "model", "year", "q"].filter((k) => s[k]).length;
   const vehLabel = [s.make, s.model, s.year].filter(Boolean).join(" ");
 
   const Filter = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -118,7 +119,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
             </Filter>
             <Filter title="Otros">
               <div className="space-y-1 text-sm">
-                {([["disponible", "Solo disponibles"], ["oferta", "Solo en oferta"]] as const).map(([key, label]) => (
+                {([["disponible", "Solo disponibles"], ["oferta", "Solo en oferta"], ["vista3d", "Con vista 3D"]] as const).map(([key, label]) => (
                   <Link key={key} href={link({ [key]: s[key] === "1" ? undefined : "1" })}
                     className={`flex items-center gap-2 rounded-lg px-2 py-1.5 transition ${s[key] === "1" ? "bg-[color:var(--color-navy)]/6 font-semibold text-navy" : "hover:bg-slate-50"}`}>
                     <span className={`grid h-4 w-4 place-items-center rounded border ${s[key] === "1" ? "border-[color:var(--color-accent)] bg-[color:var(--color-accent)] text-white" : "border-slate-300"}`}>
