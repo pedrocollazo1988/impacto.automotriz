@@ -34,6 +34,8 @@ git push -u origin main
 - **Vercel**: importar el repositorio, definir las variables de `.env.example` y ejecutar `npx prisma migrate deploy` contra la base de datos.
   `vercel.json` programa la cola de correos una vez al día (plan Hobby). En plan Pro se puede bajar a cada minuto (`* * * * *`).
   Si subes fotos/modelos, define `BLOB_READ_WRITE_TOKEN`: en Vercel el disco es de solo lectura y no persiste.
+  **`APP_SECRET` es obligatoria**: firma la sesión de clientes y del panel. Sin ella, iniciar sesión parece funcionar pero la sesión no se valida y el usuario vuelve al formulario de acceso. Defínela en Vercel → Settings → Environment Variables (Production **y** Preview).
+- **Comprobar el entorno**: abre `GET /api/health`; devuelve `ok: true` y qué variables están definidas (sin mostrar sus valores). Si `APP_SECRET` sale en `false`, las cuentas no iniciarán sesión.
 - **Servidor propio**: `npm run build && npm start` + `crontab`:
   `* * * * * curl -s -H "Authorization: Bearer $CRON_SECRET" https://tudominio.com/api/cron/campaigns`
 

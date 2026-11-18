@@ -4,10 +4,19 @@ import { prisma } from "./prisma";
 import { HttpError } from "./auth";
 
 const COOKIE = "ia_cust";
+
+// Sin APP_SECRET no se pueden firmar sesiones. Antes se firmaba con clave vacía
+// y la cookie se creaba igual, pero luego nadie podía validarla: el usuario
+// "iniciaba sesión" y seguía sin estar autenticado. Ahora se avisa claramente.
+export function assertCustomerAuthConfigured() {
+  if (!process.env.APP_SECRET) throw new HttpError(500, "El servidor no tiene configurada APP_SECRET: las sesiones no funcionan hasta definirla.");
+}
+
 const sig = (v: string) => crypto.createHmac("sha256", process.env.APP_SECRET ?? "").update(`cust:${v}`).digest("hex");
 
 export { hashPassword, verifyPassword } from "./password";
 export async function startCustomerSession(id: string) {
+  assertCustomerAuthConfigured();
   const v = `${id}.${Date.now() + 30 * 864e5}`;
   (await cookies()).set(COOKIE, `${v}.${sig(v)}`, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 30 * 86400 });
 }
