@@ -1,9 +1,10 @@
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { startCustomerSession } from "@/lib/customer-auth";
+import { startCustomerSession, assertCustomerAuthConfigured } from "@/lib/customer-auth";
 
 const back = (p: string) => Response.redirect(new URL(p, process.env.PUBLIC_URL), 302);
 export async function GET(req: Request) {
+  assertCustomerAuthConfigured();
   const sp = new URL(req.url).searchParams; const jar = await cookies();
   const state = jar.get("g_state")?.value; jar.delete("g_state");
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !state || state !== sp.get("state") || !sp.get("code")) return back("/cuenta?error=google");
