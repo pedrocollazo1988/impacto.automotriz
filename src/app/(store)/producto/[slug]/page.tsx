@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import AddToCart from "@/components/AddToCart";
-import ModelViewer from "@/components/ModelViewer";
+import Photo360 from "@/components/Photo360";
 import ProductCard from "@/components/ProductCard";
 import ProductGallery from "@/components/ProductGallery";
 import WishlistButton from "@/components/WishlistButton";
@@ -11,7 +11,8 @@ import CompareToggle from "@/components/CompareToggle";
 import ReviewForm from "@/components/ReviewForm";
 import Icon from "@/components/brand/Icon";
 import { getCustomer } from "@/lib/customer-auth";
-import { urlModelo } from "@/lib/model-url";
+import { fotos360 } from "@/lib/photo360";
+import { tieneVista360 } from "@/lib/vista360";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -45,8 +46,9 @@ export default async function Producto({ params }: Props) {
     me ? prisma.orderItem.count({ where: { productId: p.id, order: { customerId: me.id, status: { in: ["PAID", "PREPARING", "SHIPPED", "DELIVERED"] } } } }) : 0,
   ]);
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
-  const related = await prisma.product.findMany({ where: { active: true, categoryId: p.categoryId, id: { not: p.id } }, take: 4, include: { brand: true } });
-  const modelo = urlModelo(p);
+  const related = await prisma.product.findMany({ where: { active: true, categoryId: p.categoryId, id: { not: p.id } }, take: 4, include: { brand: true, category: { select: { slug: true } } } });
+  const girar360 = tieneVista360(p.category.slug);
+  const frames = girar360 ? fotos360(p.sku) : [];
   const wa = process.env.NEXT_PUBLIC_WHATSAPP;
   const specs = Object.entries((p.specs ?? {}) as Record<string, string>);
   const off = p.compareAtUsd && Number(p.compareAtUsd) > Number(p.priceUsd) ? Math.round(((Number(p.compareAtUsd) - Number(p.priceUsd)) / Number(p.compareAtUsd)) * 100) : 0;
@@ -67,12 +69,10 @@ export default async function Producto({ params }: Props) {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="space-y-4">
-          {modelo ? <ModelViewer src={modelo} alt={p.name} poster={p.images[0]} /> : <ProductGallery images={p.images} name={p.name} has3d={false} />}
-          {modelo && p.images.length > 0 && <ProductGallery images={p.images} name={p.name} has3d />}
-          {modelo && (
-            <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-              Modelo 3D esquemático: representa el tipo de pieza, no las medidas exactas del artículo.
-            </p>
+          {girar360 ? (
+            <Photo360 src={p.images[0]} frames={frames} alt={p.name} />
+          ) : (
+            <ProductGallery images={p.images} name={p.name} />
           )}
           {p.sku === "TE-4001" && (
             <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">

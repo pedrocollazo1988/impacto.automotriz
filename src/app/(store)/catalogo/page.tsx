@@ -6,6 +6,14 @@ import ProductCard from "@/components/ProductCard";
 import Icon from "@/components/brand/Icon";
 import { getCustomer } from "@/lib/customer-auth";
 import { searchProductIds } from "@/lib/catalog";
+import { CATEGORIAS_360 } from "@/lib/vista360";
+import { skusConGiro } from "@/lib/photo360";
+
+const OPCIONES_OTROS = [
+  ["disponible", "Solo disponibles"],
+  ["oferta", "Solo en oferta"],
+  ["vista3d", "Se puede girar 360°"],
+] as const;
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Catálogo de piezas y accesorios" };
@@ -30,7 +38,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
     ...(s.marca ? { brand: { slug: s.marca } } : {}),
     ...(s.disponible === "1" ? { stock: { gt: 0 } } : {}),
     ...(s.oferta === "1" ? { compareAtUsd: { not: null } } : {}),
-    ...(s.vista3d === "1" ? { model3dUrl: { not: null } } : {}),
+    ...(s.vista3d === "1" ? { OR: [{ category: { slug: { in: [...CATEGORIAS_360] } } }, { sku: { in: skusConGiro() } }] } : {}),
     ...(min !== undefined || max !== undefined ? { priceUsd: { ...(min !== undefined ? { gte: min } : {}), ...(max !== undefined ? { lte: max } : {}) } } : {}),
     ...(s.make || s.model || year ? { fits: { some: {
       ...(s.make ? { make: { contains: s.make, mode: "insensitive" as const } } : {}),
@@ -42,7 +50,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
     s.orden === "precio" ? { priceUsd: "asc" } : s.orden === "precio-desc" ? { priceUsd: "desc" } : s.orden === "popular" ? { views: "desc" } : { createdAt: "desc" };
 
   const [products, categories, brands, total] = await Promise.all([
-    prisma.product.findMany({ where, orderBy, take: 48, include: { brand: true } }),
+    prisma.product.findMany({ where, orderBy, take: 48, include: { brand: true, category: { select: { slug: true } } } }),
     getCategoriesCached(),
     getBrandsCached(),
     prisma.product.count({ where: { active: true } }),
@@ -52,6 +60,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
     const qs = new URLSearchParams(Object.entries(merged).filter(([, v]) => v) as [string, string][]).toString();
     return `/catalogo${qs ? `?${qs}` : ""}`;
   };
+  const hayGiro = skusConGiro().length > 0;
   const activeCount = ["categoria", "marca", "disponible", "oferta", "vista3d", "min", "max", "make", "model", "year", "q"].filter((k) => s[k]).length;
   const vehLabel = [s.make, s.model, s.year].filter(Boolean).join(" ");
 
@@ -120,7 +129,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
             </Filter>
             <Filter title="Otros">
               <div className="space-y-1 text-sm">
-                {([["disponible", "Solo disponibles"], ["oferta", "Solo en oferta"], ["vista3d", "Con vista 3D"]] as const).map(([key, label]) => (
+                {(OPCIONES_OTROS.filter(([k]) => k !== "vista3d" || hayGiro)).map(([key, label]) => (
                   <Link key={key} href={link({ [key]: s[key] === "1" ? undefined : "1" })}
                     className={`flex items-center gap-2 rounded-lg px-2 py-1.5 transition ${s[key] === "1" ? "bg-[color:var(--color-navy)]/6 font-semibold text-navy" : "hover:bg-slate-50"}`}>
                     <span className={`grid h-4 w-4 place-items-center rounded border ${s[key] === "1" ? "border-[color:var(--color-accent)] bg-[color:var(--color-accent)] text-white" : "border-slate-300"}`}>

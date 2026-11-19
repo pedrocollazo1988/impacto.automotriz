@@ -7,7 +7,7 @@ import VehicleFinder from "@/components/site/VehicleFinder";
 export const dynamic = "force-dynamic";
 
 const VALUE_PROPS: [string, string, string][] = [
-  ["cube", "Vista 3D y realidad aumentada", "Mira la pieza desde todos los ángulos antes de comprar, incluso en tu espacio real desde el móvil."],
+  ["cube", "Gira el vehículo eléctrico 360°", "En triciclos, bicicletas y patinetes eléctricos giras la foto real del vehículo antes de comprar."],
   ["car", "Compatibilidad con tu vehículo", "Guarda tu garaje y filtra solo las piezas que encajan con tu marca, modelo y año."],
   ["truck", "Entrega en toda Cuba", "Domicilio, mensajería, punto acordado o recogida en tienda, con tarifas por provincia y municipio."],
   ["card", "Pago en línea seguro", "Tropipay, QvaPay, transferencia o efectivo. Confirmación automática y comprobante de tu pedido."],
@@ -17,9 +17,9 @@ const CAT_ICON: Record<string, string> = { frenos: "gauge", "sistema-electrico":
 
 export default async function Home() {
   const [featured, offers, latest, categories, brands, total] = await Promise.all([
-    prisma.product.findMany({ where: { active: true, featured: true }, take: 8, orderBy: { id: "desc" }, include: { brand: true } }),
-    prisma.product.findMany({ where: { active: true, compareAtUsd: { not: null } }, take: 4, orderBy: { id: "desc" }, include: { brand: true } }),
-    prisma.product.findMany({ where: { active: true }, take: 8, orderBy: { createdAt: "desc" }, include: { brand: true } }),
+    prisma.product.findMany({ where: { active: true, featured: true }, take: 8, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true } } } }),
+    prisma.product.findMany({ where: { active: true, compareAtUsd: { not: null } }, take: 4, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true } } } }),
+    prisma.product.findMany({ where: { active: true }, take: 8, orderBy: { createdAt: "desc" }, include: { brand: true, category: { select: { slug: true } } } }),
     getCategoriesCached(),
     getBrandsCached(12),
     prisma.product.count({ where: { active: true } }),
@@ -40,8 +40,8 @@ export default async function Home() {
               La pieza correcta<br />para tu vehículo,<br /><span className="bg-gradient-to-r from-[#8fc2ff] to-[#ffd27a] bg-clip-text text-transparent">a la primera.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/75">
-              Catálogo de partes, piezas y accesorios con compatibilidad por vehículo, vista 3D de cada pieza
-              y pago en línea. Además, medios de transporte eléctrico para mover tu negocio.
+              Catálogo de partes, piezas y accesorios con compatibilidad por vehículo y pago en línea.
+              Los vehículos eléctricos se pueden girar 360°.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/catalogo" className="btn btn-accent text-base"><Icon name="grid" size={18} /> Explorar catálogo</Link>

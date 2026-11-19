@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Ofertas y precios rebajados" };
 
 export default async function Ofertas() {
-  const products = await prisma.product.findMany({ where: { active: true, compareAtUsd: { not: null } }, orderBy: { id: "desc" }, take: 48, include: { brand: true } });
+  const products = await prisma.product.findMany({ where: { active: true, compareAtUsd: { not: null } }, orderBy: { id: "desc" }, take: 48, include: { brand: true, category: { select: { slug: true } } } });
   return (
     <div>
       <section className="relative overflow-hidden bg-gradient-to-br from-[color:var(--color-navy)] to-[color:var(--color-navy-deep)] text-white">
