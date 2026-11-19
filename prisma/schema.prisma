@@ -533,3 +533,16 @@ model ProductCompatibility {
 
   @@unique([productId, targetId])
 }
+
+// Archivos subidos cuando no hay BLOB_READ_WRITE_TOKEN: se guardan en la base de
+// datos porque Vercel no tiene disco escribible. La tabla la crea el código en
+// tiempo de ejecución, así que debe existir aquí para que `db push` no la elimine.
+model MediaFile {
+  id        String   @id
+  mime      String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
