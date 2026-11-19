@@ -67,6 +67,11 @@ export default async function Producto({ params }: Props) {
         <div className="space-y-4">
           {p.model3dUrl ? <ModelViewer src={p.model3dUrl} alt={p.name} poster={p.images[0]} /> : <ProductGallery images={p.images} name={p.name} has3d={false} />}
           {p.model3dUrl && p.images.length > 0 && <ProductGallery images={p.images} name={p.name} has3d />}
+          {p.model3dUrl && (
+            <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+              Modelo 3D esquemático: representa el tipo de pieza, no las medidas exactas del artículo.
+            </p>
+          )}
           {p.sku === "TE-4001" && (
             <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
               Imagen ilustrativa de un triciclo de carga equivalente. Las medidas y el equipamiento de la ficha son los del DDS-OD.

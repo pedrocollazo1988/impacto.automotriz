@@ -117,7 +117,9 @@ async function main() {
   "TE-4003": "/products/seattle-wa-usa-pike-street-e-scooter-2022-14.webp",
 };
 
-const model = model3dUrl ?? (existsSync(path.join(process.cwd(), "public", "models", `${d.slug}.glb`)) ? `/models/${d.slug}.glb` : null);
+// Los .glb se nombran por SKU: el modelo se genera por tipo de pieza, no por slug.
+  const glb = `/models/${d.sku.toLowerCase()}.glb`;
+  const model = model3dUrl ?? (existsSync(path.join(process.cwd(), "public", "models", `${d.sku.toLowerCase()}.glb`)) ? glb : null);
     const row = await prisma.product.upsert({
       where: { slug: d.slug },
       update: {

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit, handle, requireAdmin } from "@/lib/auth";
-import { generateModel3dFromImage } from "@/lib/model3d";
+import { generateModel3d } from "@/lib/model3d";
 
 const Body = z.object({ limit: z.number().int().min(1).max(200).optional(), onlyMissing: z.boolean().optional() });
 
@@ -11,7 +11,7 @@ export const POST = handle(async (req: Request) => {
   const { limit = 50, onlyMissing = true } = Body.parse(await req.json().catch(() => ({})));
 
   const products = await prisma.product.findMany({
-    where: { active: true, images: { isEmpty: false }, ...(onlyMissing ? { model3dUrl: null } : {}) },
+    where: { active: true, ...(onlyMissing ? { model3dUrl: null } : {}) },
     select: { id: true, name: true, sku: true, images: true },
     orderBy: { id: "desc" },
     take: limit,
@@ -21,7 +21,7 @@ export const POST = handle(async (req: Request) => {
   const failed: { sku: string; error: string }[] = [];
   for (const p of products) {
     try {
-      const url = await generateModel3dFromImage(p.images[0], p.name);
+      const url = await generateModel3d({ sku: p.sku, name: p.name });
       await prisma.product.update({ where: { id: p.id }, data: { model3dUrl: url } });
       ok++;
     } catch (e) {

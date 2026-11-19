@@ -133,14 +133,14 @@ export default function ProductForm({ initial = EMPTY, categories, brands }: { i
       <section className="md:col-span-2 rounded-xl border border-slate-200 bg-white p-4">
         <header className="mb-3">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-navy"><Icon name="cubeScan" size={15} /> Vista 3D</h3>
-          <p className="mt-0.5 text-xs text-slate-500">Se genera desde la foto principal. Necesita el producto guardado y al menos una foto.</p>
+          <p className="mt-0.5 text-xs text-slate-500">Modelo esquemático según el tipo de pieza. Necesita el producto guardado.</p>
         </header>
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={gen3d} disabled={!initial.id || !fotos.length || generando3d}
+          <button type="button" onClick={gen3d} disabled={!initial.id || generando3d}
             className="btn btn-primary btn-sm disabled:opacity-50"
-            title={!initial.id ? "Guarda el producto primero" : !fotos.length ? "Añade una foto primero" : "Generar el modelo 3D"}>
+            title={!initial.id ? "Guarda el producto primero" : "Generar el modelo 3D"}>
             <Icon name={generando3d ? "spinner" : "cubeScan"} size={13} className={generando3d ? "animate-spin" : ""} />
-            {generando3d ? "Generando…" : "Generar 3D desde la foto"}
+            {generando3d ? "Generando…" : "Generar modelo 3D"}
           </button>
           <label className="btn btn-ghost btn-sm cursor-pointer">
             <Icon name="upload" size={13} /> Subir .glb
