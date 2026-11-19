@@ -14,7 +14,19 @@ import { getCustomer } from "@/lib/customer-auth";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
-const get = (slug: string) => prisma.product.findFirst({ where: { slug, active: true }, include: { brand: true, category: true, fits: true, variants: { where: { active: true }, orderBy: { id: "asc" } } } });
+const get = (slug: string) => prisma.product.findFirst({
+  where: { slug, active: true },
+  include: {
+    brand: true, category: true, fits: true,
+    variants: { where: { active: true }, orderBy: { id: "asc" } },
+    system: true,
+    compatWith: { include: { target: { select: { slug: true, name: true, sku: true } } } },
+    pins: {
+      take: 3,
+      include: { diagram: { include: { vehicle: { select: { slug: true, brand: true, model: true, version: true } }, system: { select: { slug: true, name: true } } } } },
+    },
+  },
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await get((await params).slug);
@@ -102,6 +114,51 @@ export default async function Producto({ params }: Props) {
                 {p.fits.map((f) => <li key={f.id} className="chip">{f.make} {f.model} <span className="font-mono text-[10px] text-slate-400">{f.yearFrom}–{f.yearTo}</span></li>)}
               </ul>
               <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-400"><Icon name="info" size={13} /> Compatibilidad según los datos del vendedor; confirma antes de comprar.</p>
+            </div>
+          )}
+
+          {p.pins.length > 0 && (
+            <div className="card p-4">
+              <h3 className="flex items-center gap-2 font-display text-sm font-bold text-navy"><Icon name="layers" size={16} /> Dónde va esta pieza</h3>
+              <ul className="mt-2 space-y-1.5 text-sm">
+                {p.pins.map((pin) => (
+                  <li key={pin.id}>
+                    <Link
+                      href={`/despiece/${pin.diagram.vehicle.slug}/${pin.diagram.system.slug}?pieza=${p.sku}`}
+                      className="flex items-center gap-2 text-[color:var(--color-accent-deep)] hover:underline"
+                    >
+                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[color:var(--color-navy)] font-mono text-[10px] font-bold text-white">{pin.number}</span>
+                      {pin.diagram.vehicle.brand} {pin.diagram.vehicle.model} · {pin.diagram.system.name}
+                      <Icon name="arrowRight" size={12} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs text-slate-400">Abre el diagrama con la pieza ya marcada para confirmar que es la tuya.</p>
+            </div>
+          )}
+
+          {p.compatWith.length > 0 && (
+            <div className="card p-4">
+              <h3 className="flex items-center gap-2 font-display text-sm font-bold text-navy"><Icon name="check" size={16} /> Compatibilidad cruzada</h3>
+              <ul className="mt-2 space-y-1.5 text-sm">
+                {p.compatWith.map((c) => (
+                  <li key={c.id}>
+                    <Link href={`/producto/${c.target.slug}`} className="font-semibold text-[color:var(--color-accent-deep)] hover:underline">{c.target.name}</Link>
+                    <span className="font-mono text-[11px] text-slate-400"> · {c.target.sku}</span>
+                    {c.note && <p className="text-xs text-slate-500">{c.note}</p>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {p.connectorImage && (
+            <div className="card overflow-hidden">
+              <h3 className="flex items-center gap-2 border-b border-slate-100 px-4 py-3 font-display text-sm font-bold text-navy"><Icon name="bolt" size={16} /> Conectores y pines</h3>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.connectorImage} alt={`Conectores de ${p.name}`} className="w-full bg-slate-50 object-contain" />
+              <p className="px-4 py-2 text-xs text-slate-500">Compara colores de cable y forma del enchufe con tu unidad antes de pedir.</p>
             </div>
           )}
 

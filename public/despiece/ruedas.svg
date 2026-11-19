@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" role="img" aria-label="TRANSMISIÓN Y RUEDAS">
+  <defs>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M24 0H0V24" fill="none" stroke="#dbe6f3" stroke-width="1"/>
+    </pattern>
+    <pattern id="grid-lg" width="120" height="120" patternUnits="userSpaceOnUse">
+      <path d="M120 0H0V120" fill="none" stroke="#c6d7ea" stroke-width="1.2"/>
+    </pattern>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eef4fb"/><stop offset="1" stop-color="#d3e0ef"/>
+    </linearGradient>
+    <linearGradient id="volt" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3aa0ff"/><stop offset="1" stop-color="#0b5fd0"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0 0l7 3-7 3z" fill="#4a6b96"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="800" fill="#f4f7fb"/>
+  <rect width="1200" height="800" fill="url(#grid)"/>
+  <rect width="1200" height="800" fill="url(#grid-lg)"/>
+  <rect x="14" y="14" width="1172" height="772" fill="none" stroke="#c9d8ea" stroke-width="2"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <text x="40" y="58" font-size="19" font-weight="700" fill="#0b2a5b" letter-spacing="2">TRANSMISIÓN Y RUEDAS</text>
+    <text x="40" y="80" font-size="12" fill="#4a6b96" letter-spacing="1.4">03 · NEUMÁTICO, RIN Y EJE</text>
+    <text x="1160" y="58" font-size="12" fill="#4a6b96" text-anchor="end" letter-spacing="1.4">KVITOVA · DDS-OD</text>
+    <text x="1160" y="80" font-size="11" fill="#8fa6c2" text-anchor="end">LÁMINA 03</text>
+  </g>
+  <line x1="40" y1="94" x2="1160" y2="94" stroke="#c9d8ea" stroke-width="1.5"/>
+  <!-- eje de explosión -->
+  <g opacity=".45">
+    <path d="M150 392H1090" stroke="#4a6b96" stroke-width="1.6" stroke-dasharray="10 8"/>
+    <path d="M150 660H1090" stroke="#4a6b96" stroke-width="1.6" stroke-dasharray="10 8"/>
+  </g>
+
+  <!-- 1 · neumático -->
+  <g id="parte-01">
+    <circle cx="250" cy="392" r="128" fill="none" stroke="#0b2a5b" stroke-width="30"/>
+    <circle cx="250" cy="392" r="143" fill="none" stroke="#4a6b96" stroke-width="1.6" stroke-dasharray="8 6"/>
+    <circle cx="250" cy="392" r="113" fill="none" stroke="#4a6b96" stroke-width="1.6"/>
+    <path d="M378 392l13 0" stroke="#0b2a5b" stroke-width="6"/><path d="M371.73523408577967 431.5541752799933l12.363734711836996 4.017220926874316" stroke="#0b2a5b" stroke-width="6"/><path d="M353.5541752799933 467.2365122934366l10.517220926874316 7.641208279802151" stroke="#0b2a5b" stroke-width="6"/><path d="M325.2365122934366 495.5541752799933l7.641208279802151 10.517220926874316" stroke="#0b2a5b" stroke-width="6"/><path d="M289.5541752799933 513.7352340857797l4.017220926874317 12.363734711836996" stroke="#0b2a5b" stroke-width="6"/><path d="M250 520l7.960204194457795e-16 13" stroke="#0b2a5b" stroke-width="6"/><path d="M210.44582472000673 513.7352340857797l-4.017220926874315 12.363734711836997" stroke="#0b2a5b" stroke-width="6"/><path d="M174.76348770656347 495.5541752799933l-7.641208279802149 10.517220926874316" stroke="#0b2a5b" stroke-width="6"/><path d="M146.44582472000673 467.2365122934366l-10.517220926874316 7.641208279802152" stroke="#0b2a5b" stroke-width="6"/><path d="M128.26476591422033 431.5541752799933l-12.363734711836996 4.017220926874318" stroke="#0b2a5b" stroke-width="6"/><path d="M122 392l-13 1.592040838891559e-15" stroke="#0b2a5b" stroke-width="6"/><path d="M128.26476591422033 352.44582472000667l-12.363734711836996 -4.01722092687432" stroke="#0b2a5b" stroke-width="6"/><path d="M146.44582472000673 316.76348770656347l-10.517220926874316 -7.641208279802149" stroke="#0b2a5b" stroke-width="6"/><path d="M174.7634877065634 288.4458247200067l-7.641208279802152 -10.517220926874316" stroke="#0b2a5b" stroke-width="6"/><path d="M210.44582472000673 270.26476591422033l-4.017220926874319 -12.363734711836996" stroke="#0b2a5b" stroke-width="6"/><path d="M249.99999999999997 264l-2.3880612583373385e-15 -13" stroke="#0b2a5b" stroke-width="6"/><path d="M289.5541752799933 270.26476591422033l4.017220926874314 -12.363734711836997" stroke="#0b2a5b" stroke-width="6"/><path d="M325.23651229343653 288.4458247200067l7.641208279802148 -10.517220926874318" stroke="#0b2a5b" stroke-width="6"/><path d="M353.5541752799933 316.7634877065634l10.517220926874316 -7.641208279802154" stroke="#0b2a5b" stroke-width="6"/><path d="M371.73523408577967 352.4458247200067l12.363734711836996 -4.017220926874319" stroke="#0b2a5b" stroke-width="6"/>
+    <text x="250" y="556" font-size="12" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">3.75-12 / 4.50-12</text>
+  </g>
+
+  <!-- 2 · cámara -->
+  <g id="parte-02">
+    <circle cx="540" cy="392" r="112" fill="none" stroke="#0a84ff" stroke-width="15" opacity=".65"/>
+    <path d="M540 280v-30" stroke="#0b2a5b" stroke-width="6"/>
+    <rect x="526" y="228" width="28" height="24" rx="5" fill="#0b2a5b"/>
+    <text x="540" y="556" font-size="11" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">VÁLVULA</text>
+  </g>
+
+  <!-- 3 · rin -->
+  <g id="parte-03">
+    <circle cx="820" cy="392" r="112" fill="none" stroke="#0b2a5b" stroke-width="12"/>
+    <circle cx="820" cy="392" r="34" fill="url(#steel)" stroke="#0b2a5b" stroke-width="4"/>
+    <circle cx="820" cy="359" r="8" fill="#f4f7fb" stroke="#0b2a5b" stroke-width="2.4"/><circle cx="851.38486503774" cy="381.8024391856267" r="8" fill="#f4f7fb" stroke="#0b2a5b" stroke-width="2.4"/><circle cx="839.3969133256517" cy="418.6975608143733" r="8" fill="#f4f7fb" stroke="#0b2a5b" stroke-width="2.4"/><circle cx="800.6030866743483" cy="418.6975608143733" r="8" fill="#f4f7fb" stroke="#0b2a5b" stroke-width="2.4"/><circle cx="788.61513496226" cy="381.8024391856267" r="8" fill="#f4f7fb" stroke="#0b2a5b" stroke-width="2.4"/>
+    <text x="820" y="556" font-size="11" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">ARO 12"</text>
+  </g>
+
+  <!-- 4 · radios -->
+  <g id="parte-04">
+    <path d="M350 660L284 660" stroke="#0b2a5b" stroke-width="3"/><path d="M320.71067811865476 730.7106781186548L274.04163056034264 684.0416305603426" stroke="#0b2a5b" stroke-width="3"/><path d="M250 760L250 694" stroke="#0b2a5b" stroke-width="3"/><path d="M179.28932188134524 730.7106781186548L225.9583694396574 684.0416305603426" stroke="#0b2a5b" stroke-width="3"/><path d="M150 660L216 660" stroke="#0b2a5b" stroke-width="3"/><path d="M179.28932188134524 589.2893218813452L225.9583694396574 635.9583694396574" stroke="#0b2a5b" stroke-width="3"/><path d="M249.99999999999997 560L250 626" stroke="#0b2a5b" stroke-width="3"/><path d="M320.71067811865476 589.2893218813452L274.0416305603426 635.9583694396574" stroke="#0b2a5b" stroke-width="3"/>
+    <circle cx="250" cy="660" r="30" fill="none" stroke="#0b2a5b" stroke-width="3"/>
+    <circle cx="250" cy="660" r="100" fill="none" stroke="#4a6b96" stroke-width="1.4" stroke-dasharray="7 6"/>
+    <text x="250" y="792" font-size="11" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">36 RADIOS</text>
+  </g>
+
+  <!-- 5 · eje y bujes -->
+  <g id="parte-05">
+    <path d="M500 660H900" stroke="#0b2a5b" stroke-width="10" stroke-linecap="round"/>
+    <rect x="620" y="634" width="96" height="52" rx="8" fill="url(#steel)" stroke="#0b2a5b" stroke-width="3"/>
+    <circle cx="668" cy="660" r="14" fill="#f4f7fb" stroke="#0b2a5b" stroke-width="2.4"/>
+    <circle cx="540" cy="660" r="8" fill="#0b2a5b"/><circle cx="860" cy="660" r="8" fill="#0b2a5b"/>
+    <text x="700" y="724" font-size="11" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">EJE · 4/5 BIRLOS</text>
+  </g>
+
+  <!-- detalle de perfil -->
+  <g transform="translate(940,600)" opacity=".9">
+    <ellipse cx="80" cy="60" rx="72" ry="72" fill="none" stroke="#c9d8ea" stroke-width="20"/>
+    <ellipse cx="80" cy="60" rx="46" ry="46" fill="none" stroke="#c9d8ea" stroke-width="2" stroke-dasharray="7 5"/>
+    <circle cx="80" cy="60" r="16" fill="none" stroke="#c9d8ea" stroke-width="3"/>
+  </g>
+
+  
+  <g class="callout" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <path d="M250 264 L250 150" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
+    <circle cx="250" cy="264" r="3.2" fill="#4a6b96"/>
+    <circle cx="250" cy="150" r="13" fill="#0b2a5b"/>
+    <text x="250" y="154.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+    <text x="272" y="154.4" font-size="12.5" fill="#0b2a5b"
+          text-anchor="start">Neumático reforzado</text>
+  </g>
+  
+  <g class="callout" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <path d="M540 392 L700 170" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
+    <circle cx="540" cy="392" r="3.2" fill="#4a6b96"/>
+    <circle cx="700" cy="170" r="13" fill="#0b2a5b"/>
+    <text x="700" y="174.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+    <text x="678" y="174.4" font-size="12.5" fill="#0b2a5b"
+          text-anchor="end">Cámara de aire</text>
+  </g>
+  
+  <g class="callout" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <path d="M820 392 L1010 250" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
+    <circle cx="820" cy="392" r="3.2" fill="#4a6b96"/>
+    <circle cx="1010" cy="250" r="13" fill="#0b2a5b"/>
+    <text x="1010" y="254.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+    <text x="988" y="254.4" font-size="12.5" fill="#0b2a5b"
+          text-anchor="end">Rin metálico 12"</text>
+  </g>
+  
+  <g class="callout" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <path d="M250 660 L170 740" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
+    <circle cx="250" cy="660" r="3.2" fill="#4a6b96"/>
+    <circle cx="170" cy="740" r="13" fill="#0b2a5b"/>
+    <text x="170" y="744.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">4</text>
+    <text x="192" y="744.4" font-size="12.5" fill="#0b2a5b"
+          text-anchor="start">Radios</text>
+  </g>
+  
+  <g class="callout" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <path d="M700 660 L780 770" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
+    <circle cx="700" cy="660" r="3.2" fill="#4a6b96"/>
+    <circle cx="780" cy="770" r="13" fill="#0b2a5b"/>
+    <text x="780" y="774.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">5</text>
+    <text x="758" y="774.4" font-size="12.5" fill="#0b2a5b"
+          text-anchor="end">Eje y bujes</text>
+  </g>
+
+</svg>

@@ -19,12 +19,14 @@ model Province {
   pickupPoints   PickupPoint[]
   subscribers    Subscriber[]
 }
+
 model Municipality {
   id         Int            @id @default(autoincrement())
   name       String
   provinceId Int
   province   Province       @relation(fields: [provinceId], references: [id])
   rules      DeliveryRule[]
+
   @@unique([provinceId, name])
 }
 
@@ -61,6 +63,7 @@ model DeliveryMethod {
   rules           DeliveryRule[]
   slots           DeliverySlot[]
 }
+
 // Disponibilidad por método × provincia (municipalityId = null → toda la provincia).
 // Una regla de municipio tiene prioridad sobre la de su provincia. Sin regla = NO disponible.
 model DeliveryRule {
@@ -71,7 +74,7 @@ model DeliveryRule {
   province       Province       @relation(fields: [provinceId], references: [id])
   municipalityId Int?
   municipality   Municipality?  @relation(fields: [municipalityId], references: [id])
-  scopeKey       String         // "<provinceId>:<municipalityId|*>"
+  scopeKey       String // "<provinceId>:<municipalityId|*>"
   available      Boolean        @default(true)
   feeUsd         Decimal?       @db.Decimal(10, 2)
   freeFromUsd    Decimal?       @db.Decimal(10, 2)
@@ -79,8 +82,10 @@ model DeliveryRule {
   etaMinDays     Int?
   etaMaxDays     Int?
   note           String?
+
   @@unique([methodId, scopeKey])
 }
+
 model PickupPoint {
   id             Int      @id @default(autoincrement())
   name           String
@@ -94,6 +99,7 @@ model PickupPoint {
   active         Boolean  @default(true)
   sortOrder      Int      @default(0)
 }
+
 model DeliverySlot {
   id        Int            @id @default(autoincrement())
   methodId  Int
@@ -103,6 +109,7 @@ model DeliverySlot {
   maxOrders Int            @default(10)
   active    Boolean        @default(true)
 }
+
 model ServiceAddon {
   id          Int     @id @default(autoincrement())
   code        String  @unique
@@ -111,12 +118,14 @@ model ServiceAddon {
   priceUsd    Decimal @default(0) @db.Decimal(10, 2)
   active      Boolean @default(true)
 }
+
 model StockAlert {
   id         Int       @id @default(autoincrement())
   productId  String
   email      String
   createdAt  DateTime  @default(now())
   notifiedAt DateTime?
+
   @@unique([productId, email])
 }
 
@@ -137,28 +146,29 @@ enum PaymentMethod {
 }
 
 model Order {
-  id            String        @id @default(cuid())
-  number        Int           @unique @default(autoincrement())
-  status        OrderStatus   @default(PENDING_PAYMENT)
+  id            String         @id @default(cuid())
+  number        Int            @unique @default(autoincrement())
+  status        OrderStatus    @default(PENDING_PAYMENT)
   paymentMethod PaymentMethod
-  paid          Boolean       @default(false)
+  paid          Boolean        @default(false)
   paymentRef    String?
   providerRef   String?
   paidAt        DateTime?
   customerName  String
   customerEmail String
   customerPhone String
-  subtotalUsd   Decimal       @db.Decimal(10, 2)
-  shippingUsd   Decimal       @default(0) @db.Decimal(10, 2)
-  totalUsd      Decimal       @db.Decimal(10, 2)
-  discountUsd   Decimal       @default(0) @db.Decimal(10, 2)
+  subtotalUsd   Decimal        @db.Decimal(10, 2)
+  shippingUsd   Decimal        @default(0) @db.Decimal(10, 2)
+  totalUsd      Decimal        @db.Decimal(10, 2)
+  discountUsd   Decimal        @default(0) @db.Decimal(10, 2)
   couponCode    String?
   customerId    String?
-  customer      Customer?     @relation(fields: [customerId], references: [id])
-  createdAt     DateTime      @default(now())
+  customer      Customer?      @relation(fields: [customerId], references: [id])
+  createdAt     DateTime       @default(now())
   items         OrderItem[]
   delivery      OrderDelivery?
 }
+
 model OrderItem {
   id        Int     @id @default(autoincrement())
   orderId   String
@@ -185,34 +195,43 @@ model Category {
   name     String
   products Product[]
 }
+
 model Product {
-  id           Int          @id @default(autoincrement())
-  slug         String       @unique
-  sku          String       @unique
-  name         String
-  description  String       @default("")
-  priceUsd     Decimal      @db.Decimal(10, 2)
-  compareAtUsd Decimal?     @db.Decimal(10, 2)
-  stock        Int          @default(0)
-  lowStockAt   Int          @default(3)
-  images       String[]
-  model3dUrl   String?      // archivo .glb (visor 3D / realidad aumentada)
-  specs        Json?        // { "Medida": "...", "Voltaje": "..." }
-  featured     Boolean      @default(false)
-  active       Boolean      @default(true)
-  createdAt    DateTime     @default(now())
-  brandId      Int?
-  brand        Brand?       @relation(fields: [brandId], references: [id])
-  categoryId   Int
-  category     Category     @relation(fields: [categoryId], references: [id])
-  fits         ProductFit[]
-  orderItems   OrderItem[]
-  views        Int          @default(0)
-  wishlist     WishlistItem[]
-  reviews      Review[]
-  variants     ProductVariant[]
+  id             Int                    @id @default(autoincrement())
+  slug           String                 @unique
+  sku            String                 @unique
+  name           String
+  description    String                 @default("")
+  priceUsd       Decimal                @db.Decimal(10, 2)
+  compareAtUsd   Decimal?               @db.Decimal(10, 2)
+  stock          Int                    @default(0)
+  lowStockAt     Int                    @default(3)
+  images         String[]
+  model3dUrl     String? // archivo .glb (visor 3D / realidad aumentada)
+  specs          Json? // { "Medida": "...", "Voltaje": "..." }
+  featured       Boolean                @default(false)
+  active         Boolean                @default(true)
+  createdAt      DateTime               @default(now())
+  brandId        Int?
+  brand          Brand?                 @relation(fields: [brandId], references: [id])
+  categoryId     Int
+  category       Category               @relation(fields: [categoryId], references: [id])
+  fits           ProductFit[]
+  orderItems     OrderItem[]
+  views          Int                    @default(0)
+  wishlist       WishlistItem[]
+  reviews        Review[]
+  variants       ProductVariant[]
+  systemId       Int? // sistema del despiece (Propulsión, Frenos…) para agrupar repuestos
+  system         PartSystem?            @relation(fields: [systemId], references: [id])
+  connectorImage String? // foto en primer plano de los pines o enchufes
+  packQty        Int? // si la pieza se vende en juego (p. ej. banco de 6 baterías)
+  pins           DiagramPin[]
+  compatWith     ProductCompatibility[] @relation("compatSource")
+  compatOf       ProductCompatibility[] @relation("compatTarget")
 }
-model ProductFit { // compatibilidad por vehículo
+
+model ProductFit {
   id        Int     @id @default(autoincrement())
   productId Int
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -275,6 +294,7 @@ model EmailSettings {
   dailyLimit  Int     @default(300)
   companyInfo String  @default("Impacto Automotriz S.U.R.L.")
 }
+
 model Subscriber {
   id         Int              @id @default(autoincrement())
   email      String           @unique
@@ -288,6 +308,7 @@ model Subscriber {
   createdAt  DateTime         @default(now())
   sends      CampaignSend[]
 }
+
 model Campaign {
   id        Int            @id @default(autoincrement())
   name      String
@@ -299,6 +320,7 @@ model Campaign {
   sentAt    DateTime?
   sends     CampaignSend[]
 }
+
 model CampaignSend {
   id           Int        @id @default(autoincrement())
   campaignId   Int
@@ -308,33 +330,37 @@ model CampaignSend {
   status       String
   error        String?
   sentAt       DateTime   @default(now())
+
   @@unique([campaignId, subscriberId])
 }
 
 // ───────── Cuentas de cliente, cupones ─────────
 model Customer {
-  id           String          @id @default(cuid())
-  email        String          @unique
-  name         String
-  phone        String?
-  passwordHash String?
-  emailVerified Boolean       @default(false)
-  googleId     String?         @unique
-  createdAt    DateTime        @default(now())
-  orders       Order[]
-  wishlist     WishlistItem[]
-  garage       GarageVehicle[]
-  reviews      Review[]
-  tokens       AuthToken[]
+  id            String          @id @default(cuid())
+  email         String          @unique
+  name          String
+  phone         String?
+  passwordHash  String?
+  emailVerified Boolean         @default(false)
+  googleId      String?         @unique
+  createdAt     DateTime        @default(now())
+  orders        Order[]
+  wishlist      WishlistItem[]
+  garage        GarageVehicle[]
+  reviews       Review[]
+  tokens        AuthToken[]
 }
+
 model WishlistItem {
   id         Int      @id @default(autoincrement())
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   productId  Int
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@unique([customerId, productId])
 }
+
 model GarageVehicle {
   id         Int      @id @default(autoincrement())
   customerId String
@@ -344,6 +370,7 @@ model GarageVehicle {
   year       Int
   alias      String?
 }
+
 model Review {
   id         Int      @id @default(autoincrement())
   productId  Int
@@ -354,17 +381,20 @@ model Review {
   comment    String
   visible    Boolean  @default(true) // compra verificada; el administrador puede ocultarla
   createdAt  DateTime @default(now())
+
   @@unique([productId, customerId])
 }
+
 model AuthToken {
   id         Int       @id @default(autoincrement())
   customerId String
   customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  kind       String    // RESET | VERIFY
+  kind       String // RESET | VERIFY
   tokenHash  String    @unique
   expiresAt  DateTime
   usedAt     DateTime?
 }
+
 model Coupon {
   id             Int       @id @default(autoincrement())
   code           String    @unique
@@ -378,7 +408,7 @@ model Coupon {
   active         Boolean   @default(true)
 }
 
-model ProductVariant { // medida, color, versión...  Si un producto tiene variantes activas, se compra una variante.
+model ProductVariant {
   id        Int      @id @default(autoincrement())
   productId Int
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -397,6 +427,7 @@ enum StaffRole {
   SALES
   WAREHOUSE
 }
+
 model StaffUser {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -407,6 +438,7 @@ model StaffUser {
   createdAt    DateTime  @default(now())
   lastLoginAt  DateTime?
 }
+
 model AuditLog {
   id        Int      @id @default(autoincrement())
   staffId   String?
@@ -414,10 +446,90 @@ model AuditLog {
   action    String
   detail    String?
   createdAt DateTime @default(now())
+
   @@index([createdAt])
 }
+
 model RateLimit {
   key     String   @id
   count   Int
   resetAt DateTime
+}
+
+// ───────── Despiece interactivo ─────────
+// Un vehículo (triciclo, moto, carro…) agrupa varias láminas de despiece,
+// una por sistema. Cada lámina tiene pines que apuntan a productos reales,
+// así una misma pieza puede aparecer en varios vehículos sin duplicar inventario.
+model Vehicle {
+  id        Int              @id @default(autoincrement())
+  slug      String           @unique
+  brand     String
+  model     String
+  version   String           @default("Eléctrico")
+  year      Int?
+  voltage   String?
+  power     String?
+  payload   String?
+  summary   String           @default("")
+  heroImage String?
+  active    Boolean          @default(true)
+  sortOrder Int              @default(0)
+  createdAt DateTime         @default(now())
+  diagrams  VehicleDiagram[]
+
+  @@unique([brand, model, version])
+}
+
+model PartSystem {
+  id        Int              @id @default(autoincrement())
+  slug      String           @unique
+  name      String
+  icon      String           @default("wrench")
+  blurb     String           @default("")
+  sortOrder Int              @default(0)
+  products  Product[]
+  diagrams  VehicleDiagram[]
+}
+
+model VehicleDiagram {
+  id        Int          @id @default(autoincrement())
+  vehicleId Int
+  vehicle   Vehicle      @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  systemId  Int
+  system    PartSystem   @relation(fields: [systemId], references: [id])
+  title     String
+  image     String // SVG o foto; los pines van en porcentajes, así no se desalinean
+  notes     String?
+  sortOrder Int          @default(0)
+  pins      DiagramPin[]
+
+  @@unique([vehicleId, systemId])
+}
+
+model DiagramPin {
+  id        Int            @id @default(autoincrement())
+  diagramId Int
+  diagram   VehicleDiagram @relation(fields: [diagramId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  number    Int // número visible en el dibujo y en la tabla
+  x         Float // porcentaje 0-100 sobre la lámina
+  y         Float
+  svgId     String? // id del grupo dentro del SVG (para iluminar la pieza)
+  label     String? // nombre corto en el dibujo si difiere del producto
+
+  @@unique([diagramId, number])
+  @@unique([diagramId, productId])
+  @@index([productId])
+}
+
+model ProductCompatibility {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation("compatSource", fields: [productId], references: [id], onDelete: Cascade)
+  targetId  Int
+  target    Product @relation("compatTarget", fields: [targetId], references: [id], onDelete: Cascade)
+  note      String?
+
+  @@unique([productId, targetId])
 }
