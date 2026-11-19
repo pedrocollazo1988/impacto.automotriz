@@ -18,6 +18,7 @@ export default function DespieceAdmin() {
   const [pending, setPending] = useState<{ x: number; y: number } | null>(null);
   const [form, setForm] = useState({ productId: "", number: "", label: "", svgId: "" });
   const [err, setErr] = useState("");
+  const [sembrando, setSembrando] = useState(false);
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState<number | null>(null);
   const imgRef = useRef<HTMLDivElement | null>(null);
@@ -38,6 +39,21 @@ export default function DespieceAdmin() {
     }
   }, []);
   useEffect(() => { load(); }, [load]);
+
+  const sembrar = async () => {
+    if (!confirm("Se cargarán las 7 láminas y 23 piezas del Kvitova DDS-OD en esta base de datos. ¿Continuar?")) return;
+    setSembrando(true); setErr("");
+    try {
+      const r = await fetch("/api/admin/despiece/seed", { method: "POST" });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { setErr(j.error ?? `No se pudo cargar el despiece (HTTP ${r.status})`); return; }
+      await load();
+    } catch {
+      setErr("No se pudo conectar con el servidor. Revisa tu conexión y recarga.");
+    } finally {
+      setSembrando(false);
+    }
+  };
   useEffect(() => {
     fetch("/api/admin/products?take=500")
       .then((r) => (r.ok ? r.json() : { items: [] }))
@@ -176,8 +192,13 @@ export default function DespieceAdmin() {
           <EmptyState
             icon="layers"
             title="No hay vehículos con despiece"
-            hint="La base de datos de este entorno está vacía. Ejecuta `npm run db:seed:despiece` para cargar el Kvitova DDS-OD con sus 7 láminas y 23 piezas."
+            hint="La base de datos de este entorno no tiene el despiece cargado. Puedes cargar el Kvitova DDS-OD con sus 7 láminas y 23 piezas ahora mismo."
           />
+          <div className="flex justify-center pb-6">
+            <button className="btn btn-primary btn-sm" disabled={sembrando} onClick={sembrar}>
+              {sembrando ? "Cargando…" : "Cargar despiece de fábrica"}
+            </button>
+          </div>
         </Panel>
       ) : !diagram ? (
         <Panel><EmptyState icon="layers" title="Sin láminas" hint="Este vehículo no tiene láminas cargadas." /></Panel>
