@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader, Panel, PanelPad, EmptyState, Badge, inputCls } from "@/components/admin/ui";
+import Icon from "@/components/brand/Icon";
 
 type C = { id: number; code: string; percentOff: number | null; amountOffUsd: string | null; minSubtotalUsd: string | null; maxUses: number | null; used: number; expiresAt: string | null; active: boolean };
 export default function Cupones() {
@@ -22,7 +23,7 @@ export default function Cupones() {
           <label className="space-y-1"><span className="block text-xs font-semibold text-slate-600">Compra mín.</span><input className={`${inputCls} w-28`} type="number" placeholder="0" value={f.min} onChange={(e) => setF({ ...f, min: e.target.value })} /></label>
           <label className="space-y-1"><span className="block text-xs font-semibold text-slate-600">Usos máx.</span><input className={`${inputCls} w-24`} type="number" placeholder="∞" value={f.maxUses} onChange={(e) => setF({ ...f, maxUses: e.target.value })} /></label>
           <label className="space-y-1"><span className="block text-xs font-semibold text-slate-600">Vence</span><input className={inputCls} type="date" value={f.expiresAt} onChange={(e) => setF({ ...f, expiresAt: e.target.value })} /></label>
-          <button className="btn btn-primary" onClick={create}>Crear cupón</button>
+          <button className="btn btn-primary" onClick={create}><Icon name="plus" size={14} /> Crear cupón</button>
         </div>
         {err && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
       </PanelPad>
@@ -31,7 +32,7 @@ export default function Cupones() {
           <div className="adm-scroll">
             <table className="adm-table"><thead><tr><th>Código</th><th>Descuento</th><th>Mínimo</th><th>Usos</th><th>Vence</th><th /></tr></thead>
               <tbody>{list.map((c) => <tr key={c.id} className={c.active ? "" : "text-slate-400"}><td className="font-mono text-xs font-semibold">{c.code}</td><td>{c.percentOff ? `${c.percentOff}%` : `${Number(c.amountOffUsd).toFixed(2)} USD`}</td><td className="text-slate-500">{c.minSubtotalUsd ?? "—"}</td><td>{c.used}{c.maxUses ? `/${c.maxUses}` : ""}</td><td className="text-slate-500">{c.expiresAt?.slice(0, 10) ?? "—"}</td>
-                <td className="text-right">{c.active ? <button className="btn btn-danger btn-xs" onClick={async () => { await fetch(`/api/admin/coupons?id=${c.id}`, { method: "DELETE" }); load(); }}>Desactivar</button> : <Badge tone="mute">Inactivo</Badge>}</td></tr>)}</tbody></table>
+                <td className="text-right">{c.active ? <button className="btn btn-danger btn-xs" onClick={async () => { await fetch(`/api/admin/coupons?id=${c.id}`, { method: "DELETE" }); load(); }}><Icon name="close" size={12} /> Desactivar</button> : <Badge tone="mute">Inactivo</Badge>}</td></tr>)}</tbody></table>
           </div>
         )}
       </Panel>

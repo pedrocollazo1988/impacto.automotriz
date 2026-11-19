@@ -19,6 +19,18 @@ type Part = {
   packQty?: number; variants?: { sku: string; name: string; priceUsd?: number; stock: number }[];
 };
 
+// Fotos reales verificadas (Wikimedia Commons, ver public/products/CREDITOS.md).
+// Solo las piezas con foto fiable; el resto conserva el marcador del catalogo.
+const FOTO_PIEZA: Record<string, string> = {
+  "KVI-CAR-02": "/products/truck-seat.webp",
+  "KVI-FRE-01": "/products/drum-brake-parts-jpg.webp",
+  "KVI-MAN-03": "/products/ignition-switch-lock-assembly-1997-honda-pre.webp",
+  "KVI-MOT-01": "/products/largehubmotordetail-jpg.webp",
+  "KVI-MOT-02": "/products/dana-60-dodge-4-10-gears-jpg.webp",
+  "KVI-RUE-01": "/products/honda-ntv650-motorcycle-1993-front-tyre.webp",
+  "KVI-SUS-02": "/products/leaf-spring-on-hot-rod-truck.webp",
+};
+
 // Coordenadas en porcentaje sobre la lámina de cada sistema (1200×800).
 const PARTS: Part[] = [
   // ── Propulsión ──
@@ -230,6 +242,7 @@ export async function sembrarDespiece(prisma: PrismaClient) {
       slug, sku: p.sku, name: p.name, description: p.description, priceUsd: p.priceUsd,
       stock: p.stock, specs: p.specs, categoryId: category.id, brandId: brand.id,
       systemId: systems[p.system], packQty: p.packQty ?? null, active: true,
+      images: [FOTO_PIEZA[p.sku] ?? "/placeholder.svg"],
     };
     const row = await prisma.product.upsert({ where: { sku: p.sku }, update: data, create: data });
     productIds[p.sku] = row.id;

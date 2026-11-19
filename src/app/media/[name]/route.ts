@@ -1,14 +1,17 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { MIME, uploadDir } from "@/lib/storage";
+import { readMedia } from "@/lib/storage";
 
-// Sirve los archivos subidos a disco (cuando no se usa Vercel Blob).
+// Sirve los archivos subidos desde el panel (base de datos, o disco en local).
 export async function GET(_req: Request, { params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
-  const m = /^[0-9a-f-]{36}\.(jpg|png|webp|glb)$/.exec(name);
-  if (!m) return new Response("Not found", { status: 404 });
-  try {
-    const data = await fs.readFile(path.join(uploadDir(), name));
-    return new Response(data, { headers: { "Content-Type": MIME[m[1]], "Cache-Control": "public, max-age=31536000, immutable", "X-Content-Type-Options": "nosniff" } });
-  } catch { return new Response("Not found", { status: 404 }); }
+  if (!/^[0-9a-f-]{36}\.(jpg|png|webp|glb)$/.test(name)) return new Response("Not found", { status: 404 });
+  const f = await readMedia(name);
+  if (!f) return new Response("Not found", { status: 404 });
+  return new Response(Buffer.from(f.data), {
+    headers: {
+      "Content-Type": f.mime,
+      "Content-Length": String(f.data.length),
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }

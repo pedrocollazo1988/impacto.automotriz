@@ -3,7 +3,7 @@ import path from "node:path";
 import sharp from "sharp";
 import { HttpError } from "./auth";
 import { buildTexturedBoxGLB, type GlbImage } from "./glb";
-import { saveModel, uploadDir } from "./storage";
+import { readMedia, saveModel } from "./storage";
 
 const MAX_BYTES = 12 * 1024 * 1024;
 const TEXTURE_W = 768;
@@ -20,7 +20,9 @@ async function readImage(src: string): Promise<Buffer> {
   if (src.startsWith("/media/")) {
     const name = path.basename(src);
     if (!/^[0-9a-f-]{36}\.(jpg|png|webp)$/.test(name)) throw new HttpError(400, "Imagen no válida");
-    return fs.readFile(path.join(uploadDir(), name));
+    const f = await readMedia(name);
+    if (!f) throw new HttpError(404, "La imagen subida ya no existe: vuelve a subirla");
+    return Buffer.from(f.data);
   }
   if (src.startsWith("/")) {
     const rel = path.normalize(src).replace(/^(\.\.[/\\])+/, "").replace(/^[/\\]+/, "");

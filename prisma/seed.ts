@@ -89,18 +89,46 @@ async function main() {
     const { fits, cat: catId, brand, price, compareAt, desc, specs, model3dUrl, featured, ...rest } = d;
     // Cada producto demo trae su modelo 3D generado (npm run models:build). Si el
     // archivo no existe todavía, se deja sin 3D para no enlazar a algo inexistente.
-    const model = model3dUrl ?? (existsSync(path.join(process.cwd(), "public", "models", `${d.slug}.glb`)) ? `/models/${d.slug}.glb` : null);
+    const FOTO_REAL: Record<string, string> = {
+  "AC-9001": "/products/aftermarket-car-rubber-floor-mat.webp",
+  "AC-9002": "/products/mobile-phone-holder.webp",
+  "AC-9003": "/products/usb-charger-to-fit-a-car-lighter-socket.webp",
+  "CA-8001": "/products/car-wing-mirror.webp",
+  "CA-8002": "/products/car-bumper-front-national-exhibition.webp",
+  "EL-3001": "/products/car-battery.webp",
+  "EL-3002": "/products/car-alternator-on-a-workbench.webp",
+  "EL-3003": "/products/electri-motor-starter.webp",
+  "EL-3004": "/products/engine-spark-plugs.webp",
+  "FI-6001": "/products/engine-oil-filter-cutaway.webp",
+  "FI-6002": "/products/air-filter-opel-astra.webp",
+  "FI-6003": "/products/fuel-filter.webp",
+  "FR-1001": "/products/brake-pad.webp",
+  "FR-1002": "/products/disc-brake-of-motorbike-honda-cbr-1000.webp",
+  "FR-1003": "/products/delco-brake-fluid-can.webp",
+  "LU-7001": "/products/headlamps-of-pontiac-bonneville-1965-xzz700.webp",
+  "LU-7002": "/products/halogen-bulb.webp",
+  "MO-5001": "/products/car-engine.webp",
+  "MO-5002": "/products/timing-belt.webp",
+  "SU-2001": "/products/ohlins.webp",
+  "SU-2002": "/products/late-1990s-weforma-gmbh-wm-s-0-5-hydraulic-i.webp",
+  "SU-2003": "/products/tie-rod-end.webp",
+  "TE-4001": "/products/cargo-500-eec.webp",
+  "TE-4002": "/products/electric-bicycle-with-front-motor-jpg.webp",
+  "TE-4003": "/products/seattle-wa-usa-pike-street-e-scooter-2022-14.webp",
+};
+
+const model = model3dUrl ?? (existsSync(path.join(process.cwd(), "public", "models", `${d.slug}.glb`)) ? `/models/${d.slug}.glb` : null);
     const row = await prisma.product.upsert({
       where: { slug: d.slug },
       update: {
         name: rest.name, sku: rest.sku,
         categoryId: catId, brandId: b.id, priceUsd: price, compareAtUsd: compareAt ?? null,
-        images: [`/products/${d.slug}.svg`], description: desc, specs: specs ?? undefined,
+        images: [FOTO_REAL[d.sku] ?? `/products/${d.slug}.svg`], description: desc, specs: specs ?? undefined,
         featured: featured ?? false, model3dUrl: model,
       },
       create: {
         ...rest, categoryId: catId, brandId: b.id, priceUsd: price, compareAtUsd: compareAt ?? null,
-        images: [`/products/${d.slug}.svg`], description: desc, specs: specs ?? undefined,
+        images: [FOTO_REAL[d.sku] ?? `/products/${d.slug}.svg`], description: desc, specs: specs ?? undefined,
         featured: featured ?? false, model3dUrl: model,
       },
     });
