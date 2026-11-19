@@ -11,6 +11,7 @@ import CompareToggle from "@/components/CompareToggle";
 import ReviewForm from "@/components/ReviewForm";
 import Icon from "@/components/brand/Icon";
 import { getCustomer } from "@/lib/customer-auth";
+import { urlModelo } from "@/lib/model-url";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -45,6 +46,7 @@ export default async function Producto({ params }: Props) {
   ]);
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
   const related = await prisma.product.findMany({ where: { active: true, categoryId: p.categoryId, id: { not: p.id } }, take: 4, include: { brand: true } });
+  const modelo = urlModelo(p);
   const wa = process.env.NEXT_PUBLIC_WHATSAPP;
   const specs = Object.entries((p.specs ?? {}) as Record<string, string>);
   const off = p.compareAtUsd && Number(p.compareAtUsd) > Number(p.priceUsd) ? Math.round(((Number(p.compareAtUsd) - Number(p.priceUsd)) / Number(p.compareAtUsd)) * 100) : 0;
@@ -65,9 +67,9 @@ export default async function Producto({ params }: Props) {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="space-y-4">
-          {p.model3dUrl ? <ModelViewer src={p.model3dUrl} alt={p.name} poster={p.images[0]} /> : <ProductGallery images={p.images} name={p.name} has3d={false} />}
-          {p.model3dUrl && p.images.length > 0 && <ProductGallery images={p.images} name={p.name} has3d />}
-          {p.model3dUrl && (
+          {modelo ? <ModelViewer src={modelo} alt={p.name} poster={p.images[0]} /> : <ProductGallery images={p.images} name={p.name} has3d={false} />}
+          {modelo && p.images.length > 0 && <ProductGallery images={p.images} name={p.name} has3d />}
+          {modelo && (
             <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
               Modelo 3D esquemático: representa el tipo de pieza, no las medidas exactas del artículo.
             </p>

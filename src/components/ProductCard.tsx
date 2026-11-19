@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import Icon from "@/components/brand/Icon";
+import { urlModelo } from "@/lib/model-url";
 
 export type CardProduct = {
   slug: string; name: string; priceUsd: unknown; compareAtUsd?: unknown; stock: number; images: string[];
@@ -26,7 +27,7 @@ export default function ProductCard({ p }: { p: CardProduct }) {
           {p.stock <= 0 && <span className="badge bg-slate-900/85 text-white">Agotado</span>}
           {low && <span className="badge bg-white/90 text-amber-700">Últimas {p.stock}</span>}
         </div>
-        {p.model3dUrl && (
+        {urlModelo(p) && (
           <span className="badge absolute right-2 top-2 flex items-center gap-1 bg-[color:var(--color-navy)]/90 text-white shadow" title="Tiene vista 3D">
             <Icon name="cube" size={12} /> 3D
           </span>
