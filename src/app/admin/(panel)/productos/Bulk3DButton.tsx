@@ -21,8 +21,8 @@ export default function Bulk3DButton({ missing }: { missing: number }) {
   };
   return (
     <span className="inline-flex items-center gap-2">
-      <button onClick={run} disabled={busy || missing === 0} className="rounded border px-4 py-2 disabled:opacity-50" title="Crea un modelo 3D a partir de la foto principal de cada producto">
-        <span className="inline-flex items-center gap-1"><Icon name="cube" size={13} /> Generar 3D{missing > 0 ? ` (${missing})` : ""}</span>
+      <button onClick={run} disabled={busy || missing === 0} className="btn btn-ghost btn-sm disabled:opacity-50" title="Crea un modelo 3D a partir de la foto principal de cada producto">
+        <Icon name="cube" size={15} /> Generar 3D{missing > 0 ? ` (${missing})` : ""}
       </button>
       {msg && <span className="text-xs text-slate-500">{msg}</span>}
     </span>

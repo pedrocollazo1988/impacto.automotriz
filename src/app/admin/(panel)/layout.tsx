@@ -1,20 +1,22 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { can, getSessionUser, type Perm } from "@/lib/auth";
-import LogoutAdmin from "./LogoutAdmin";
+import AdminShell, { type NavLink } from "@/components/admin/AdminShell";
 
-const LINKS: [string, string, Perm][] = [["/admin", "Pedidos", "orders"], ["/admin/productos", "Productos", "products"], ["/admin/cupones", "Cupones", "coupons"], ["/admin/envios", "Entregas y zonas", "logistics"],
-  ["/admin/campanas", "Email marketing", "email"], ["/admin/reportes", "Reportes", "reports"], ["/admin/resenas", "Reseñas", "reviews"], ["/admin/equipo", "Equipo", "team"], ["/admin/auditoria", "Actividad", "team"]];
+const LINKS: [string, string, Perm, string][] = [
+  ["/admin", "Pedidos", "orders", "box"],
+  ["/admin/productos", "Productos", "products", "cube"],
+  ["/admin/cupones", "Cupones", "coupons", "tag"],
+  ["/admin/envios", "Entregas y zonas", "logistics", "truck"],
+  ["/admin/campanas", "Email marketing", "email", "mail"],
+  ["/admin/reportes", "Reportes", "reports", "chart"],
+  ["/admin/resenas", "Reseñas", "reviews", "star"],
+  ["/admin/equipo", "Equipo", "team", "user"],
+  ["/admin/auditoria", "Actividad", "team", "clock"],
+];
+
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const u = await getSessionUser();
   if (!u) redirect("/admin/login");
-  return (
-    <>
-      <nav className="flex flex-wrap items-center gap-5 bg-navy px-6 py-3 text-sm font-medium text-white">
-        {LINKS.filter(([, , p]) => can(u, p)).map(([h, l]) => <Link key={h} href={h}>{l}</Link>)}
-        <span className="ml-auto text-white/70">{u.name} · {u.role}</span><Link href="/">Ver tienda</Link><LogoutAdmin />
-      </nav>
-      {children}
-    </>
-  );
+  const links: NavLink[] = LINKS.filter(([, , p]) => can(u, p)).map(([href, label, , icon]) => ({ href, label, icon, exact: href === "/admin" }));
+  return <AdminShell links={links} userName={u.name} role={u.role}>{children}</AdminShell>;
 }
