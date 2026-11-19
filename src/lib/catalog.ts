@@ -1,3 +1,4 @@
+import { revalidateTag, unstable_cache } from "next/cache";
 import { prisma } from "./prisma";
 
 export const slugify = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
@@ -20,6 +21,30 @@ export async function searchProductIds(term: string): Promise<number[]> {
   );
   return rows.map((r) => r.id);
 }
+
+// Categorías y marcas apenas cambian y se piden en cada visita de la portada y
+// del catálogo. Cachearlas ahorra dos viajes a la base de datos por carga.
+const CATEGORIAS_TAG = "categorias";
+const MARCAS_TAG = "marcas";
+
+export const getCategoriesCached = unstable_cache(
+  async () => prisma.category.findMany({ orderBy: { name: "asc" }, include: { _count: { select: { products: true } } } }),
+  ["categorias-con-conteo"],
+  { revalidate: 3600, tags: [CATEGORIAS_TAG] },
+);
+
+export const getBrandsCached = unstable_cache(
+  async (take?: number) => prisma.brand.findMany({ orderBy: { name: "asc" }, ...(take ? { take } : {}) }),
+  ["marcas"],
+  { revalidate: 3600, tags: [MARCAS_TAG] },
+);
+
+// Se llama tras cualquier alta o cambio de producto para que la portada y el
+// catálogo reflejen al instante las categorías y marcas nuevas.
+export const invalidarCacheCatalogo = () => {
+  revalidateTag(CATEGORIAS_TAG);
+  revalidateTag(MARCAS_TAG);
+};
 
 export type ProductInput = {
   sku: string; name: string; slug?: string; description?: string; priceUsd: number; compareAtUsd?: number | null; stock: number; lowStockAt?: number;
@@ -60,6 +85,7 @@ export async function saveProduct(i: ProductInput, id?: number) {
       await prisma.product.update({ where: { id: row.id }, data: { stock: sum } });
     }
   }
+  invalidarCacheCatalogo();
   return { row, created: !existing };
 }
 

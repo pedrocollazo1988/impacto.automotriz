@@ -9,6 +9,7 @@ import { useCart } from "@/components/CartProvider";
 const NAV: [string, string][] = [
   ["/catalogo", "Catálogo"],
   ["/ofertas", "Ofertas"],
+  ["/despiece", "Despiece"],
   ["/catalogo?vehiculo=1", "Buscar por vehículo"],
   ["/nosotros", "Nosotros"],
   ["/contacto", "Contacto"],

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Icon from "@/components/brand/Icon";
 import ModelViewer from "@/components/ModelViewer";
 import { inputCls } from "@/components/admin/ui";
@@ -11,33 +12,56 @@ const EMPTY: PInit = { sku: "", name: "", description: "", priceUsd: 0, compareA
 
 export default function ProductForm({ initial = EMPTY, categories, brands }: { initial?: PInit; categories: string[]; brands: string[] }) {
   const router = useRouter(); const [f, setF] = useState(initial); const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
-  const [images, setImages] = useState(initial.images.join("\n"));
+  const [fotos, setFotos] = useState<string[]>(initial.images);
+  const [subiendo, setSubiendo] = useState(false);
+  const [generando3d, setGenerando3d] = useState(false);
+  const [arrastrando, setArrastrando] = useState(false);
   const [specs, setSpecs] = useState(Object.entries(initial.specs ?? {}).map(([k, v]) => `${k}: ${v}`).join("\n"));
   const [variants, setVariants] = useState(initial.variants.map((v) => `${v.sku};${v.name};${v.priceUsd ?? ""};${v.stock}`).join("\n"));
   const [up, setUp] = useState("");
   const upload = async (files: FileList | null, kind: "img" | "glb") => {
-    if (!files?.length) return; setUp("Subiendo…"); const urls: string[] = [];
-    for (const file of Array.from(files)) { const fd = new FormData(); fd.append("file", file); const r = await fetch("/api/admin/upload", { method: "POST", body: fd }); const j = await r.json(); if (!r.ok) return setUp(j.error ?? "Error al subir"); urls.push(j.url); }
-    if (kind === "img") setImages((p) => [p.trim(), ...urls].filter(Boolean).join("\n")); else set("model3dUrl", urls[0]); setUp("Listo ✓");
+    if (!files?.length) return;
+    setErr(""); setUp("");
+    if (kind === "img") setSubiendo(true); else setUp("Subiendo…");
+    try {
+      const urls: string[] = [];
+      for (const file of Array.from(files)) {
+        const fd = new FormData(); fd.append("file", file);
+        const r = await fetch("/api/admin/upload", { method: "POST", body: fd });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j.error ?? `No se pudo subir ${file.name} (HTTP ${r.status})`);
+        urls.push(j.url);
+      }
+      if (kind === "img") { setFotos((p) => [...p, ...urls]); setUp(`${urls.length} foto${urls.length > 1 ? "s" : ""} añadida${urls.length > 1 ? "s" : ""}`); }
+      else { set("model3dUrl", urls[0]); setUp("Modelo 3D subido"); }
+    } catch (e) {
+      setUp(""); setErr(e instanceof Error ? e.message : "No se pudo subir el archivo");
+    } finally { setSubiendo(false); }
   };
+  const quitarFoto = (i: number) => setFotos((p) => p.filter((_, n) => n !== i));
+  const moverFoto = (i: number, d: number) => setFotos((p) => {
+    const a = [...p]; const j = i + d;
+    if (j < 0 || j >= a.length) return p;
+    [a[i], a[j]] = [a[j], a[i]]; return a;
+  });
   const [fits, setFits] = useState(initial.fits.map((x) => `${x.make};${x.model};${x.yearFrom};${x.yearTo}`).join("\n"));
   const set = <K extends keyof PInit>(k: K, v: PInit[K]) => setF((p) => ({ ...p, [k]: v }));
 
   const gen3d = async () => {
     if (!initial.id) return setErr("Guarda el producto primero para generar su modelo 3D");
-    setUp("Generando modelo 3D…"); setErr("");
+    setUp(""); setErr(""); setGenerando3d(true);
     try {
       const r = await fetch(`/api/admin/products/${initial.id}/model3d`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ imageIndex: 0 }) });
       const j = await r.json(); if (!r.ok) throw new Error(j.error ?? "No se pudo generar");
-      set("model3dUrl", j.url); setUp("Modelo 3D listo ✓");
-    } catch (e) { setUp(""); setErr(e instanceof Error ? e.message : "Error al generar el 3D"); }
+      set("model3dUrl", j.url); setUp("Modelo 3D listo");
+    } catch (e) { setErr(e instanceof Error ? e.message : "Error al generar el 3D"); } finally { setGenerando3d(false); }
   };
 
   const save = async () => {
     setBusy(true); setErr("");
     try {
       const body = {
-        ...f, images: images.split("\n").map((s) => s.trim()).filter(Boolean), model3dUrl: f.model3dUrl || null, brandName: f.brandName || null,
+        ...f, images: fotos, model3dUrl: f.model3dUrl || null, brandName: f.brandName || null,
         specs: Object.fromEntries(specs.split("\n").map((l) => l.split(/:(.*)/s).map((s) => s.trim())).filter(([k, v]) => k && v)),
         variants: variants.split("\n").map((l) => l.split(";").map((s) => s.trim())).filter((a) => a.length >= 4 && a[0] && a[1]).map(([sku, name, price, stock]) => ({ sku, name, priceUsd: price ? Number(price.replace(",", ".")) : null, stock: Number(stock) || 0 })),
         fits: fits.split("\n").map((l) => l.split(";").map((s) => s.trim())).filter((a) => a.length === 4).map(([make, model, a, b]) => ({ make, model, yearFrom: +a, yearTo: +b })),
@@ -60,17 +84,81 @@ export default function ProductForm({ initial = EMPTY, categories, brands }: { i
       <L t="Existencias"><input type="number" className={i} value={f.stock} onChange={(e) => set("stock", Number(e.target.value))} /></L>
       <L t="Avisar cuando queden"><input type="number" className={i} value={f.lowStockAt} onChange={(e) => set("lowStockAt", Number(e.target.value))} /></L>
       <div className="md:col-span-2"><L t="Descripción"><textarea rows={3} className={i} value={f.description} onChange={(e) => set("description", e.target.value)} /></L></div>
-      <L t="Fotos (URL por línea; la primera es la principal)"><div className="space-y-1"><textarea rows={4} className={`${i} font-mono`} value={images} onChange={(e) => setImages(e.target.value)} /><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => upload(e.target.files, "img")} className="text-xs" /></div></L>
-      <L t="Modelo 3D (archivo .glb)"><div className="space-y-2">
-        <input className={i} value={f.model3dUrl ?? ""} onChange={(e) => set("model3dUrl", e.target.value)} placeholder="Pega una URL .glb o genera uno desde la foto" />
+      {/* Medios: fotos y modelo 3D. */}
+      <section className="md:col-span-2 rounded-xl border border-slate-200 bg-white p-4">
+        <header className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-navy"><Icon name="image" size={15} /> Fotos del producto</h3>
+            <p className="mt-0.5 text-xs text-slate-500">La primera es la principal en el catálogo. JPG, PNG o WebP hasta 5 MB.</p>
+          </div>
+          <label className={`btn btn-primary btn-sm ${subiendo ? "opacity-60" : ""}`}>
+            <Icon name={subiendo ? "spinner" : "upload"} size={13} className={subiendo ? "animate-spin" : ""} />
+            {subiendo ? "Subiendo…" : "Subir fotos"}
+            <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" disabled={subiendo} onChange={(e) => { void upload(e.target.files, "img"); e.currentTarget.value = ""; }} />
+          </label>
+        </header>
+
+        {fotos.length > 0 ? (
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {fotos.map((url, i) => (
+              <li key={url} className="group relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                <div className="relative aspect-square">
+                  <Image src={url} alt={`Foto ${i + 1}`} fill sizes="160px" className="object-cover" unoptimized={url.endsWith(".svg")} />
+                  {i === 0 && <span className="absolute left-1.5 top-1.5 rounded bg-navy/85 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Principal</span>}
+                </div>
+                <div className="flex items-center justify-between gap-1 border-t border-slate-200 bg-white p-1.5">
+                  <button type="button" onClick={() => moverFoto(i, -1)} disabled={i === 0} className="iconbtn" aria-label="Mover antes" title="Mover antes"><Icon name="chevronLeft" size={13} /></button>
+                  <button type="button" onClick={() => moverFoto(i, 1)} disabled={i === fotos.length - 1} className="iconbtn" aria-label="Mover después" title="Mover después"><Icon name="chevronRight" size={13} /></button>
+                  <button type="button" onClick={() => quitarFoto(i)} className="iconbtn text-red-600 hover:bg-red-50" aria-label="Quitar foto" title="Quitar foto"><Icon name="trash" size={13} /></button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <label
+            onDragOver={(e) => { e.preventDefault(); setArrastrando(true); }}
+            onDragLeave={() => setArrastrando(false)}
+            onDrop={(e) => { e.preventDefault(); setArrastrando(false); void upload(e.dataTransfer.files, "img"); }}
+            className={`flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed px-4 py-10 text-center transition-colors ${arrastrando ? "border-navy bg-navy/5" : "border-slate-300 hover:border-navy/40 hover:bg-slate-50"}`}
+          >
+            <Icon name="image" size={26} className="text-slate-400" />
+            <span className="text-sm font-medium text-navy">Arrastra las fotos aquí o pulsa para elegirlas</span>
+            <span className="text-xs text-slate-500">Sin fotos, el catálogo muestra un marcador genérico.</span>
+            <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={(e) => { void upload(e.target.files, "img"); e.currentTarget.value = ""; }} />
+          </label>
+        )}
+      </section>
+
+      {/* Modelo 3D */}
+      <section className="md:col-span-2 rounded-xl border border-slate-200 bg-white p-4">
+        <header className="mb-3">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-navy"><Icon name="cubeScan" size={15} /> Vista 3D</h3>
+          <p className="mt-0.5 text-xs text-slate-500">Modelo esquemático según el tipo de pieza. Necesita el producto guardado.</p>
+        </header>
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={gen3d} className="btn btn-primary btn-xs disabled:opacity-50" disabled={!initial.id}><Icon name="cube" size={12} /> Generar 3D desde la foto</button>
-          {f.model3dUrl && <button type="button" onClick={() => set("model3dUrl", null)} className="btn btn-ghost btn-xs">Quitar 3D</button>}
-          <input type="file" accept=".glb" onChange={(e) => upload(e.target.files, "glb")} className="text-xs" />
+          <button type="button" onClick={gen3d} disabled={!initial.id || generando3d}
+            className="btn btn-primary btn-sm disabled:opacity-50"
+            title={!initial.id ? "Guarda el producto primero" : "Generar el modelo 3D"}>
+            <Icon name={generando3d ? "spinner" : "cubeScan"} size={13} className={generando3d ? "animate-spin" : ""} />
+            {generando3d ? "Generando…" : "Generar modelo 3D"}
+          </button>
+          <label className="btn btn-ghost btn-sm cursor-pointer">
+            <Icon name="upload" size={13} /> Subir .glb
+            <input type="file" accept=".glb" className="hidden" onChange={(e) => { void upload(e.target.files, "glb"); e.currentTarget.value = ""; }} />
+          </label>
+          {f.model3dUrl && <button type="button" onClick={() => set("model3dUrl", null)} className="btn btn-ghost btn-sm text-red-600"><Icon name="trash" size={13} /> Quitar 3D</button>}
         </div>
-        {f.model3dUrl && <div className="h-44 overflow-hidden rounded-lg border bg-slate-100"><ModelViewer src={f.model3dUrl} alt={f.name || "Vista previa"} /></div>}
-        <p className="text-xs text-slate-500">{up || (!initial.id && "Guarda el producto para poder generarlo.")}</p>
-      </div></L>
+        <details className="mt-2">
+          <summary className="cursor-pointer text-xs text-slate-500 hover:text-navy">Usar una URL .glb existente</summary>
+          <input className={`${i} mt-2 font-mono text-xs`} value={f.model3dUrl ?? ""} onChange={(e) => set("model3dUrl", e.target.value)} placeholder="https://…/modelo.glb" />
+        </details>
+        {f.model3dUrl && (
+          <div className="mt-3 h-52 overflow-hidden rounded-lg border border-slate-200 bg-gradient-to-b from-slate-50 to-slate-100">
+            <ModelViewer src={f.model3dUrl} alt={f.name || "Vista previa 3D"} />
+          </div>
+        )}
+        {(up || err) && <p className={`mt-2 text-xs ${err ? "text-red-600" : "text-emerald-600"}`}>{err || up}</p>}
+      </section>
       <L t="Especificaciones (una por línea: Medida: 16 pulgadas)"><textarea rows={4} className={i} value={specs} onChange={(e) => setSpecs(e.target.value)} /></L>
       <L t="Compatibilidad (una por línea: Marca;Modelo;desde;hasta)"><textarea rows={4} className={`${i} font-mono`} value={fits} onChange={(e) => setFits(e.target.value)} /></L>
       <div className="md:col-span-2"><L t="Variantes (opcional; una por línea: SKU;Nombre;Precio (vacío = el del producto);Existencias). Con variantes, las existencias del producto son la suma de ellas."><textarea rows={4} className={`${i} font-mono`} value={variants} onChange={(e) => setVariants(e.target.value)} placeholder="LLA-16-R;Rojo 16 pulgadas;45;4" /></L></div>

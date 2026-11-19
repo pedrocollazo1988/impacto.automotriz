@@ -43,7 +43,7 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
   const [orders, garage, wish] = await Promise.all([
     prisma.order.findMany({ where: { customerId: me.id }, orderBy: { id: "desc" }, take: 20 }),
     prisma.garageVehicle.findMany({ where: { customerId: me.id } }),
-    prisma.wishlistItem.findMany({ where: { customerId: me.id }, include: { product: true } }),
+    prisma.wishlistItem.findMany({ where: { customerId: me.id }, include: { product: { include: { category: { select: { slug: true } } } } } }),
   ]);
   return (
     <div className="container-x py-8">

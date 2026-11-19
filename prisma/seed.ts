@@ -66,7 +66,7 @@ async function main() {
     { slug: "alternador-12v-70a", sku: "EL-3002", name: "Alternador 12V 70A", cat: electrico.id, brand: "Bosch", price: 140, compareAt: 165, stock: 3, desc: "Alternador remanufacturado con regulador nuevo y garantía.", specs: { "Voltaje": "12 V", "Amperaje": "70 A" }, fits: [["Chevrolet", "Aveo", 2008, 2016]] },
     { slug: "motor-arranque", sku: "EL-3003", name: "Motor de arranque", cat: electrico.id, brand: "Bosch", price: 110, stock: 4, desc: "Motor de arranque de alto par, con piñón y bobinado reforzados.", specs: { "Voltaje": "12 V", "Potencia": "1.2 kW" } },
     { slug: "bujias-iridio-juego", sku: "EL-3004", name: "Bujías de iridio (juego 4)", cat: electrico.id, brand: "NGK", price: 32, stock: 20, desc: "Juego de 4 bujías de iridio: mejor arranque, consumo y durabilidad.", specs: { "Electrodo": "Iridio", "Piezas": "4" }, fits: [["Toyota", "Corolla", 2005, 2019]] },
-    { slug: "triciclo-electrico-cargo", sku: "TE-4001", name: "Triciclo eléctrico de carga", cat: triciclos.id, brand: "Impacto EV", price: 1200, compareAt: 1350, stock: 2, featured: true, desc: "Triciclo eléctrico de carga con caja trasera de 200 kg, ideal para reparto y transporte de mercancías.", specs: { "Autonomía": "80 km", "Carga útil": "200 kg", "Motor": "1000 W", "Batería": "60 V / 20 Ah" } },
+    { slug: "triciclo-electrico-cargo", sku: "TE-4001", name: "Triciclo eléctrico de carga Kvitova DDS-OD", cat: triciclos.id, brand: "Kvitova", price: 1200, compareAt: 1350, stock: 2, featured: true, desc: "Triciclo eléctrico de carga Kvitova DDS-OD, con tolva de volteo de 1600 × 1100 mm. La ficha completa de repuestos por sistema está en el despiece interactivo.", specs: { "Motor": "1200 W brushless", "Batería": "72 V (6 × 12 V 58 Ah)", "Carga útil": "500–800 kg", "Tolva": "1600 × 1100 mm", "Transmisión": "Eje con diferencial y reductora" } },
     { slug: "bicicleta-electrica-plegable", sku: "TE-4002", name: "Bicicleta eléctrica plegable", cat: triciclos.id, brand: "Impacto EV", price: 680, stock: 5, desc: "Bicicleta eléctrica plegable con motor de 350 W y batería extraíble.", specs: { "Autonomía": "45 km", "Motor": "350 W", "Batería": "36 V / 10 Ah", "Plegable": "Sí" } },
     { slug: "patinete-electrico-urbano", sku: "TE-4003", name: "Patinete eléctrico urbano", cat: triciclos.id, brand: "Impacto EV", price: 420, compareAt: 480, stock: 7, desc: "Patinete eléctrico ligero para ciudad, con freno eléctrico y luces LED.", specs: { "Autonomía": "30 km", "Velocidad máx.": "25 km/h", "Peso": "12 kg" } },
     { slug: "motor-1-6-16v-completo", sku: "MO-5001", name: "Motor 1.6 16V completo", cat: motor.id, brand: "Marca demo", price: 1450, stock: 1, desc: "Motor 1.6 16V revisado, con garantía de funcionamiento.", specs: { "Cilindrada": "1.6 L", "Válvulas": "16V", "Combustible": "Gasolina" } },
@@ -89,17 +89,48 @@ async function main() {
     const { fits, cat: catId, brand, price, compareAt, desc, specs, model3dUrl, featured, ...rest } = d;
     // Cada producto demo trae su modelo 3D generado (npm run models:build). Si el
     // archivo no existe todavía, se deja sin 3D para no enlazar a algo inexistente.
-    const model = model3dUrl ?? (existsSync(path.join(process.cwd(), "public", "models", `${d.slug}.glb`)) ? `/models/${d.slug}.glb` : null);
+    const FOTO_REAL: Record<string, string> = {
+  "AC-9001": "/products/aftermarket-car-rubber-floor-mat.webp",
+  "AC-9002": "/products/mobile-phone-holder.webp",
+  "AC-9003": "/products/usb-charger-to-fit-a-car-lighter-socket.webp",
+  "CA-8001": "/products/car-wing-mirror.webp",
+  "CA-8002": "/products/car-bumper-front-national-exhibition.webp",
+  "EL-3001": "/products/car-battery.webp",
+  "EL-3002": "/products/car-alternator-on-a-workbench.webp",
+  "EL-3003": "/products/electri-motor-starter.webp",
+  "EL-3004": "/products/engine-spark-plugs.webp",
+  "FI-6001": "/products/engine-oil-filter-cutaway.webp",
+  "FI-6002": "/products/air-filter-opel-astra.webp",
+  "FI-6003": "/products/fuel-filter.webp",
+  "FR-1001": "/products/brake-pad.webp",
+  "FR-1002": "/products/disc-brake-of-motorbike-honda-cbr-1000.webp",
+  "FR-1003": "/products/delco-brake-fluid-can.webp",
+  "LU-7001": "/products/headlamps-of-pontiac-bonneville-1965-xzz700.webp",
+  "LU-7002": "/products/halogen-bulb.webp",
+  "MO-5001": "/products/car-engine.webp",
+  "MO-5002": "/products/timing-belt.webp",
+  "SU-2001": "/products/ohlins.webp",
+  "SU-2002": "/products/late-1990s-weforma-gmbh-wm-s-0-5-hydraulic-i.webp",
+  "SU-2003": "/products/tie-rod-end.webp",
+  "TE-4001": "/products/cargo-500-eec.webp",
+  "TE-4002": "/products/electric-bicycle-with-front-motor-jpg.webp",
+  "TE-4003": "/products/seattle-wa-usa-pike-street-e-scooter-2022-14.webp",
+};
+
+// Los .glb se nombran por SKU: el modelo se genera por tipo de pieza, no por slug.
+  const glb = `/models/${d.sku.toLowerCase()}.glb`;
+  const model = model3dUrl ?? (existsSync(path.join(process.cwd(), "public", "models", `${d.sku.toLowerCase()}.glb`)) ? glb : null);
     const row = await prisma.product.upsert({
       where: { slug: d.slug },
       update: {
+        name: rest.name, sku: rest.sku,
         categoryId: catId, brandId: b.id, priceUsd: price, compareAtUsd: compareAt ?? null,
-        images: [`/products/${d.slug}.svg`], description: desc, specs: specs ?? undefined,
+        images: [FOTO_REAL[d.sku] ?? `/products/${d.slug}.svg`], description: desc, specs: specs ?? undefined,
         featured: featured ?? false, model3dUrl: model,
       },
       create: {
         ...rest, categoryId: catId, brandId: b.id, priceUsd: price, compareAtUsd: compareAt ?? null,
-        images: [`/products/${d.slug}.svg`], description: desc, specs: specs ?? undefined,
+        images: [FOTO_REAL[d.sku] ?? `/products/${d.slug}.svg`], description: desc, specs: specs ?? undefined,
         featured: featured ?? false, model3dUrl: model,
       },
     });

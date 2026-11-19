@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" role="img" aria-label="SISTEMA ELECTRÓNICO">
+  <defs>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M24 0H0V24" fill="none" stroke="#dbe6f3" stroke-width="1"/>
+    </pattern>
+    <pattern id="grid-lg" width="120" height="120" patternUnits="userSpaceOnUse">
+      <path d="M120 0H0V120" fill="none" stroke="#c6d7ea" stroke-width="1.2"/>
+    </pattern>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eef4fb"/><stop offset="1" stop-color="#d3e0ef"/>
+    </linearGradient>
+    <linearGradient id="volt" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3aa0ff"/><stop offset="1" stop-color="#0b5fd0"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0 0l7 3-7 3z" fill="#4a6b96"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="800" fill="#f4f7fb"/>
+  <rect width="1200" height="800" fill="url(#grid)"/>
+  <rect width="1200" height="800" fill="url(#grid-lg)"/>
+  <rect x="14" y="14" width="1172" height="772" fill="none" stroke="#c9d8ea" stroke-width="2"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <text x="40" y="58" font-size="19" font-weight="700" fill="#0b2a5b" letter-spacing="2">SISTEMA ELECTRÓNICO</text>
+    <text x="40" y="80" font-size="12" fill="#4a6b96" letter-spacing="1.4">02 · CONTROLADOR, BATERÍAS Y CARGA</text>
+    <text x="1160" y="58" font-size="12" fill="#4a6b96" text-anchor="end" letter-spacing="1.4">KVITOVA · DDS-OD</text>
+    <text x="1160" y="80" font-size="11" fill="#8fa6c2" text-anchor="end">LÁMINA 02</text>
+  </g>
+  <line x1="40" y1="94" x2="1160" y2="94" stroke="#c9d8ea" stroke-width="1.5"/><g id="sheet-body" transform="translate(-72.2 -100.3) scale(1.102)">
+  <!-- controlador -->
+  <g id="parte-01">
+    <rect x="120" y="300" width="230" height="150" rx="16" fill="url(#steel)" stroke="#0b2a5b" stroke-width="3"/>
+    <g stroke="#0b2a5b" stroke-width="2" fill="none">
+      <path d="M148 336h174M148 366h174M148 396h174M148 426h120"/>
+    </g>
+    <rect x="286" y="336" width="42" height="60" rx="6" fill="#0a84ff" opacity=".85"/>
+    <path d="M350 330h70M350 360h70M350 390h70M350 420h70" stroke="#4a6b96" stroke-width="3.4"/>
+    <circle cx="430" cy="330" r="6" fill="#0b2a5b"/><circle cx="430" cy="360" r="6" fill="#0b2a5b"/>
+    <circle cx="430" cy="390" r="6" fill="#0b2a5b"/><circle cx="430" cy="420" r="6" fill="#0b2a5b"/>
+    <text x="235" y="490" font-size="12" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">72V24Q60A · 24 MOSFET</text>
+  </g>
+  <!-- baterías: banco de 6 -->
+  <g id="parte-02">
+    <g><rect x="620" y="300" width="108" height="104" rx="9" fill="url(#steel)" stroke="#0b2a5b" stroke-width="2.6"/>
+      <rect x="634" y="312" width="80" height="16" rx="3" fill="#0b2a5b" opacity=".8"/>
+      <circle cx="650" cy="346" r="7" fill="#b91c1c"/><circle cx="698" cy="346" r="7" fill="#0b2a5b"/>
+      <text x="674" y="384" font-size="10.5" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">12V 58Ah</text></g><g><rect x="750" y="300" width="108" height="104" rx="9" fill="url(#steel)" stroke="#0b2a5b" stroke-width="2.6"/>
+      <rect x="764" y="312" width="80" height="16" rx="3" fill="#0b2a5b" opacity=".8"/>
+      <circle cx="780" cy="346" r="7" fill="#b91c1c"/><circle cx="828" cy="346" r="7" fill="#0b2a5b"/>
+      <text x="804" y="384" font-size="10.5" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">12V 58Ah</text></g><g><rect x="880" y="300" width="108" height="104" rx="9" fill="url(#steel)" stroke="#0b2a5b" stroke-width="2.6"/>
+      <rect x="894" y="312" width="80" height="16" rx="3" fill="#0b2a5b" opacity=".8"/>
+      <circle cx="910" cy="346" r="7" fill="#b91c1c"/><circle cx="958" cy="346" r="7" fill="#0b2a5b"/>
+      <text x="934" y="384" font-size="10.5" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">12V 58Ah</text></g><g><rect x="620" y="432" width="108" height="104" rx="9" fill="url(#steel)" stroke="#0b2a5b" stroke-width="2.6"/>
+      <rect x="634" y="444" width="80" height="16" rx="3" fill="#0b2a5b" opacity=".8"/>
+      <circle cx="650" cy="478" r="7" fill="#b91c1c"/><circle cx="698" cy="478" r="7" fill="#0b2a5b"/>
+      <text x="674" y="516" font-size="10.5" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">12V 58Ah</text></g><g><rect x="750" y="432" width="108" height="104" rx="9" fill="url(#steel)" stroke="#0b2a5b" stroke-width="2.6"/>
+      <rect x="764" y="444" width="80" height="16" rx="3" fill="#0b2a5b" opacity=".8"/>
+      <circle cx="780" cy="478" r="7" fill="#b91c1c"/><circle cx="828" cy="478" r="7" fill="#0b2a5b"/>
+      <text x="804" y="516" font-size="10.5" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">12V 58Ah</text></g><g><rect x="880" y="432" width="108" height="104" rx="9" fill="url(#steel)" stroke="#0b2a5b" stroke-width="2.6"/>
+      <rect x="894" y="444" width="80" height="16" rx="3" fill="#0b2a5b" opacity=".8"/>
+      <circle cx="910" cy="478" r="7" fill="#b91c1c"/><circle cx="958" cy="478" r="7" fill="#0b2a5b"/>
+      <text x="934" y="516" font-size="10.5" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">12V 58Ah</text></g>
+    <path d="M620 268h368" stroke="#4a6b96" stroke-width="2" stroke-dasharray="6 4"/>
+    <text x="804" y="256" font-size="11.5" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">SERIE · 72V TOTAL</text>
+  </g>
+  <!-- cargador -->
+  <g id="parte-03">
+    <rect x="120" y="560" width="150" height="112" rx="14" fill="url(#steel)" stroke="#0b2a5b" stroke-width="2.8"/>
+    <rect x="142" y="582" width="106" height="42" rx="6" fill="#f4f7fb" stroke="#0b2a5b" stroke-width="2"/>
+    <path d="M270 616h56" stroke="#0b2a5b" stroke-width="5" stroke-linecap="round"/>
+    <rect x="326" y="602" width="34" height="28" rx="5" fill="#0b2a5b"/>
+    <text x="195" y="700" font-size="11.5" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">72V · 7A</text>
+  </g>
+  <!-- convertidor -->
+  <g id="parte-04">
+    <rect x="430" y="576" width="128" height="86" rx="11" fill="#f4f7fb" stroke="#0b2a5b" stroke-width="2.6"/>
+    <path d="M446 596h96M446 616h96" stroke="#4a6b96" stroke-width="2"/>
+    <text x="494" y="648" font-size="11" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">72V→12V</text>
+  </g>
+  <!-- extensor de rango -->
+  <g id="parte-05">
+    <rect x="920" y="560" width="180" height="112" rx="14" fill="#f4f7fb" stroke="#4a6b96" stroke-width="2.4" stroke-dasharray="7 5"/>
+    <text x="1010" y="606" font-size="11.5" fill="#4a6b96" text-anchor="middle" font-family="ui-monospace, monospace">GENERADOR</text>
+    <text x="1010" y="626" font-size="11" fill="#8fa6c2" text-anchor="middle" font-family="ui-monospace, monospace">OPCIONAL · HÍBRIDO</text>
+  </g>
+  
+  <g class="callout" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <path d="M235 375 L250 190" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
+    <circle cx="235" cy="375" r="3.2" fill="#4a6b96"/>
+    <circle cx="250" cy="190" r="13" fill="#0b2a5b"/>
+    <text x="250" y="194.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+    <text x="272" y="194.4" font-size="12.5" fill="#0b2a5b"
+          text-anchor="start">Controlador</text>
+  </g>
+  
+  <g class="callout" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <path d="M804 404 L1010 200" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
+    <circle cx="804" cy="404" r="3.2" fill="#4a6b96"/>
+    <circle cx="1010" cy="200" r="13" fill="#0b2a5b"/>
+    <text x="1010" y="204.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+    <text x="988" y="204.4" font-size="12.5" fill="#0b2a5b"
+          text-anchor="end">Banco de baterías</text>
+  </g>
+  
+  <g class="callout" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <path d="M195 616 L120 740" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
+    <circle cx="195" cy="616" r="3.2" fill="#4a6b96"/>
+    <circle cx="120" cy="740" r="13" fill="#0b2a5b"/>
+    <text x="120" y="744.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+    <text x="142" y="744.4" font-size="12.5" fill="#0b2a5b"
+          text-anchor="start">Cargador</text>
+  </g>
+  
+  <g class="callout" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <path d="M494 618 L560 730" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
+    <circle cx="494" cy="618" r="3.2" fill="#4a6b96"/>
+    <circle cx="560" cy="730" r="13" fill="#0b2a5b"/>
+    <text x="560" y="734.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">4</text>
+    <text x="582" y="734.4" font-size="12.5" fill="#0b2a5b"
+          text-anchor="start">Convertidor DC-DC</text>
+  </g>
+  
+  <g class="callout" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <path d="M1010 616 L1060 740" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
+    <circle cx="1010" cy="616" r="3.2" fill="#4a6b96"/>
+    <circle cx="1060" cy="740" r="13" fill="#0b2a5b"/>
+    <text x="1060" y="744.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">5</text>
+    <text x="1038" y="744.4" font-size="12.5" fill="#0b2a5b"
+          text-anchor="end">Extensor de rango</text>
+  </g>
+</g>
+</svg>
