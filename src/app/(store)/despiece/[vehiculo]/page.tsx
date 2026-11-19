@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getVehicle, getVehicles } from "@/lib/despiece";
+import { getVehicle, getVehiclesCached } from "@/lib/despiece";
 import Icon from "@/components/brand/Icon";
 import VehiclePicker from "@/components/despiece/VehiclePicker";
 export const dynamic = "force-dynamic";
@@ -22,7 +22,7 @@ export default async function VehiculoDespiece({ params }: Props) {
   const v = await getVehicle(slug);
   if (!v) notFound();
   const total = v.diagrams.reduce((s, d) => s + d.pins.length, 0);
-  const otros = (await getVehicles()).filter((x) => x.slug !== slug);
+  const otros = (await getVehiclesCached()).filter((x) => x.slug !== slug);
 
   return (
     <div className="container-x py-8">

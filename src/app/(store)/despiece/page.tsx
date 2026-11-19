@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getVehicles, getVehicle } from "@/lib/despiece";
+import { getVehiclesConLaminasCached } from "@/lib/despiece";
 import Icon from "@/components/brand/Icon";
 import VehiclePicker from "@/components/despiece/VehiclePicker";
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DespieceIndex() {
-  const vehicles = await getVehicles();
+  const vehicles = await getVehiclesConLaminasCached();
 
   if (vehicles.length === 0) {
     return (
@@ -26,8 +26,6 @@ export default async function DespieceIndex() {
     );
   }
 
-  const details = await Promise.all(vehicles.map((v) => getVehicle(v.slug)));
-
   return (
     <div className="container-x py-10">
       <header className="mb-8 max-w-2xl">
@@ -40,9 +38,8 @@ export default async function DespieceIndex() {
       </header>
 
       <div className="grid gap-5 md:grid-cols-2">
-        {vehicles.map((v, i) => {
-          const d = details[i];
-          const piezas = d?.diagrams.reduce((s, x) => s + x.pins.length, 0) ?? 0;
+        {vehicles.map((v) => {
+          const piezas = v.diagrams.reduce((s, x) => s + x._count.pins, 0);
           return (
             <article key={v.id} className="adm-panel">
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 p-4">
@@ -58,12 +55,12 @@ export default async function DespieceIndex() {
               </div>
               {v.summary && <p className="border-b border-slate-100 p-4 text-sm leading-relaxed text-slate-600">{v.summary}</p>}
               <ul className="grid grid-cols-2 gap-px bg-slate-100 sm:grid-cols-3">
-                {(d?.diagrams ?? []).map((dg) => (
+                {v.diagrams.map((dg) => (
                   <li key={dg.id}>
                     <Link href={`/despiece/${v.slug}/${dg.system.slug}`} className="flex h-full flex-col gap-1 bg-white p-3 transition hover:bg-slate-50">
                       <Icon name={dg.system.icon} size={16} className="text-[color:var(--color-accent)]" />
                       <span className="text-xs font-bold leading-tight text-navy">{dg.system.name}</span>
-                      <span className="font-mono text-[10px] text-slate-400">{dg.pins.length} piezas</span>
+                      <span className="font-mono text-[10px] text-slate-400">{dg._count.pins} piezas</span>
                     </Link>
                   </li>
                 ))}

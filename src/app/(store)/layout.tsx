@@ -1,7 +1,7 @@
 import { CartProvider } from "@/components/CartProvider";
 import { VehicleProvider } from "@/components/VehicleProvider";
 import MiVehiculoBar from "@/components/despiece/MiVehiculoBar";
-import { getVehicles } from "@/lib/despiece";
+import { getVehiclesCached } from "@/lib/despiece";
 import PwaRegister from "@/components/PwaRegister";
 import Analytics from "@/components/Analytics";
 import SiteHeader from "@/components/site/SiteHeader";
@@ -9,7 +9,7 @@ import SiteFooter from "@/components/site/SiteFooter";
 import WhatsAppFab from "@/components/site/WhatsAppFab";
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
-  const vehicles = await getVehicles().catch(() => []);
+  const vehicles = await getVehiclesCached().catch(() => []);
   return (
     <VehicleProvider>
     <CartProvider>

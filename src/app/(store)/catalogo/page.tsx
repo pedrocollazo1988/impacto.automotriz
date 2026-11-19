@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getBrandsCached, getCategoriesCached } from "@/lib/catalog";
 import ProductCard from "@/components/ProductCard";
 import Icon from "@/components/brand/Icon";
 import { getCustomer } from "@/lib/customer-auth";
@@ -42,8 +43,8 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
 
   const [products, categories, brands, total] = await Promise.all([
     prisma.product.findMany({ where, orderBy, take: 48, include: { brand: true } }),
-    prisma.category.findMany({ orderBy: { name: "asc" }, include: { _count: { select: { products: true } } } }),
-    prisma.brand.findMany({ orderBy: { name: "asc" } }),
+    getCategoriesCached(),
+    getBrandsCached(),
     prisma.product.count({ where: { active: true } }),
   ]);
   const link = (o: Record<string, string | undefined>) => {

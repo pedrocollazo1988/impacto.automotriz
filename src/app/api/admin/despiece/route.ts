@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit, handle, requireAdmin, HttpError } from "@/lib/auth";
+import { invalidarCacheDespiece } from "@/lib/despiece";
 
 // GET ?vehicle=slug → láminas y pines de un vehículo; sin parámetro → todos los vehículos.
 export const GET = handle(async (req: Request) => {
@@ -41,6 +42,7 @@ export const POST = handle(async (req: Request) => {
   const taken = await prisma.diagramPin.findFirst({ where: { diagramId: b.diagramId, number: b.number } });
   if (taken) throw new HttpError(409, `El número ${b.number} ya está usado en esta lámina`);
   const row = await prisma.diagramPin.create({ data: { ...b, svgId: b.svgId ?? null, label: b.label ?? null } });
+  invalidarCacheDespiece();
   await audit(u, "despiece.pin.crear", `lámina ${b.diagramId} · nº ${b.number}`);
   return Response.json(row);
 });
@@ -63,6 +65,7 @@ export const PATCH = handle(async (req: Request) => {
     if (clash) throw new HttpError(409, `El número ${d.number} ya está usado`);
   }
   const row = await prisma.diagramPin.update({ where: { id }, data: d });
+  invalidarCacheDespiece();
   await audit(u, "despiece.pin.mover", String(id));
   return Response.json(row);
 });
@@ -72,6 +75,7 @@ export const DELETE = handle(async (req: Request) => {
   const id = Number(new URL(req.url).searchParams.get("id"));
   if (!id) throw new HttpError(400, "Falta id");
   await prisma.diagramPin.delete({ where: { id } });
+  invalidarCacheDespiece();
   await audit(u, "despiece.pin.borrar", String(id));
   return Response.json({ ok: true });
 });

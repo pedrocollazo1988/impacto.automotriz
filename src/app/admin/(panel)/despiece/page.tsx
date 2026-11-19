@@ -23,15 +23,24 @@ export default function DespieceAdmin() {
   const imgRef = useRef<HTMLDivElement | null>(null);
 
   const load = useCallback(async () => {
-    const r = await fetch("/api/admin/despiece");
-    const d: Vehicle[] = await r.json();
-    setVehicles(d);
-    setVSlug((s) => s || d[0]?.slug || "");
+    try {
+      const r = await fetch("/api/admin/despiece");
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        setErr(j.error ?? `No se pudo cargar el despiece (HTTP ${r.status})`);
+        return;
+      }
+      const d: Vehicle[] = await r.json();
+      setVehicles(Array.isArray(d) ? d : []);
+      setVSlug((s) => s || d[0]?.slug || "");
+    } catch {
+      setErr("No se pudo conectar con el servidor. Revisa tu conexión y recarga.");
+    }
   }, []);
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
     fetch("/api/admin/products?take=500")
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : { items: [] }))
       .then((d) => setProducts(Array.isArray(d) ? d : (d.items ?? [])))
       .catch(() => {});
   }, []);
@@ -162,8 +171,16 @@ export default function DespieceAdmin() {
         {err && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
       </PanelPad>
 
-      {!diagram ? (
-        <Panel><EmptyState icon="layers" title="Sin láminas" hint="Carga un vehículo con sus diagramas para empezar." /></Panel>
+      {vehicles.length === 0 ? (
+        <Panel>
+          <EmptyState
+            icon="layers"
+            title="No hay vehículos con despiece"
+            hint="La base de datos de este entorno está vacía. Ejecuta `npm run db:seed:despiece` para cargar el Kvitova DDS-OD con sus 7 láminas y 23 piezas."
+          />
+        </Panel>
+      ) : !diagram ? (
+        <Panel><EmptyState icon="layers" title="Sin láminas" hint="Este vehículo no tiene láminas cargadas." /></Panel>
       ) : (
         <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
           <Panel className="lg:col-span-8">

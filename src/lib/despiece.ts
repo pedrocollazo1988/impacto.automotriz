@@ -1,3 +1,4 @@
+import { revalidateTag, unstable_cache } from "next/cache";
 import { prisma } from "./prisma";
 
 export type DespiecePin = {
@@ -27,7 +28,41 @@ export async function getVehicles() {
   });
 }
 
-export async function getVehicle(slug: string) {
+// El layout de la tienda pide los vehículos en CADA página solo para pintar el
+// selector de "Mi vehículo". Sin caché eso era una ida y vuelta a la base de
+// datos en el camino crítico de todo el sitio; el catálogo de vehículos cambia
+// muy rara vez, así que se reutiliza la lista durante una hora.
+const TAGS_DESPIECE = ["vehiculos-activos", "vehiculos-con-laminas"];
+
+export const getVehiclesCached = unstable_cache(getVehicles, ["vehiculos-activos"], { revalidate: 3600, tags: TAGS_DESPIECE });
+
+// Tras editar pines o láminas en el admin hay que soltar la caché o el cambio
+// tardaría hasta una hora en verse en la tienda.
+export const invalidarCacheDespiece = () => {
+  TAGS_DESPIECE.forEach((t) => revalidateTag(t));
+  revalidateTag("vehiculo");
+  revalidateTag("lamina");
+};
+
+// Índice de despiece: antes hacía una consulta por vehículo (N+1). Con una sola
+// consulta se traen todos los vehículos con sus láminas y sistemas.
+export const getVehiclesConLaminasCached = unstable_cache(
+  async () =>
+    prisma.vehicle.findMany({
+      where: { active: true },
+      orderBy: [{ sortOrder: "asc" }, { brand: "asc" }],
+      include: {
+        diagrams: {
+          orderBy: { sortOrder: "asc" },
+          include: { system: true, _count: { select: { pins: true } } },
+        },
+      },
+    }),
+  ["vehiculos-con-laminas"],
+  { revalidate: 3600, tags: TAGS_DESPIECE },
+);
+
+const getVehicleUncached = async (slug: string) => {
   return prisma.vehicle.findFirst({
     where: { slug, active: true },
     include: {
@@ -47,16 +82,20 @@ export async function getVehicle(slug: string) {
       },
     },
   });
-}
+};
+
+// El despiece cambia solo cuando el admin edita pines; se cachea una hora.
+export const getVehicle = (slug: string) =>
+  unstable_cache(() => getVehicleUncached(slug), ["vehiculo", slug], { revalidate: 3600, tags: ["vehiculo", "lamina"] })();
 
 // Carga una lámina concreta ya normalizada para el visor (números como number, no Decimal).
-export async function getDiagram(vehicleSlug: string, systemSlug: string): Promise<{
+const getDiagramUncached = async (vehicleSlug: string, systemSlug: string): Promise<{
   vehicle: { slug: string; brand: string; model: string; version: string; voltage: string | null; power: string | null };
   diagram: { id: number; title: string; image: string; notes: string | null };
   system: { slug: string; name: string; icon: string };
   pins: DespiecePin[];
   siblings: { slug: string; name: string; icon: string; count: number }[];
-} | null> {
+} | null> => {
   const vehicle = await prisma.vehicle.findFirst({
     where: { slug: vehicleSlug, active: true },
     include: {
@@ -95,7 +134,10 @@ export async function getDiagram(vehicleSlug: string, systemSlug: string): Promi
     })),
     siblings: vehicle.diagrams.map((d) => ({ slug: d.system.slug, name: d.system.name, icon: d.system.icon, count: d._count.pins })),
   };
-}
+};
+
+export const getDiagram = (vehicleSlug: string, systemSlug: string) =>
+  unstable_cache(() => getDiagramUncached(vehicleSlug, systemSlug), ["lamina", vehicleSlug, systemSlug], { revalidate: 3600, tags: ["vehiculo", "lamina"] })();
 
 // Piezas de un vehículo para la tabla completa (todas las láminas de una vez).
 export async function getVehicleParts(vehicleId: number) {

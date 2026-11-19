@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getBrandsCached, getCategoriesCached } from "@/lib/catalog";
 import ProductCard from "@/components/ProductCard";
 import Icon from "@/components/brand/Icon";
 import VehicleFinder from "@/components/site/VehicleFinder";
@@ -19,8 +20,8 @@ export default async function Home() {
     prisma.product.findMany({ where: { active: true, featured: true }, take: 8, orderBy: { id: "desc" }, include: { brand: true } }),
     prisma.product.findMany({ where: { active: true, compareAtUsd: { not: null } }, take: 4, orderBy: { id: "desc" }, include: { brand: true } }),
     prisma.product.findMany({ where: { active: true }, take: 8, orderBy: { createdAt: "desc" }, include: { brand: true } }),
-    prisma.category.findMany({ orderBy: { name: "asc" }, include: { _count: { select: { products: true } } } }),
-    prisma.brand.findMany({ orderBy: { name: "asc" }, take: 12 }),
+    getCategoriesCached(),
+    getBrandsCached(12),
     prisma.product.count({ where: { active: true } }),
   ]);
   const marquee = brands.length >= 4 ? brands : [...brands, ...brands];
