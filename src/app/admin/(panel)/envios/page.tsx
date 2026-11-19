@@ -1,3 +1,10 @@
 import ZoneRulesEditor from "@/components/ZoneRulesEditor";
-// Proteger con el middleware/proxy de autenticación del núcleo (solo ADMIN).
-export default function Page() { return <main className="mx-auto max-w-5xl p-6"><h1 className="mb-4 text-2xl font-bold">Entregas y zonas</h1><ZoneRulesEditor /></main>; }
+import { PageHeader } from "@/components/admin/ui";
+export default function Page() {
+  return (
+    <>
+      <PageHeader title="Entregas y zonas" subtitle="Activa métodos y tarifas por provincia o municipio" />
+      <ZoneRulesEditor />
+    </>
+  );
+}

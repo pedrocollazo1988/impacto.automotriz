@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/brand/Icon";
 import ModelViewer from "@/components/ModelViewer";
+import { inputCls } from "@/components/admin/ui";
 
 export type PInit = { id?: number; sku: string; name: string; description: string; priceUsd: number; compareAtUsd: number | null; stock: number; lowStockAt: number; images: string[];
   variants: { sku: string; name: string; priceUsd: number | null; stock: number }[]; model3dUrl: string | null; specs: Record<string, string> | null; featured: boolean; active: boolean; categoryName: string; brandName: string; fits: { make: string; model: string; yearFrom: number; yearTo: number }[] };
@@ -46,7 +47,7 @@ export default function ProductForm({ initial = EMPTY, categories, brands }: { i
       router.push("/admin/productos"); router.refresh();
     } catch (e) { setErr(e instanceof Error ? e.message : "Error"); } finally { setBusy(false); }
   };
-  const i = "w-full rounded border px-3 py-2 text-sm"; const L = ({ t, children }: { t: string; children: React.ReactNode }) => <label className="block space-y-1"><span className="text-xs font-medium text-slate-600">{t}</span>{children}</label>;
+  const i = inputCls; const L = ({ t, children }: { t: string; children: React.ReactNode }) => <label className="block space-y-1"><span className="text-xs font-medium text-slate-600">{t}</span>{children}</label>;
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <L t="Nombre"><input className={i} value={f.name} onChange={(e) => set("name", e.target.value)} /></L>
@@ -63,11 +64,11 @@ export default function ProductForm({ initial = EMPTY, categories, brands }: { i
       <L t="Modelo 3D (archivo .glb)"><div className="space-y-2">
         <input className={i} value={f.model3dUrl ?? ""} onChange={(e) => set("model3dUrl", e.target.value)} placeholder="Pega una URL .glb o genera uno desde la foto" />
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={gen3d} className="rounded bg-navy px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" disabled={!initial.id}><Icon name="cube" size={12} /> Generar 3D desde la foto</button>
-          {f.model3dUrl && <button type="button" onClick={() => set("model3dUrl", null)} className="rounded border px-3 py-1.5 text-xs">Quitar 3D</button>}
+          <button type="button" onClick={gen3d} className="btn btn-primary btn-xs disabled:opacity-50" disabled={!initial.id}><Icon name="cube" size={12} /> Generar 3D desde la foto</button>
+          {f.model3dUrl && <button type="button" onClick={() => set("model3dUrl", null)} className="btn btn-ghost btn-xs">Quitar 3D</button>}
           <input type="file" accept=".glb" onChange={(e) => upload(e.target.files, "glb")} className="text-xs" />
         </div>
-        {f.model3dUrl && <div className="h-44 overflow-hidden rounded-lg border bg-[#eef1f6]"><ModelViewer src={f.model3dUrl} alt={f.name || "Vista previa"} /></div>}
+        {f.model3dUrl && <div className="h-44 overflow-hidden rounded-lg border bg-slate-100"><ModelViewer src={f.model3dUrl} alt={f.name || "Vista previa"} /></div>}
         <p className="text-xs text-slate-500">{up || (!initial.id && "Guarda el producto para poder generarlo.")}</p>
       </div></L>
       <L t="Especificaciones (una por línea: Medida: 16 pulgadas)"><textarea rows={4} className={i} value={specs} onChange={(e) => setSpecs(e.target.value)} /></L>
@@ -75,6 +76,6 @@ export default function ProductForm({ initial = EMPTY, categories, brands }: { i
       <div className="md:col-span-2"><L t="Variantes (opcional; una por línea: SKU;Nombre;Precio (vacío = el del producto);Existencias). Con variantes, las existencias del producto son la suma de ellas."><textarea rows={4} className={`${i} font-mono`} value={variants} onChange={(e) => setVariants(e.target.value)} placeholder="LLA-16-R;Rojo 16 pulgadas;45;4" /></L></div>
       <label className="flex gap-2 text-sm"><input type="checkbox" checked={f.featured} onChange={(e) => set("featured", e.target.checked)} />Destacado en portada</label>
       <label className="flex gap-2 text-sm"><input type="checkbox" checked={f.active} onChange={(e) => set("active", e.target.checked)} />Visible en la tienda</label>
-      <div className="md:col-span-2 space-y-2">{err && <p className="text-sm text-red-600">{err}</p>}<button disabled={busy} onClick={save} className="rounded bg-navy px-6 py-2 font-semibold text-white disabled:opacity-50">{busy ? "Guardando…" : "Guardar producto"}</button></div>
+      <div className="md:col-span-2 space-y-2">{err && <p className="text-sm text-red-600">{err}</p>}<button disabled={busy} onClick={save} className="btn btn-primary">{busy ? "Guardando…" : "Guardar producto"}</button></div>
     </div>);
 }
