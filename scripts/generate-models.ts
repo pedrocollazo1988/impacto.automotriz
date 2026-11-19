@@ -6,6 +6,7 @@ import { buildModelGLB } from "../src/lib/glb";
 import { formaDe } from "../src/lib/shapes";
 
 const OUT = path.join(process.cwd(), "public", "models");
+const MANIFIESTO = path.join(process.cwd(), "src", "lib", "model-slugs.ts");
 
 // SKU y nombre de cada producto del catálogo demo (mantener alineado con prisma/seed.ts).
 const CATALOGO: [string, string][] = [
@@ -66,12 +67,16 @@ async function main() {
   await Promise.all(previos.map((f) => fs.unlink(path.join(OUT, f))));
 
   let n = 0;
+  const slugs: string[] = [];
   for (const [sku, nombre] of CATALOGO) {
     const glb = buildModelGLB({ piezas: formaDe(sku, nombre), nombre });
     const slug = sku.toLowerCase();
     await fs.writeFile(path.join(OUT, `${slug}.glb`), glb);
+    slugs.push(slug);
     n++;
   }
+  // El visor solo debe pedir modelos que existan; esta lista la consume urlModelo().
+  await fs.writeFile(MANIFIESTO, `// Generado por scripts/generate-models.ts. No editar a mano.\nexport const SLUGS_MODELO: ReadonlySet<string> = new Set(${JSON.stringify(slugs.sort(), null, 2)});\n`);
   console.log(`Modelos 3D generados: ${n} en public/models/`);
 }
 
