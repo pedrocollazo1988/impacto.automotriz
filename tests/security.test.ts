@@ -22,3 +22,21 @@ describe("firma de notificación Tropipay", () => {
     expect(validNotification({ bankOrderCode: "BANK1", originalCurrencyAmount: 2500 })).toBe(false);
   });
 });
+
+describe("configuración de sesiones (APP_SECRET)", () => {
+  it("las sesiones de cliente y de panel fallan si falta APP_SECRET", async () => {
+    const { assertCustomerAuthConfigured } = await import("@/lib/customer-auth");
+    const { assertStaffAuthConfigured } = await import("@/lib/auth");
+    const prev = process.env.APP_SECRET;
+    try {
+      delete process.env.APP_SECRET;
+      expect(() => assertCustomerAuthConfigured()).toThrow(/APP_SECRET/);
+      expect(() => assertStaffAuthConfigured()).toThrow(/APP_SECRET/);
+      process.env.APP_SECRET = "clave-larga";
+      expect(() => assertCustomerAuthConfigured()).not.toThrow();
+      expect(() => assertStaffAuthConfigured()).not.toThrow();
+    } finally {
+      if (prev === undefined) delete process.env.APP_SECRET; else process.env.APP_SECRET = prev;
+    }
+  });
+});

@@ -5,3 +5,9 @@ node_modules
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+
+# archivos subidos en local (en producción usa Vercel Blob)
+uploads
+
+# memoria local del agente
+.openhands/

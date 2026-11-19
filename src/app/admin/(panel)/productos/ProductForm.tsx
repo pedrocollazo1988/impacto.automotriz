@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Icon from "@/components/brand/Icon";
+import ModelViewer from "@/components/ModelViewer";
 
 export type PInit = { id?: number; sku: string; name: string; description: string; priceUsd: number; compareAtUsd: number | null; stock: number; lowStockAt: number; images: string[];
   variants: { sku: string; name: string; priceUsd: number | null; stock: number }[]; model3dUrl: string | null; specs: Record<string, string> | null; featured: boolean; active: boolean; categoryName: string; brandName: string; fits: { make: string; model: string; yearFrom: number; yearTo: number }[] };
@@ -19,6 +21,16 @@ export default function ProductForm({ initial = EMPTY, categories, brands }: { i
   };
   const [fits, setFits] = useState(initial.fits.map((x) => `${x.make};${x.model};${x.yearFrom};${x.yearTo}`).join("\n"));
   const set = <K extends keyof PInit>(k: K, v: PInit[K]) => setF((p) => ({ ...p, [k]: v }));
+
+  const gen3d = async () => {
+    if (!initial.id) return setErr("Guarda el producto primero para generar su modelo 3D");
+    setUp("Generando modelo 3D…"); setErr("");
+    try {
+      const r = await fetch(`/api/admin/products/${initial.id}/model3d`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ imageIndex: 0 }) });
+      const j = await r.json(); if (!r.ok) throw new Error(j.error ?? "No se pudo generar");
+      set("model3dUrl", j.url); setUp("Modelo 3D listo ✓");
+    } catch (e) { setUp(""); setErr(e instanceof Error ? e.message : "Error al generar el 3D"); }
+  };
 
   const save = async () => {
     setBusy(true); setErr("");
@@ -48,7 +60,16 @@ export default function ProductForm({ initial = EMPTY, categories, brands }: { i
       <L t="Avisar cuando queden"><input type="number" className={i} value={f.lowStockAt} onChange={(e) => set("lowStockAt", Number(e.target.value))} /></L>
       <div className="md:col-span-2"><L t="Descripción"><textarea rows={3} className={i} value={f.description} onChange={(e) => set("description", e.target.value)} /></L></div>
       <L t="Fotos (URL por línea; la primera es la principal)"><div className="space-y-1"><textarea rows={4} className={`${i} font-mono`} value={images} onChange={(e) => setImages(e.target.value)} /><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => upload(e.target.files, "img")} className="text-xs" /></div></L>
-      <L t="Modelo 3D (archivo .glb)"><div className="space-y-1"><input className={i} value={f.model3dUrl ?? ""} onChange={(e) => set("model3dUrl", e.target.value)} /><input type="file" accept=".glb" onChange={(e) => upload(e.target.files, "glb")} className="text-xs" /><p className="text-xs text-slate-500">{up}</p></div></L>
+      <L t="Modelo 3D (archivo .glb)"><div className="space-y-2">
+        <input className={i} value={f.model3dUrl ?? ""} onChange={(e) => set("model3dUrl", e.target.value)} placeholder="Pega una URL .glb o genera uno desde la foto" />
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={gen3d} className="rounded bg-navy px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" disabled={!initial.id}><Icon name="cube" size={12} /> Generar 3D desde la foto</button>
+          {f.model3dUrl && <button type="button" onClick={() => set("model3dUrl", null)} className="rounded border px-3 py-1.5 text-xs">Quitar 3D</button>}
+          <input type="file" accept=".glb" onChange={(e) => upload(e.target.files, "glb")} className="text-xs" />
+        </div>
+        {f.model3dUrl && <div className="h-44 overflow-hidden rounded-lg border bg-[#eef1f6]"><ModelViewer src={f.model3dUrl} alt={f.name || "Vista previa"} /></div>}
+        <p className="text-xs text-slate-500">{up || (!initial.id && "Guarda el producto para poder generarlo.")}</p>
+      </div></L>
       <L t="Especificaciones (una por línea: Medida: 16 pulgadas)"><textarea rows={4} className={i} value={specs} onChange={(e) => setSpecs(e.target.value)} /></L>
       <L t="Compatibilidad (una por línea: Marca;Modelo;desde;hasta)"><textarea rows={4} className={`${i} font-mono`} value={fits} onChange={(e) => setFits(e.target.value)} /></L>
       <div className="md:col-span-2"><L t="Variantes (opcional; una por línea: SKU;Nombre;Precio (vacío = el del producto);Existencias). Con variantes, las existencias del producto son la suma de ellas."><textarea rows={4} className={`${i} font-mono`} value={variants} onChange={(e) => setVariants(e.target.value)} placeholder="LLA-16-R;Rojo 16 pulgadas;45;4" /></L></div>

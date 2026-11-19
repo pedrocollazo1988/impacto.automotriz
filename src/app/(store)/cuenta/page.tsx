@@ -5,30 +5,94 @@ import AuthForm from "@/components/AuthForm";
 import GarageManager from "@/components/GarageManager";
 import ProductCard from "@/components/ProductCard";
 import VerifyBanner from "@/components/VerifyBanner";
+import Icon from "@/components/brand/Icon";
 import LogoutButton from "./LogoutButton";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Mi cuenta", robots: { index: false } };
 
-const L: Record<string, string> = { PENDING_PAYMENT: "Pendiente de pago", PAID: "Pagado", PREPARING: "En preparación", SHIPPED: "Enviado", DELIVERED: "Entregado", CANCELED: "Cancelado" };
+const L: Record<string, [string, string]> = {
+  PENDING_PAYMENT: ["Pendiente de pago", "bg-amber-100 text-amber-700"],
+  PAID: ["Pagado", "bg-blue-100 text-blue-700"],
+  PREPARING: ["En preparación", "bg-indigo-100 text-indigo-700"],
+  SHIPPED: ["Enviado", "bg-violet-100 text-violet-700"],
+  DELIVERED: ["Entregado", "bg-green-100 text-green-700"],
+  CANCELED: ["Cancelado", "bg-slate-200 text-slate-600"],
+};
+
 export default async function Cuenta({ searchParams }: { searchParams: Promise<{ verificado?: string; error?: string }> }) {
   const sp = await searchParams;
   const me = await getCustomer();
-  if (!me) return <div className="space-y-3">{sp.error && <p className="mx-auto max-w-sm rounded bg-red-50 p-3 text-sm text-red-700">No se pudo iniciar sesión con Google. Inténtalo de nuevo.</p>}<AuthForm google={!!process.env.GOOGLE_CLIENT_ID} /></div>;
+  if (!me) return (
+    <div className="container-x py-12">
+      {sp.error && <p className="mx-auto mb-4 max-w-md rounded-xl bg-red-50 p-3 text-sm text-red-700">No se pudo iniciar sesión con Google. Inténtalo de nuevo.</p>}
+      <div className="grid items-start gap-8 lg:grid-cols-2">
+        <div>
+          <span className="eyebrow">Tu cuenta</span>
+          <h1 className="mt-2 font-display text-3xl font-extrabold text-navy">Bienvenido de nuevo</h1>
+          <p className="mt-3 text-slate-500">Inicia sesión para seguir tus pedidos, guardar tu garaje, tu lista de deseos y valorar los productos que compres.</p>
+          <ul className="mt-6 space-y-3 text-sm text-slate-600">
+            {["Sigue el estado de tus pedidos", "Guarda tus vehículos y ve piezas compatibles", "Lista de deseos y comparaciones", "Historial de compras y comprobantes"].map((t) => (
+              <li key={t} className="flex items-center gap-2"><Icon name="check" size={16} className="text-[color:var(--color-ok)]" /> {t}</li>
+            ))}
+          </ul>
+        </div>
+        <AuthForm google={!!process.env.GOOGLE_CLIENT_ID} />
+      </div>
+    </div>
+  );
   const [orders, garage, wish] = await Promise.all([
     prisma.order.findMany({ where: { customerId: me.id }, orderBy: { id: "desc" }, take: 20 }),
     prisma.garageVehicle.findMany({ where: { customerId: me.id } }),
     prisma.wishlistItem.findMany({ where: { customerId: me.id }, include: { product: true } }),
   ]);
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between"><h1 className="text-2xl font-bold text-navy">Hola, {me.name}</h1><LogoutButton /></div>
-      {sp.verificado === "1" && <p className="rounded bg-green-50 p-3 text-sm text-green-700">¡Correo confirmado!</p>}
-      {sp.verificado === "0" && <p className="rounded bg-red-50 p-3 text-sm text-red-700">El enlace de confirmación no es válido o venció.</p>}
-      {!me.emailVerified && <VerifyBanner />}
-      <section><h2 className="mb-2 font-semibold">Mis pedidos</h2>
-        {orders.length ? <ul className="divide-y rounded-lg border text-sm">{orders.map((o) => <li key={o.id} className="flex justify-between p-3"><Link className="text-navy underline" href={`/pedido/${o.id}`}>Pedido #{o.number}</Link><span>{Number(o.totalUsd).toFixed(2)} USD · {L[o.status]}</span></li>)}</ul> : <p className="text-sm text-slate-500">Aún no tienes pedidos.</p>}</section>
-      <section><h2 className="mb-2 font-semibold">Mi garaje</h2><GarageManager vehicles={garage} /></section>
-      <section><h2 className="mb-2 font-semibold">Lista de deseos</h2>
-        {wish.length ? <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{wish.map((w) => <ProductCard key={w.id} p={w.product} />)}</div> : <p className="text-sm text-slate-500">Guarda productos con el botón ♡ de cada ficha.</p>}</section>
-    </div>);
+    <div className="container-x py-8">
+      <div className="card relative overflow-hidden p-6">
+        <div aria-hidden className="absolute inset-0 blueprint-dark" />
+        <div className="relative flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[color:var(--color-navy)] to-[color:var(--color-accent)] font-display text-xl font-extrabold text-white">{me.name.slice(0, 1)}</span>
+            <div><h1 className="font-display text-2xl font-extrabold text-navy">Hola, {me.name.split(" ")[0]}</h1><p className="text-sm text-slate-500">{me.email}</p></div>
+          </div>
+          <LogoutButton />
+        </div>
+      </div>
+      <div className="mt-4 space-y-3">
+        {sp.verificado === "1" && <p className="rounded-xl bg-green-50 p-3 text-sm text-green-700">¡Correo confirmado!</p>}
+        {sp.verificado === "0" && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">El enlace de confirmación no es válido o venció.</p>}
+        {!me.emailVerified && <VerifyBanner />}
+      </div>
+
+      <section className="mt-8">
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="box" size={18} /> Mis pedidos</h2>
+        {orders.length ? (
+          <div className="mt-4 space-y-3">
+            {orders.map((o) => {
+              const [label, cls] = L[o.status] ?? [o.status, "bg-slate-100 text-slate-600"];
+              return (
+                <Link key={o.id} href={`/pedido/${o.id}`} className="card card-hover flex flex-wrap items-center gap-4 p-4">
+                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-accent-deep)]"><Icon name="box" size={20} /></span>
+                  <div className="min-w-0 flex-1"><p className="font-semibold text-slate-800">Pedido #{o.number}</p><p className="text-xs text-slate-400">{o.createdAt.toLocaleDateString("es-CU")}</p></div>
+                  <span className={`badge ${cls}`}>{label}</span>
+                  <span className="font-display font-extrabold text-navy">{Number(o.totalUsd).toFixed(2)} USD</span>
+                  <Icon name="chevronRight" size={18} className="text-slate-300" />
+                </Link>
+              );
+            })}
+          </div>
+        ) : <p className="mt-3 text-sm text-slate-500">Aún no tienes pedidos.</p>}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="car" size={18} /> Mi garaje</h2>
+        <div className="mt-4"><GarageManager vehicles={garage} /></div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="heart" size={18} /> Lista de deseos</h2>
+        {wish.length ? <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">{wish.map((w) => <ProductCard key={w.id} p={w.product} />)}</div>
+          : <p className="mt-3 text-sm text-slate-500">Guarda productos con el botón ♡ de cada ficha.</p>}
+      </section>
+    </div>
+  );
 }

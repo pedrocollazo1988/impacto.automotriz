@@ -26,10 +26,17 @@ export const SESSION_COOKIE = "ia_admin";
 const sig = (v: string) => crypto.createHmac("sha256", process.env.APP_SECRET ?? "").update(`staff:${v}`).digest("hex");
 const safeEq = (a: string, b: string) => { const x = Buffer.from(a), y = Buffer.from(b); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 const sha = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
-export const sessionToken = (id: string) => { const v = `${id}.${Date.now() + 8 * 3600_000}`; return `${v}.${sig(v)}`; };
+export const sessionToken = (id: string) => {   const v = `${id}.${Date.now() + 8 * 3600_000}`; return `${v}.${sig(v)}`; };
+
+// Igual que en las sesiones de cliente: sin APP_SECRET la cookie se firma con
+// clave vacía y luego no se puede validar. Mejor fallar al crear la sesión.
+export function assertStaffAuthConfigured() {
+  if (!process.env.APP_SECRET) throw new HttpError(500, "El servidor no tiene configurada APP_SECRET: el panel no funciona hasta definirla.");
+}
 
 // El primer administrador se crea al iniciar sesión con ADMIN_EMAIL + ADMIN_PASSWORD (solo si no hay equipo aún).
 export async function loginStaff(emailIn: string, password: string) {
+  assertStaffAuthConfigured();
   const email = emailIn.trim().toLowerCase();
   let staff = await prisma.staffUser.findUnique({ where: { email } });
   if (!staff && (await prisma.staffUser.count()) === 0 && process.env.ADMIN_EMAIL?.toLowerCase() === email && process.env.ADMIN_PASSWORD && safeEq(sha(password), sha(process.env.ADMIN_PASSWORD)))

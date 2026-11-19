@@ -15,15 +15,23 @@ const KINDS = [
 export const uploadDir = () => path.resolve(process.env.UPLOAD_DIR ?? "./uploads");
 
 // Con BLOB_READ_WRITE_TOKEN guarda en Vercel Blob; si no, en disco (UPLOAD_DIR, requiere servidor con disco persistente).
+async function store(name: string, buf: Buffer, mime: string) {
+  if (process.env.BLOB_READ_WRITE_TOKEN) return (await put(`productos/${name}`, buf, { access: "public", contentType: mime })).url;
+  await fs.mkdir(uploadDir(), { recursive: true });
+  await fs.writeFile(path.join(uploadDir(), name), buf);
+  return `/media/${name}`;
+}
+
 export async function saveUpload(file: File) {
   const buf = Buffer.from(await file.arrayBuffer());
   const kind = KINDS.find((k) => k.test(buf));
   if (!kind) throw new HttpError(415, "Formato no admitido (usa JPG, PNG, WebP o GLB)");
   if (buf.length > kind.max * 1024 * 1024) throw new HttpError(413, `El archivo supera ${kind.max} MB`);
-  const name = `${crypto.randomUUID()}.${kind.ext}`;
-  if (process.env.BLOB_READ_WRITE_TOKEN) return (await put(`productos/${name}`, buf, { access: "public", contentType: kind.mime })).url;
-  await fs.mkdir(uploadDir(), { recursive: true });
-  await fs.writeFile(path.join(uploadDir(), name), buf);
-  return `/media/${name}`;
+  return store(`${crypto.randomUUID()}.${kind.ext}`, buf, kind.mime);
+}
+
+// Guarda un modelo .glb generado por el servidor (no pasa por la validación de File).
+export async function saveModel(buf: Buffer) {
+  return store(`${crypto.randomUUID()}.glb`, buf, MIME.glb);
 }
 export const MIME: Record<string, string> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp", glb: "model/gltf-binary" };

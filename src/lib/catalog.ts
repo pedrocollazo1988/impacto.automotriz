@@ -2,6 +2,25 @@ import { prisma } from "./prisma";
 
 export const slugify = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 
+// Búsqueda insensible a acentos (español: "bateria" debe encontrar "Batería").
+// Usa translate() de Postgres para plegar los acentos; no requiere la extensión unaccent.
+const ACCENTS = "áàäâãåéèëêíìïîóòöôõúùüûñçýÿ";
+const FOLDED = "aaaaaaeeeeiiiiooooouuuuncyy";
+
+export async function searchProductIds(term: string): Promise<number[]> {
+  const q = `%${term.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+  const rows = await prisma.$queryRawUnsafe<{ id: number }[]>(
+    `SELECT id FROM "Product"
+     WHERE active = true AND (
+       translate(lower(name), $1, $2) LIKE translate(lower($3), $1, $2)
+       OR translate(lower(sku), $1, $2) LIKE translate(lower($3), $1, $2)
+       OR translate(lower(coalesce(description, '')), $1, $2) LIKE translate(lower($3), $1, $2)
+     )`,
+    ACCENTS, FOLDED, q,
+  );
+  return rows.map((r) => r.id);
+}
+
 export type ProductInput = {
   sku: string; name: string; slug?: string; description?: string; priceUsd: number; compareAtUsd?: number | null; stock: number; lowStockAt?: number;
   images?: string[]; model3dUrl?: string | null; specs?: Record<string, string> | null; featured?: boolean; active?: boolean;

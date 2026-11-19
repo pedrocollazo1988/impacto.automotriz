@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Icon from "@/components/brand/Icon";
 
 type P = { id: number; slug: string; name: string; priceUsd: number; inStock: boolean; brand: string | null; category: string; specs: Record<string, string>; fits: string[] };
+
 export default function Comparar() {
   const [ps, setPs] = useState<P[] | null>(null);
   useEffect(() => {
@@ -11,17 +13,49 @@ export default function Comparar() {
     fetch("/api/compare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids }) }).then((r) => r.json()).then((d) => setPs(Array.isArray(d) ? d : []));
   }, []);
   const remove = (id: number) => { const l = (JSON.parse(localStorage.getItem("compare") ?? "[]") as number[]).filter((x) => x !== id); localStorage.setItem("compare", JSON.stringify(l)); setPs((p) => p?.filter((x) => x.id !== id) ?? []); };
-  if (ps === null) return <p>Cargando…</p>;
-  if (!ps.length) return <p>No hay productos para comparar. Usa el botón «Comparar» en la ficha de cada producto. <Link className="text-navy underline" href="/catalogo">Ver catálogo</Link></p>;
+
+  if (ps === null) return <div className="container-x py-16"><p className="text-sm text-slate-400">Cargando comparación…</p></div>;
+  if (!ps.length) return (
+    <div className="container-x py-16">
+      <div className="card mx-auto grid max-w-md place-items-center p-10 text-center">
+        <span className="grid h-16 w-16 place-items-center rounded-2xl bg-slate-100 text-slate-400"><Icon name="compare" size={30} /></span>
+        <h1 className="mt-4 font-display text-xl font-bold text-navy">Nada que comparar</h1>
+        <p className="mt-1 text-sm text-slate-500">Usa el botón «Comparar» en la ficha de cada producto para verlos lado a lado.</p>
+        <Link href="/catalogo" className="btn btn-primary mt-5">Ver catálogo</Link>
+      </div>
+    </div>
+  );
   const keys = [...new Set(ps.flatMap((p) => Object.keys(p.specs)))];
-  const row = (label: string, f: (p: P) => React.ReactNode) => <tr className="border-t"><th className="py-2 pr-3 text-left font-medium text-slate-600">{label}</th>{ps.map((p) => <td key={p.id} className="py-2 pr-3 align-top">{f(p)}</td>)}</tr>;
+  const row = (label: string, f: (p: P) => React.ReactNode, first = false) => (
+    <tr className={first ? "" : "border-t border-slate-100"}>
+      <th className="w-40 py-3 pr-4 text-left align-top text-xs font-semibold uppercase tracking-wider text-slate-400">{label}</th>
+      {ps.map((p) => <td key={p.id} className="py-3 pr-4 align-top text-sm text-slate-700">{f(p)}</td>)}
+    </tr>
+  );
   return (
-    <div className="space-y-4 overflow-x-auto"><h1 className="text-2xl font-bold text-navy">Comparar productos</h1>
-      <table className="w-full min-w-[640px] text-sm"><tbody>
-        {row("Producto", (p) => <><Link className="font-semibold text-navy underline" href={`/producto/${p.slug}`}>{p.name}</Link><br /><button className="text-xs text-red-600" onClick={() => remove(p.id)}>Quitar</button></>)}
-        {row("Precio", (p) => <b>{p.priceUsd.toFixed(2)} USD</b>)}{row("Marca", (p) => p.brand ?? "—")}{row("Categoría", (p) => p.category)}
-        {row("Disponibilidad", (p) => (p.inStock ? "Disponible" : "Agotado"))}
-        {keys.map((k) => row(k, (p) => p.specs[k] ?? "—"))}
-        {row("Compatible con", (p) => (p.fits.length ? p.fits.map((f) => <div key={f}>{f}</div>) : "—"))}
-      </tbody></table></div>);
+    <div className="container-x py-8">
+      <div className="mb-6 flex items-end justify-between gap-4">
+        <div><span className="eyebrow">Comparador</span><h1 className="mt-1 font-display text-3xl font-extrabold text-navy">Comparar productos</h1></div>
+        <Link href="/catalogo" className="btn btn-ghost hidden sm:inline-flex">Seguir comprando</Link>
+      </div>
+      <div className="card overflow-x-auto p-4">
+        <table className="w-full min-w-[640px]"><tbody>
+          {row("Producto", (p) => (
+            <div className="flex flex-col gap-1.5">
+              <Link className="font-semibold text-navy link-underline" href={`/producto/${p.slug}`}>{p.name}</Link>
+              <button className="flex w-fit items-center gap-1 text-xs text-red-600 hover:underline" onClick={() => remove(p.id)}><Icon name="trash" size={12} /> Quitar</button>
+            </div>
+          ), true)}
+          {row("Precio", (p) => <span className="font-display text-lg font-extrabold text-navy">{p.priceUsd.toFixed(2)} USD</span>)}
+          {row("Marca", (p) => p.brand ?? "—")}
+          {row("Categoría", (p) => <span className="badge bg-slate-100 text-slate-600">{p.category}</span>)}
+          {row("Disponibilidad", (p) => p.inStock
+            ? <span className="flex items-center gap-1.5 text-[color:var(--color-ok)]"><Icon name="check" size={14} /> Disponible</span>
+            : <span className="text-red-600">Agotado</span>)}
+          {keys.map((k) => row(k, (p) => p.specs[k] ?? "—"))}
+          {row("Compatible con", (p) => p.fits.length ? <div className="flex flex-col gap-1">{p.fits.map((f) => <span key={f} className="chip w-fit">{f}</span>)}</div> : "—")}
+        </tbody></table>
+      </div>
+    </div>
+  );
 }
