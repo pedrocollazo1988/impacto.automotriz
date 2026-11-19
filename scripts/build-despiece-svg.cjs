@@ -52,8 +52,24 @@ const callout = (n, label, ax, ay, lx, ly) => `
 
 const note = (t, x, y) => `<text x="${x}" y="${y}" font-size="11.5" fill="${MID}" font-family="ui-monospace, monospace">${t}</text>`;
 
-const svg = (title, sub, body) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${title}">${defs}${frame(title, sub)}${body}\n</svg>\n`;
+// Cada lámina se dibuja y luego se encaja en el área útil: así, cuando se quitan
+// piezas, el dibujo no queda arrinconado con medio lienzo vacío.
+const AREA = { x: 60, y: 112, w: 1080, h: 640 };
+const FIT = {
+  propulsion: { s: 1.45, tx: -10.4, ty: -196.4 },
+  electronica: { s: 1.102, tx: -72.2, ty: -100.3 },
+  ruedas: { s: 1.309, tx: -80.0, ty: -93.1 },
+  suspension: { s: 1.383, tx: -186.2, ty: -105.6 },
+  frenos: { s: 1.406, tx: -240.8, ty: -171.3 },
+  carroceria: { s: 1.08, tx: -48.0, ty: 8.4 },
+  mandos: { s: 1.456, tx: -158.6, ty: -77.2 },
+};
+
+const svg = (title, sub, body, key) => {
+  const t = FIT[key];
+  const g = t && t !== 1 ? `<g id="sheet-body" transform="translate(${t.tx} ${t.ty}) scale(${t.s})">${body}</g>` : `<g id="sheet-body">${body}</g>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${title}">${defs}${frame(title, sub)}${g}\n</svg>\n`;
+};
 
 /* ───────── 1 · PROPULSIÓN ───────── */
 const propulsion = `
@@ -83,15 +99,6 @@ const propulsion = `
     <text x="580" y="600" font-size="12" fill="${MID}" text-anchor="middle" font-family="ui-monospace, monospace">DIFERENCIAL · REDUCTORA</text>
   </g>
 
-  <!-- eje trasero, explosionado a la derecha -->
-  <g id="parte-04">
-    <path d="M760 468H1010" stroke="${INK}" stroke-width="11" stroke-linecap="round"/>
-    <circle cx="760" cy="468" r="10" fill="${PAPER}" stroke="${INK}" stroke-width="3"/>
-    <circle cx="1010" cy="468" r="10" fill="${PAPER}" stroke="${INK}" stroke-width="3"/>
-    <path d="M790 440h190" stroke="${MID}" stroke-width="1.6" stroke-dasharray="6 5"/>
-    <text x="885" y="432" font-size="11" fill="${MID}" text-anchor="middle" font-family="ui-monospace, monospace">EJE</text>
-    <text x="885" y="524" font-size="11" fill="${MID}" text-anchor="middle" font-family="ui-monospace, monospace">980 mm entre bujes</text>
-  </g>
 
   <!-- selector de fuerza -->
   <g id="parte-03">
@@ -105,7 +112,6 @@ const propulsion = `
   ${callout(1, "Motor sin escobillas", 238, 468, 150, 300)}
   ${callout(2, "Eje con diferencial", 580, 468, 640, 690)}
   ${callout(3, "Selector de fuerza", 452, 280, 340, 190)}
-  ${callout(4, "Eje trasero", 885, 468, 1010, 340)}
   ${note("ACOPLE DIRECTO AL DIFERENCIAL · CAJA REDUCTORA DE DOBLE FUERZA", 40, 762)}
 `;
 
@@ -204,27 +210,7 @@ const ruedas = `
     <text x="820" y="556" font-size="11" fill="${MID}" text-anchor="middle" font-family="ui-monospace, monospace">ARO 12\"</text>
   </g>
 
-  <!-- 4 · radios -->
-  <g id="parte-04">
-    ${Array.from({ length: 8 }, (_, i) => {
-      const a = (i / 8) * Math.PI * 2;
-      const x1 = 250 + Math.cos(a) * 100, y1 = 660 + Math.sin(a) * 100;
-      const x2 = 250 + Math.cos(a) * 34, y2 = 660 + Math.sin(a) * 34;
-      return `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="${INK}" stroke-width="3"/>`;
-    }).join("")}
-    <circle cx="250" cy="660" r="30" fill="none" stroke="${INK}" stroke-width="3"/>
-    <circle cx="250" cy="660" r="100" fill="none" stroke="${MID}" stroke-width="1.4" stroke-dasharray="7 6"/>
-    <text x="250" y="792" font-size="11" fill="${MID}" text-anchor="middle" font-family="ui-monospace, monospace">36 RADIOS</text>
-  </g>
 
-  <!-- 5 · eje y bujes -->
-  <g id="parte-05">
-    <path d="M500 660H900" stroke="${INK}" stroke-width="10" stroke-linecap="round"/>
-    <rect x="620" y="634" width="96" height="52" rx="8" fill="url(#steel)" stroke="${INK}" stroke-width="3"/>
-    <circle cx="668" cy="660" r="14" fill="${PAPER}" stroke="${INK}" stroke-width="2.4"/>
-    <circle cx="540" cy="660" r="8" fill="${INK}"/><circle cx="860" cy="660" r="8" fill="${INK}"/>
-    <text x="700" y="724" font-size="11" fill="${MID}" text-anchor="middle" font-family="ui-monospace, monospace">EJE · 4/5 BIRLOS</text>
-  </g>
 
   <!-- detalle de perfil -->
   <g transform="translate(940,600)" opacity=".9">
@@ -236,8 +222,6 @@ const ruedas = `
   ${callout(1, "Neumático reforzado", 250, 264, 250, 150)}
   ${callout(2, "Cámara de aire", 540, 392, 700, 170)}
   ${callout(3, "Rin metálico 12\"", 820, 392, 1010, 250)}
-  ${callout(4, "Radios", 250, 660, 170, 740)}
-  ${callout(5, "Eje y bujes", 700, 660, 780, 770)}
 `;
 
 /* ───────── 4 · SUSPENSIÓN ───────── */
@@ -346,15 +330,9 @@ const carroceria = `
     <path d="M326 250V140h150v110" fill="#e8f1fb" stroke="${INK}" stroke-width="2.4" opacity=".9"/>
     <text x="401" y="200" font-size="10.5" fill="${MID}" text-anchor="middle" font-family="ui-monospace, monospace">PARABRISAS</text>
   </g>
-  <!-- chasis -->
-  <g id="parte-04">
-    <path d="M200 560h800" stroke="${INK}" stroke-width="12" stroke-linecap="round"/>
-    <path d="M240 620h720" stroke="${MID}" stroke-width="5" stroke-dasharray="10 7"/>
-  </g>
   ${callout(1, "Cama / tolva de carga", 600, 400, 1010, 330)}
   ${callout(2, "Asientos y escalera", 495, 132, 300, 120)}
   ${callout(3, "Parabrisas y techo", 401, 200, 700, 130)}
-  ${callout(4, "Chasis", 700, 560, 700, 700)}
 `;
 
 /* ───────── 7 · MANDOS ───────── */
@@ -385,23 +363,9 @@ const mandos = `
     <path d="M840 310l24 -18" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>
     <text x="840" y="392" font-size="11" fill="${MID}" text-anchor="middle" font-family="ui-monospace, monospace">2 LLAVES</text>
   </g>
-  <!-- manillar -->
-  <g id="parte-04">
-    <path d="M120 470q240 -110 480 0" fill="none" stroke="${INK}" stroke-width="11" stroke-linecap="round"/>
-    <circle cx="120" cy="470" r="15" fill="${MID}"/><circle cx="600" cy="470" r="15" fill="${MID}"/>
-    <text x="360" y="530" font-size="11.5" fill="${MID}" text-anchor="middle" font-family="ui-monospace, monospace">MANILLAR</text>
-  </g>
-  <!-- interruptores -->
-  <g id="parte-05">
-    <rect x="700" y="450" width="130" height="60" rx="12" fill="${PAPER}" stroke="${INK}" stroke-width="2.6"/>
-    <circle cx="735" cy="480" r="12" fill="#1f7a3f"/><circle cx="765" cy="480" r="12" fill="${MID}"/><circle cx="795" cy="480" r="12" fill="#b91c1c"/>
-    <text x="765" y="540" font-size="10.5" fill="${MID}" text-anchor="middle" font-family="ui-monospace, monospace">LUCES · BOCINA</text>
-  </g>
   ${callout(1, "Puño acelerador", 275, 330, 210, 210)}
   ${callout(2, "Display digital", 575, 325, 640, 180)}
   ${callout(3, "Switch de encendido", 840, 310, 1010, 240)}
-  ${callout(4, "Manillar", 360, 400, 300, 620)}
-  ${callout(5, "Interruptores", 765, 480, 900, 620)}
 `;
 
 const files = [
@@ -416,6 +380,6 @@ const files = [
 
 const out = path.join(__dirname, "..", "public", "despiece");
 for (const [file, title, sub, body] of files) {
-  fs.writeFileSync(path.join(out, file), svg(title, sub, body), "utf8");
+  fs.writeFileSync(path.join(out, file), svg(title, sub, body, file.replace(".svg", "")), "utf8");
   console.log("escrito", file);
 }

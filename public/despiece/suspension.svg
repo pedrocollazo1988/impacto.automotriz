@@ -26,7 +26,7 @@
     <text x="1160" y="58" font-size="12" fill="#4a6b96" text-anchor="end" letter-spacing="1.4">KVITOVA · DDS-OD</text>
     <text x="1160" y="80" font-size="11" fill="#8fa6c2" text-anchor="end">LÁMINA 04</text>
   </g>
-  <line x1="40" y1="94" x2="1160" y2="94" stroke="#c9d8ea" stroke-width="1.5"/>
+  <line x1="40" y1="94" x2="1160" y2="94" stroke="#c9d8ea" stroke-width="1.5"/><g id="sheet-body" transform="translate(-186.2 -105.6) scale(1.383)">
   <!-- barras telescópicas -->
   <g id="parte-01">
     <rect x="196" y="196" width="34" height="330" rx="15" fill="url(#steel)" stroke="#0b2a5b" stroke-width="3"/>
@@ -83,5 +83,5 @@
           text-anchor="end">Amortiguadores</text>
   </g>
   <text x="40" y="770" font-size="11.5" fill="#4a6b96" font-family="ui-monospace, monospace">CARGA ÚTIL DE DISEÑO: 500–800 kg · DOBLE CRISTO DELANTERO</text>
-
+</g>
 </svg>
