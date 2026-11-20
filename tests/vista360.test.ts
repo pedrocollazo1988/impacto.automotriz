@@ -51,3 +51,27 @@ describe("fotos360", () => {
     expect(fotos360(null)).toEqual([]);
   });
 });
+
+// La secuencia real del repositorio: si alguien borra o renombra fotogramas, el
+// giro de la ficha se apaga sin avisar y el fallo solo se ve en producción.
+describe("secuencia 360 publicada", () => {
+  it("los tres eléctricos giran con 36 fotogramas", () => {
+    const dir = path.join(process.cwd(), "public", "products", "360");
+    for (const sku of ["te-4001", "te-4002", "te-4003"]) {
+      const f = fotos360(sku);
+      expect(f, `${sku} sin secuencia`).toHaveLength(36);
+      for (const ruta of f) expect(fs.existsSync(path.join(dir, path.basename(ruta)))).toBe(true);
+    }
+    expect(skusConGiro().sort()).toEqual(["TE-4001", "TE-4002", "TE-4003"]);
+  });
+
+  it("cada fotograma es un WebP real y no un fichero vacio", () => {
+    const dir = path.join(process.cwd(), "public", "products", "360");
+    for (const f of fotos360("TE-4001")) {
+      const buf = fs.readFileSync(path.join(dir, path.basename(f)));
+      expect(buf.subarray(0, 4).toString("ascii")).toBe("RIFF");
+      expect(buf.subarray(8, 12).toString("ascii")).toBe("WEBP");
+      expect(buf.length).toBeGreaterThan(500);
+    }
+  });
+});
