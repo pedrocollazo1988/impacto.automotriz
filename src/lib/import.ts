@@ -23,7 +23,16 @@ export async function xlsxToRows(buf: Buffer): Promise<string[][]> {
   return rows;
 }
 
-// Importa filas (cabecera + datos). Columnas: sku, nombre, precio, existencias, categoria, [marca, descripcion, imagenes, modelo3d, destacado, compatibilidad]
+// «Clave: valor|Clave: valor». Los pares incompletos se descartan.
+export function parseSpecs(v: string): Record<string, string> {
+  return Object.fromEntries(
+    v.split("|")
+      .map((x) => x.split(/:(.*)/s).map((t) => t.trim()))
+      .filter(([k, val]) => k && val),
+  );
+}
+
+// Importa filas (cabecera + datos). Columnas: sku, nombre, precio, existencias, categoria, [marca, descripcion, imagenes, modelo3d, destacado, compatibilidad, especificaciones]
 export async function importRows(rows: string[][]) {
   const head = rows[0].map(norm); const col = (r: string[], n: string) => (r[head.indexOf(n)] ?? "").trim();
   for (const need of ["sku", "nombre", "precio", "existencias", "categoria"]) if (!head.includes(need)) throw new Error(`Falta la columna «${need}»`);
@@ -33,9 +42,12 @@ export async function importRows(rows: string[][]) {
       const price = num(col(r, "precio")), stock = Number(col(r, "existencias"));
       if (!col(r, "sku") || !col(r, "nombre") || !col(r, "categoria") || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0) throw new Error("Datos incompletos o inválidos");
       const fits = col(r, "compatibilidad").split("|").filter(Boolean).map((x) => { const [make, model, a, b] = x.split(":").map((t) => t.trim()); if (!make || !model || !+a || !+b) throw new Error(`Compatibilidad inválida «${x}»`); return { make, model, yearFrom: +a, yearTo: +b }; });
+      // Sin pares válidos se omite, para no borrar las que ya tenga la ficha.
+      const specs = parseSpecs(col(r, "especificaciones"));
       const { created: c } = await saveProduct({
         sku: col(r, "sku"), name: col(r, "nombre"), priceUsd: price, stock, categoryName: col(r, "categoria"), brandName: col(r, "marca") || null, description: col(r, "descripcion"),
         images: col(r, "imagenes").split("|").map((u) => u.trim()).filter(Boolean), model3dUrl: col(r, "modelo3d") || null,
+        specs: Object.keys(specs).length ? specs : undefined,
         featured: /^(si|sí|1|true|x)$/i.test(col(r, "destacado")), fits: head.includes("compatibilidad") ? fits : undefined,
       });
       c ? created++ : updated++;
