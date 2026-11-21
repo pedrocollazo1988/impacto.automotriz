@@ -86,7 +86,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
           </div>
           <form action="/catalogo" className="flex items-center gap-2">
             <input type="hidden" name="categoria" value={s.categoria ?? ""} />
-            <select name="orden" defaultValue={s.orden ?? "novedad"} className="input-select min-h-12 w-52 lg:min-h-0">
+            <select name="orden" aria-label="Ordenar productos" defaultValue={s.orden ?? "novedad"} className="input-select min-h-12 w-52 lg:min-h-0">
               {ORDENES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
             <button className="btn btn-ghost min-h-12 lg:min-h-0">Aplicar</button>
@@ -106,7 +106,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
                 {categories.map((c) => (
                   <Link key={c.id} href={link({ categoria: s.categoria === c.slug ? undefined : c.slug })}
                     className={`flex min-h-12 items-center justify-between rounded-lg px-2 py-1.5 transition lg:min-h-0 ${s.categoria === c.slug ? "bg-[color:var(--color-navy)] font-semibold text-white" : "hover:bg-slate-50"}`}>
-                    <span>{c.name}</span><span className={`font-mono text-[10px] ${s.categoria === c.slug ? "text-white/70" : "text-slate-400"}`}>{c._count.products}</span>
+                    <span>{c.name}</span><span className={`font-mono text-[10px] ${s.categoria === c.slug ? "text-white/70" : "text-slate-500"}`}>{c._count.products}</span>
                   </Link>
                 ))}
               </div>

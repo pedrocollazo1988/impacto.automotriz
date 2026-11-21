@@ -94,6 +94,7 @@ export default async function Home() {
 
       {/* ── Valor ── */}
       <section className="container-x mt-4 relative z-10">
+        <h2 className="sr-only">Por qué comprar en Impacto Automotriz</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {VALUE_PROPS.map(([ic, t, d], i) => (
             <div key={t} className={`card p-5 animate-fade-up delay-${i + 1}`}>
