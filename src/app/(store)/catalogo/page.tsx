@@ -67,7 +67,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
 
   const Filter = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="border-t border-slate-100 py-4 first:border-t-0 first:pt-0">
-      <h3 className="mb-2 font-display text-xs font-bold uppercase tracking-wider text-navy">{title}</h3>
+      <h2 className="mb-2 font-display text-xs font-bold uppercase tracking-wider text-navy">{title}</h2>
       {children}
     </div>
   );
