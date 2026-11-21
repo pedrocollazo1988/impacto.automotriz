@@ -25,7 +25,7 @@ export default function Logo({ variant = "dark", size = "md", href = "/", taglin
       </span>
       <span className="flex flex-col leading-none">
         <span className={`font-display font-extrabold tracking-tight ${s.name} ${light ? "text-white" : "text-navy"}`}>
-          IMPACTO<span className={light ? " text-[#8fc2ff]" : " text-[color:var(--color-accent)]"}>·</span>AUTOMOTRIZ
+          IMPACTO<span className={light ? " text-[#f0c98a]" : " text-[color:var(--color-accent)]"}>·</span>AUTOMOTRIZ
         </span>
         {tagline && (
           <span className={`mt-1 font-mono uppercase tracking-[0.28em] ${s.tag} ${light ? "text-white/55" : "text-slate-500"}`}>
