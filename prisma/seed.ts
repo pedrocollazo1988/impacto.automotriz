@@ -137,6 +137,15 @@ async function main() {
     if (fits?.length && !(await prisma.productFit.count({ where: { productId: row.id } })))
       await prisma.productFit.createMany({ data: fits.map(([make, model, yearFrom, yearTo]) => ({ productId: row.id, make, model, yearFrom, yearTo })) });
   }
-  console.log("Seed OK: 16 provincias, 168 municipios, métodos de entrega y catálogo demo.");
+  // Pasarelas de pago: mismas por defecto que el panel, para que el checkout
+  // tenga algo que ofrecer en el primer arranque.
+  const gw = [
+    { key: "TROPIPAY", name: "Tropipay", description: "Tarjeta y saldo Tropipay. Confirmación automática.", kind: "online", enabled: true, sortOrder: 1 },
+    { key: "QVAPAY", name: "QvaPay", description: "Pago con saldo QvaPay. Confirmación automática.", kind: "online", enabled: true, sortOrder: 2 },
+    { key: "TRANSFER", name: "Transferencia bancaria", description: "Transferencia o depósito. Confirmamos el pago a mano.", kind: "manual", enabled: true, sortOrder: 3, instructions: process.env.BANK_INSTRUCTIONS ?? "" },
+    { key: "CASH", name: "Efectivo contra entrega", description: "Pagas al recibir el pedido o al recogerlo en tienda.", kind: "manual", enabled: true, sortOrder: 4 },
+  ];
+  for (const g of gw) await prisma.paymentGateway.upsert({ where: { key: g.key }, update: {}, create: g });
+  console.log("Seed OK: 16 provincias, 168 municipios, métodos de entrega, pasarelas y catálogo demo.");
 }
 main().finally(() => prisma.$disconnect());

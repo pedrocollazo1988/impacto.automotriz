@@ -13,13 +13,20 @@ describe("contraseñas", () => {
 });
 
 describe("firma de notificación Tropipay", () => {
-  beforeEach(() => { process.env.TROPIPAY_CLIENT_ID = "id"; process.env.TROPIPAY_CLIENT_SECRET = "secret"; });
+  // Las credenciales llegan por parámetro (las gestiona el panel), así que la
+  // firma depende de ellas y no de process.env.
+  const creds = { clientId: "id", clientSecret: "secret" };
   it("acepta la firma válida y rechaza cambios de importe", async () => {
     const { validNotification } = await import("@/lib/tropipay");
     const sig = crypto.createHash("sha256").update("BANK1" + "id" + "secret" + "2500").digest("hex");
-    expect(validNotification({ bankOrderCode: "BANK1", originalCurrencyAmount: 2500, signature: sig })).toBe(true);
-    expect(validNotification({ bankOrderCode: "BANK1", originalCurrencyAmount: 100, signature: sig })).toBe(false);
-    expect(validNotification({ bankOrderCode: "BANK1", originalCurrencyAmount: 2500 })).toBe(false);
+    expect(validNotification({ bankOrderCode: "BANK1", originalCurrencyAmount: 2500, signature: sig }, creds)).toBe(true);
+    expect(validNotification({ bankOrderCode: "BANK1", originalCurrencyAmount: 100, signature: sig }, creds)).toBe(false);
+    expect(validNotification({ bankOrderCode: "BANK1", originalCurrencyAmount: 2500 }, creds)).toBe(false);
+  });
+  it("rechaza la firma hecha con otras credenciales", async () => {
+    const { validNotification } = await import("@/lib/tropipay");
+    const sig = crypto.createHash("sha256").update("BANK1" + "id" + "otro-secreto" + "2500").digest("hex");
+    expect(validNotification({ bankOrderCode: "BANK1", originalCurrencyAmount: 2500, signature: sig }, creds)).toBe(false);
   });
 });
 

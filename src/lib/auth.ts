@@ -10,13 +10,13 @@ export class HttpError extends Error {
 }
 
 // ───────── Equipo: roles y permisos ─────────
-export type Perm = "orders" | "products" | "coupons" | "logistics" | "email" | "reports" | "reviews" | "team" | "media";
+export type Perm = "orders" | "products" | "coupons" | "logistics" | "email" | "reports" | "reviews" | "team" | "media" | "payments";
 export type Role = "ADMIN" | "MANAGER" | "SALES" | "WAREHOUSE";
-const ALL: Perm[] = ["orders", "products", "coupons", "logistics", "email", "reports", "reviews", "team", "media"];
+const ALL: Perm[] = ["orders", "products", "coupons", "logistics", "email", "reports", "reviews", "team", "media", "payments"];
 export const ROLE_PERMS: Record<Role, Perm[]> = {
   ADMIN: ALL,
   MANAGER: ALL.filter((p) => p !== "team"),
-  SALES: ["orders", "coupons", "reports", "reviews", "email"],
+  SALES: ["orders", "coupons", "reports", "reviews", "email", "payments"],
   WAREHOUSE: ["products", "orders", "media", "logistics"],
 };
 export type StaffSession = { id: string; name: string; email: string; role: Role };

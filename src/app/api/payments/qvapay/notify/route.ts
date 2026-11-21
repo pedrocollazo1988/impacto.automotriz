@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { invoiceStatus } from "@/lib/qvapay";
+import { porClave } from "@/lib/payment-gateways";
 
 // Webhook de QvaPay: NO se confía en el cuerpo; se vuelve a consultar el estado de la factura y se compara el importe.
 export async function POST(req: Request) {
@@ -8,8 +9,11 @@ export async function POST(req: Request) {
   const order = orderId ? await prisma.order.findUnique({ where: { id: orderId } }) : null;
   if (!order || order.paymentMethod !== "QVAPAY" || !order.providerRef) return new Response("Not found", { status: 404 });
   if (order.paid) return Response.json({ ok: true });
+  const gw = await porClave("QVAPAY");
+  const c = gw?.creds ?? {};
+  if (!gw?.enabled || !c.appId || !c.appSecret) return new Response("Gateway disabled", { status: 503 });
   try {
-    const s = await invoiceStatus(order.providerRef);
+    const s = await invoiceStatus(order.providerRef, { appId: c.appId, appSecret: c.appSecret });
     if (!s.paid) return Response.json({ ok: true, paid: false });
     if (Math.abs(s.amount - Number(order.totalUsd)) > 0.01) return new Response("Amount mismatch", { status: 422 });
     await prisma.order.update({ where: { id: order.id }, data: { paid: true, paidAt: new Date(), status: "PAID" } });

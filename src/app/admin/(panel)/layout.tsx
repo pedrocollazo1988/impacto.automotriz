@@ -7,6 +7,7 @@ const LINKS: [string, string, Perm, string][] = [
   ["/admin/productos", "Productos", "products", "cube"],
   ["/admin/despiece", "Despiece", "products", "layers"],
   ["/admin/cupones", "Cupones", "coupons", "tag"],
+  ["/admin/pagos", "Pagos", "payments", "card"],
   ["/admin/envios", "Entregas y zonas", "logistics", "truck"],
   ["/admin/campanas", "Email marketing", "email", "mail"],
   ["/admin/reportes", "Reportes", "reports", "chart"],
