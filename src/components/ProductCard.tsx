@@ -40,14 +40,14 @@ export default function ProductCard({ p }: { p: CardProduct }) {
         </span>
       </div>
       <div className="flex flex-1 flex-col p-3.5">
-        <span className="eyebrow mb-1 !text-[10px] text-slate-400">{p.category?.name ?? p.brand?.name ?? "Recambio"}</span>
+        <span className="eyebrow mb-1 !text-[10px] text-slate-500">{p.category?.name ?? p.brand?.name ?? "Recambio"}</span>
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-slate-800 transition group-hover:text-navy">{p.name}</h3>
         <div className="mt-auto pt-3">
           <div className="flex items-end gap-2">
             <span className="font-display text-lg font-extrabold text-navy">{Number(p.priceUsd).toFixed(2)} <span className="text-xs font-bold text-slate-500">USD</span></span>
             {off > 0 && <s className="pb-0.5 text-xs text-slate-400">{Number(p.compareAtUsd).toFixed(2)}</s>}
           </div>
-          <p className={`mt-1 flex items-center gap-1 text-xs font-medium ${p.stock > 0 ? "text-[color:var(--color-ok)]" : "text-red-600"}`}>
+          <p className={`mt-1 flex items-center gap-1 text-xs font-medium ${p.stock > 0 ? "text-emerald-700" : "text-red-600"}`}>
             <span className={`inline-block h-1.5 w-1.5 rounded-full ${p.stock > 0 ? "bg-[color:var(--color-ok)]" : "bg-red-500"}`} />
             {p.stock > 0 ? "Disponible" : "Agotado"}
           </p>

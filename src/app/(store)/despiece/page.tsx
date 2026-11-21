@@ -50,7 +50,7 @@ export default async function DespieceIndex() {
                 </div>
                 <div className="text-right">
                   <p className="font-display text-2xl font-extrabold text-navy">{piezas}</p>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-400">piezas</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">piezas</p>
                 </div>
               </div>
               {v.summary && <p className="border-b border-slate-100 p-4 text-sm leading-relaxed text-slate-600">{v.summary}</p>}

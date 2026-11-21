@@ -105,7 +105,7 @@ export default function DespieceViewer({ vehicleSlug, image, pins }: Props) {
 
       <div className="lg:col-span-5">
         {compatible && (
-          <p className="mb-3 flex items-center gap-2 rounded-xl border border-[color:var(--color-ok)]/30 bg-[color:var(--color-ok)]/8 px-3 py-2 text-xs font-semibold text-[color:var(--color-ok)]">
+          <p className="mb-3 flex items-center gap-2 rounded-xl border border-[color:var(--color-ok)]/30 bg-[color:var(--color-ok)]/8 px-3 py-2 text-xs font-semibold text-emerald-700">
             <Icon name="check" size={14} /> Estas piezas corresponden a tu {vehicle?.brand} {vehicle?.model}
           </p>
         )}
@@ -148,7 +148,7 @@ export default function DespieceViewer({ vehicleSlug, image, pins }: Props) {
                     </div>
                     <div className="shrink-0 text-right">
                       <p className="font-display text-base font-extrabold text-navy">{money(prod.priceUsd)} <span className="text-[10px] font-bold text-slate-400">USD</span></p>
-                      <p className={`mt-0.5 text-[10px] font-semibold ${agotado ? "text-red-700" : "text-[color:var(--color-ok)]"}`}>
+                      <p className={`mt-0.5 text-[10px] font-semibold ${agotado ? "text-red-700" : "text-emerald-700"}`}>
                         {agotado ? "Agotado" : `${prod.stock} disp.`}
                       </p>
                       <button

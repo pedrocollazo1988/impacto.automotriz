@@ -120,7 +120,7 @@ export default async function Home() {
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate font-display text-sm font-bold text-navy">{c.name}</span>
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">{c._count.products} productos</span>
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500">{c._count.products} productos</span>
                 </span>
                 <Icon name="chevronRight" size={16} className="ml-auto shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[color:var(--color-accent)]" />
               </Link>

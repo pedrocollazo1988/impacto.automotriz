@@ -50,7 +50,7 @@ export default function Comparar() {
           {row("Marca", (p) => p.brand ?? "—")}
           {row("Categoría", (p) => <span className="badge bg-slate-100 text-slate-600">{p.category}</span>)}
           {row("Disponibilidad", (p) => p.inStock
-            ? <span className="flex items-center gap-1.5 text-[color:var(--color-ok)]"><Icon name="check" size={14} /> Disponible</span>
+            ? <span className="flex items-center gap-1.5 text-emerald-700"><Icon name="check" size={14} /> Disponible</span>
             : <span className="text-red-600">Agotado</span>)}
           {keys.map((k) => row(k, (p) => p.specs[k] ?? "—"))}
           {row("Compatible con", (p) => p.fits.length ? <div className="flex flex-col gap-1">{p.fits.map((f) => <span key={f} className="chip w-fit">{f}</span>)}</div> : "—")}

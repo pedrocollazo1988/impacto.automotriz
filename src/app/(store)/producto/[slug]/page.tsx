@@ -61,7 +61,7 @@ export default async function Producto({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />
 
       <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
-        <Link href="/" className="hover:text-navy">Inicio</Link><Icon name="chevronRight" size={12} />
+        <Link href="/" className="inline-flex min-h-12 items-center hover:text-navy lg:min-h-0">Inicio</Link><Icon name="chevronRight" size={12} />
         <Link href="/catalogo" className="hover:text-navy">Catálogo</Link><Icon name="chevronRight" size={12} />
         <Link href={`/catalogo?categoria=${p.category.slug}`} className="hover:text-navy">{p.category.name}</Link><Icon name="chevronRight" size={12} />
         <span className="text-slate-500">{p.name}</span>
@@ -107,7 +107,7 @@ export default async function Producto({ params }: Props) {
             <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
               <WishlistButton productId={p.id} initial={inWish > 0} />
               <CompareToggle productId={p.id} />
-              {wa && <a className="btn btn-ghost !text-[color:var(--color-ok)]" target="_blank" rel="noopener" href={`https://wa.me/${wa}?text=${encodeURIComponent(`Hola, consulta sobre: ${p.name} (${p.sku})`)}`}><Icon name="whatsapp" size={18} /> Consultar</a>}
+              {wa && <a className="btn btn-ghost !text-emerald-700" target="_blank" rel="noopener" href={`https://wa.me/${wa}?text=${encodeURIComponent(`Hola, consulta sobre: ${p.name} (${p.sku})`)}`}><Icon name="whatsapp" size={18} /> Consultar</a>}
             </div>
           </div>
 

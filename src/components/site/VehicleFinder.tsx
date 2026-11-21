@@ -28,20 +28,20 @@ export default function VehicleFinder() {
         </div>
         <div className="mt-4 space-y-3">
           <div>
-            <label className="eyebrow !text-[10px] text-slate-400">Marca</label>
-            <select className="input-select mt-1" value={make} onChange={(e) => setMake(e.target.value)}>
+            <label htmlFor="vf-marca" className="eyebrow !text-[10px] text-slate-500">Marca</label>
+            <select id="vf-marca" className="input-select mt-1" value={make} onChange={(e) => setMake(e.target.value)}>
               <option value="">Cualquier marca…</option>
               {MAKES.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="eyebrow !text-[10px] text-slate-400">Modelo</label>
-              <input className="input mt-1" placeholder="Corolla…" value={model} onChange={(e) => setModel(e.target.value)} />
+              <label htmlFor="vf-modelo" className="eyebrow !text-[10px] text-slate-500">Modelo</label>
+              <input id="vf-modelo" className="input mt-1" placeholder="Corolla…" value={model} onChange={(e) => setModel(e.target.value)} />
             </div>
             <div>
-              <label className="eyebrow !text-[10px] text-slate-400">Año</label>
-              <select className="input-select mt-1" value={year} onChange={(e) => setYear(e.target.value)}>
+              <label htmlFor="vf-anio" className="eyebrow !text-[10px] text-slate-500">Año</label>
+              <select id="vf-anio" className="input-select mt-1" value={year} onChange={(e) => setYear(e.target.value)}>
                 <option value="">—</option>
                 {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>

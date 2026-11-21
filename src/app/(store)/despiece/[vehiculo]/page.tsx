@@ -27,7 +27,7 @@ export default async function VehiculoDespiece({ params }: Props) {
   return (
     <div className="container-x py-8">
       <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
-        <Link href="/" className="hover:text-navy">Inicio</Link><Icon name="chevronRight" size={12} />
+        <Link href="/" className="inline-flex min-h-12 items-center hover:text-navy lg:min-h-0">Inicio</Link><Icon name="chevronRight" size={12} />
         <Link href="/despiece" className="hover:text-navy">Despiece</Link><Icon name="chevronRight" size={12} />
         <span className="text-slate-500">{v.brand} {v.model}</span>
       </nav>

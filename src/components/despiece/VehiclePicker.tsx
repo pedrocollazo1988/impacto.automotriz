@@ -8,7 +8,7 @@ export default function VehiclePicker({ vehicle }: { vehicle: MiVehiculo }) {
   return (
     <button
       onClick={() => setVehicle(esMio ? null : vehicle)}
-      className={`btn btn-xs ${esMio ? "btn-ghost text-[color:var(--color-ok)]" : "btn-ghost"}`}
+      className={`btn btn-xs ${esMio ? "btn-ghost text-emerald-700" : "btn-ghost"}`}
       aria-pressed={esMio}
     >
       <Icon name={esMio ? "check" : "car"} size={13} />

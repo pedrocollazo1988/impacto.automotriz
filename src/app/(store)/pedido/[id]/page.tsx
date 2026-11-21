@@ -54,7 +54,7 @@ export default async function Pedido({ params }: { params: Promise<{ id: string 
           </ul>
           <div className="ml-auto w-full max-w-xs space-y-1 px-5 py-4 text-sm">
             <p className="flex justify-between"><span className="text-slate-500">Subtotal</span>{Number(o.subtotalUsd).toFixed(2)} USD</p>
-            {Number(o.discountUsd) > 0 && <p className="flex justify-between text-[color:var(--color-ok)]"><span>Descuento</span>−{Number(o.discountUsd).toFixed(2)} USD</p>}
+            {Number(o.discountUsd) > 0 && <p className="flex justify-between text-emerald-700"><span>Descuento</span>−{Number(o.discountUsd).toFixed(2)} USD</p>}
             <p className="flex justify-between"><span className="text-slate-500">Envío</span>{Number(o.shippingUsd).toFixed(2)} USD</p>
             <p className="flex justify-between border-t border-slate-100 pt-2 text-base font-bold text-navy"><span>Total</span>{Number(o.totalUsd).toFixed(2)} USD</p>
           </div>
