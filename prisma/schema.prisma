@@ -209,6 +209,10 @@ model Product {
   stock          Int                    @default(0)
   lowStockAt     Int                    @default(3)
   images         String[]
+  // El visor 3D se retiró y ningún código lo usa. La columna se queda con
+  // @ignore porque el build de Vercel sincroniza con `prisma db push`, que se
+  // niega a borrar columnas que todavía tienen datos.
+  model3dUrl     String? @ignore
   specs          Json? // { "Medida": "...", "Voltaje": "..." }
   featured       Boolean                @default(false)
   active         Boolean                @default(true)
