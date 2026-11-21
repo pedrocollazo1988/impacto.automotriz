@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Icon from "@/components/brand/Icon";
 import { tieneVista360 } from "@/lib/vista360";
-import { fotos360 } from "@/lib/photo360";
+import { relieveDe } from "@/lib/relieve";
 
 export type CardProduct = {
   slug: string; name: string; priceUsd: unknown; compareAtUsd?: unknown; stock: number; images: string[];
@@ -29,7 +29,7 @@ export default function ProductCard({ p }: { p: CardProduct }) {
           {p.stock <= 0 && <span className="badge bg-slate-900/85 text-white">Agotado</span>}
           {low && <span className="badge bg-white/90 text-amber-700">Últimas {p.stock}</span>}
         </div>
-        {tieneVista360(p.category?.slug) && fotos360(p.sku).length > 0 && (
+        {tieneVista360(p.category?.slug) && relieveDe(p.sku) && (
           <span className="badge absolute right-2 top-2 flex items-center gap-1 bg-[color:var(--color-navy)]/90 text-white shadow" title="Se puede girar 360°">
             <Icon name="cube" size={12} /> 360°
           </span>

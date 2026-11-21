@@ -7,7 +7,7 @@ import Icon from "@/components/brand/Icon";
 import { getCustomer } from "@/lib/customer-auth";
 import { searchProductIds } from "@/lib/catalog";
 import { CATEGORIAS_360 } from "@/lib/vista360";
-import { skusConGiro } from "@/lib/photo360";
+import { skusConRelieve } from "@/lib/relieve";
 
 const OPCIONES_OTROS = [
   ["disponible", "Solo disponibles"],
@@ -38,7 +38,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
     ...(s.marca ? { brand: { slug: s.marca } } : {}),
     ...(s.disponible === "1" ? { stock: { gt: 0 } } : {}),
     ...(s.oferta === "1" ? { compareAtUsd: { not: null } } : {}),
-    ...(s.vista3d === "1" ? { OR: [{ category: { slug: { in: [...CATEGORIAS_360] } } }, { sku: { in: skusConGiro() } }] } : {}),
+    ...(s.vista3d === "1" ? { OR: [{ category: { slug: { in: [...CATEGORIAS_360] } } }, { sku: { in: skusConRelieve() } }] } : {}),
     ...(min !== undefined || max !== undefined ? { priceUsd: { ...(min !== undefined ? { gte: min } : {}), ...(max !== undefined ? { lte: max } : {}) } } : {}),
     ...(s.make || s.model || year ? { fits: { some: {
       ...(s.make ? { make: { contains: s.make, mode: "insensitive" as const } } : {}),
@@ -60,7 +60,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
     const qs = new URLSearchParams(Object.entries(merged).filter(([, v]) => v) as [string, string][]).toString();
     return `/catalogo${qs ? `?${qs}` : ""}`;
   };
-  const hayGiro = skusConGiro().length > 0;
+  const hayGiro = skusConRelieve().length > 0;
   const activeCount = ["categoria", "marca", "disponible", "oferta", "vista3d", "min", "max", "make", "model", "year", "q"].filter((k) => s[k]).length;
   const vehLabel = [s.make, s.model, s.year].filter(Boolean).join(" ");
 

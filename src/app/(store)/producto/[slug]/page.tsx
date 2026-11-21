@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import AddToCart from "@/components/AddToCart";
-import Photo360 from "@/components/Photo360";
+import FotoRelieve from "@/components/FotoRelieve";
 import ProductCard from "@/components/ProductCard";
 import ProductGallery from "@/components/ProductGallery";
 import WishlistButton from "@/components/WishlistButton";
@@ -11,7 +11,7 @@ import CompareToggle from "@/components/CompareToggle";
 import ReviewForm from "@/components/ReviewForm";
 import Icon from "@/components/brand/Icon";
 import { getCustomer } from "@/lib/customer-auth";
-import { fotos360 } from "@/lib/photo360";
+import { relieveDe, rutaRelieve } from "@/lib/relieve";
 import { tieneVista360 } from "@/lib/vista360";
 export const dynamic = "force-dynamic";
 
@@ -47,8 +47,7 @@ export default async function Producto({ params }: Props) {
   ]);
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
   const related = await prisma.product.findMany({ where: { active: true, categoryId: p.categoryId, id: { not: p.id } }, take: 4, include: { brand: true, category: { select: { slug: true } } } });
-  const girar360 = tieneVista360(p.category.slug);
-  const frames = girar360 ? fotos360(p.sku) : [];
+  const relieve = tieneVista360(p.category.slug) ? relieveDe(p.sku) : null;
   const wa = process.env.NEXT_PUBLIC_WHATSAPP;
   const specs = Object.entries((p.specs ?? {}) as Record<string, string>);
   const off = p.compareAtUsd && Number(p.compareAtUsd) > Number(p.priceUsd) ? Math.round(((Number(p.compareAtUsd) - Number(p.priceUsd)) / Number(p.compareAtUsd)) * 100) : 0;
@@ -69,8 +68,8 @@ export default async function Producto({ params }: Props) {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="space-y-4">
-          {girar360 ? (
-            <Photo360 src={p.images[0]} frames={frames} alt={p.name} />
+          {relieve ? (
+            <FotoRelieve base={rutaRelieve(p.sku)} anguloMax={relieve.anguloMax} alt={p.name} prioridad />
           ) : (
             <ProductGallery images={p.images} name={p.name} />
           )}

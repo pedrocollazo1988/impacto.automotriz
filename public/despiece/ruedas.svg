@@ -87,11 +87,11 @@
   </g>
   
   <g class="callout" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
-    <path d="M820 392 L1010 250" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
+    <path d="M820 392 L932.0 250.0" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
     <circle cx="820" cy="392" r="3.2" fill="#4a6b96"/>
-    <circle cx="1010" cy="250" r="13" fill="#0b2a5b"/>
-    <text x="1010" y="254.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">3</text>
-    <text x="988" y="254.4" font-size="12.5" fill="#0b2a5b"
+    <circle cx="932.0" cy="250.0" r="13" fill="#0b2a5b"/>
+    <text x="932.0" y="254.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+    <text x="910.0" y="254.4" font-size="12.5" fill="#0b2a5b"
           text-anchor="end">Rin metálico 12"</text>
   </g>
 </g>
