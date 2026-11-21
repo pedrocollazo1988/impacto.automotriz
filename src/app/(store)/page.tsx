@@ -17,14 +17,24 @@ const CAT_ICON: Record<string, string> = { frenos: "gauge", "sistema-electrico":
 
 export default async function Home() {
   const hayGiro = skusConGiro().length > 0;
-  const [featured, offers, latest, categories, brands, total] = await Promise.all([
-    prisma.product.findMany({ where: { active: true, featured: true }, take: 8, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true } } } }),
-    prisma.product.findMany({ where: { active: true, compareAtUsd: { not: null } }, take: 4, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true } } } }),
-    prisma.product.findMany({ where: { active: true }, take: 8, orderBy: { createdAt: "desc" }, include: { brand: true, category: { select: { slug: true } } } }),
+  const [todos, offers, categories, brands, total] = await Promise.all([
+    prisma.product.findMany({ where: { active: true }, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true, name: true } } } }),
+    prisma.product.findMany({ where: { active: true, compareAtUsd: { not: null } }, take: 4, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true, name: true } } } }),
     getCategoriesCached(),
     getBrandsCached(12),
     prisma.product.count({ where: { active: true } }),
   ]);
+
+  const featured = todos.filter((p) => p.featured).slice(0, 8);
+  const latest = [...todos].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)).slice(0, 8);
+
+  // Filas por departamento, como las secciones de la tienda de MCV: cada una
+  // con su encabezado y una tira de productos, de la categoría con más stock.
+  const departamentos = categories
+    .map((c) => ({ ...c, items: todos.filter((p) => p.category?.slug === c.slug).slice(0, 8) }))
+    .filter((c) => c.items.length >= 2)
+    .sort((a, b) => b.items.length - a.items.length)
+    .slice(0, 4);
   const marquee = brands.length >= 4 ? brands : [...brands, ...brands];
 
   return (
@@ -60,8 +70,30 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ── Accesos rápidos, como los botones de MCV ── */}
+      <section className="container-x mt-10">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            ["/catalogo", "grid", "Tienda virtual", "Todo el catálogo con filtros por vehículo"],
+            ["/despiece", "layers", "Despiece", "Localiza la pieza sobre el plano"],
+            ["/renta", "truck", "Renta y leasing", "Flotas con mantenimiento incluido"],
+            ["/marcas-y-modelos", "car", "Marcas y modelos", "Consulta qué tenemos para tu vehículo"],
+          ].map(([href, ic, t, d]) => (
+            <Link key={href} href={href} className="card card-hover group flex items-start gap-3 p-4">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)] text-white transition group-hover:bg-[color:var(--color-accent)] group-hover:text-[color:var(--color-navy-deep)]">
+                <Icon name={ic} size={21} />
+              </span>
+              <span className="min-w-0">
+                <span className="block font-display text-sm font-bold text-navy">{t}</span>
+                <span className="mt-0.5 block text-xs leading-snug text-slate-500">{d}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* ── Valor ── */}
-      <section className="container-x -mt-8 relative z-10">
+      <section className="container-x mt-4 relative z-10">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {VALUE_PROPS.map(([ic, t, d], i) => (
             <div key={t} className={`card p-5 animate-fade-up delay-${i + 1}`}>
@@ -96,6 +128,24 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      {/* ── Departamentos, como las secciones de la tienda de MCV ── */}
+      {departamentos.map((d) => (
+        <section key={d.id} className="container-x mt-14">
+          <div className="flex items-end justify-between gap-4 border-b border-slate-200 pb-3">
+            <div>
+              <h2 className="font-display text-xl font-extrabold text-navy sm:text-2xl">{d.name}</h2>
+              <p className="mt-0.5 font-mono text-[11px] uppercase tracking-wider text-slate-400">{d._count.products} productos</p>
+            </div>
+            <Link href={`/catalogo?categoria=${d.slug}`} className="flex shrink-0 items-center gap-1 text-sm font-bold text-[color:var(--color-accent-ink)] transition hover:text-navy">
+              Ver todo <Icon name="arrowRight" size={15} />
+            </Link>
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {d.items.map((p) => <ProductCard key={p.id} p={p} />)}
+          </div>
+        </section>
+      ))}
 
       {/* ── Destacados ── */}
       {featured.length > 0 && (
