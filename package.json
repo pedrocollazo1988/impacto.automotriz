@@ -13,7 +13,7 @@
     "models:build": "tsx scripts/generate-models.ts",
     "test": "vitest run",
     "db:seed:despiece": "tsx prisma/seed-despiece.ts",
-    "relieve": "tsx scripts/relieve.ts"
+    "fotos360": "tsx scripts/fotos-360.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
