@@ -60,7 +60,7 @@ export default async function MarcasYModelos() {
             <div className="flex items-end justify-between gap-4 border-b border-slate-200 pb-3">
               <div>
                 <h2 className="font-display text-xl font-extrabold text-navy sm:text-2xl">{m.name}</h2>
-                <p className="mt-0.5 font-mono text-[11px] uppercase tracking-wider text-slate-400">{m.items.length} productos</p>
+                <p className="mt-0.5 font-mono text-[11px] uppercase tracking-wider text-slate-500">{m.items.length} productos</p>
               </div>
               <Link href={`/catalogo?marca=${m.slug}`} className="flex shrink-0 items-center gap-1 text-sm font-bold text-[color:var(--color-accent-ink)] transition hover:text-navy">
                 Ver todo <Icon name="arrowRight" size={15} />

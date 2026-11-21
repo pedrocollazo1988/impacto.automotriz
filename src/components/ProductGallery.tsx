@@ -10,7 +10,7 @@ export default function ProductGallery({ images, name }: { images: string[]; nam
   return (
     <div className="space-y-3">
       <div className="card group relative aspect-square overflow-hidden">
-        <Image src={src} alt={name} fill sizes="(max-width:768px) 100vw, 40vw" className="object-cover transition-transform duration-500 group-hover:scale-105" unoptimized={src.endsWith(".svg")} priority />
+        <Image src={src} alt={name} fill sizes="(max-width:768px) calc(100vw - 2rem), (max-width:1024px) 45vw, 40vw" className="object-cover transition-transform duration-500 group-hover:scale-105" unoptimized={src.endsWith(".svg")} priority />
       </div>
       {list.length > 1 && (
         <div className="grid grid-cols-5 gap-2">

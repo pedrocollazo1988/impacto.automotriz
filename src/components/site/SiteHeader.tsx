@@ -52,7 +52,7 @@ export default function SiteHeader() {
 
       {/* Barra principal: logo, buscador y acciones */}
       <div className={`border-b border-slate-200/80 transition-all duration-300 ${scrolled ? "bg-white/95 shadow-[0_10px_30px_-24px_rgba(6,24,51,.6)] backdrop-blur-md" : "bg-white"}`}>
-        <div className="container-x flex items-center gap-3 py-3 sm:gap-5">
+        <div className="container-x flex items-center gap-2 py-3 sm:gap-5">
           <Logo size="sm" tagline={false} className="min-w-0" />
 
           <form action="/catalogo" className="relative hidden flex-1 md:block">
@@ -67,14 +67,14 @@ export default function SiteHeader() {
           </form>
 
           <div className="ml-auto flex shrink-0 items-center gap-1 lg:ml-0">
-            <Link href="/comparar" aria-label="Comparar" className="hidden h-11 w-11 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 hover:text-navy sm:grid">
+            <Link href="/comparar" aria-label="Comparar" className="hidden h-12 w-12 place-items-center rounded-xl text-slate-700 lg:h-11 lg:w-11 transition hover:bg-slate-100 hover:text-navy sm:grid">
               <Icon name="compare" size={20} />
             </Link>
-            <Link href="/carrito" aria-label="Carrito" className="relative grid h-11 w-11 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 hover:text-navy">
+            <Link href="/carrito" aria-label="Carrito" className="relative grid h-12 w-12 place-items-center rounded-xl lg:h-11 lg:w-11 text-slate-700 transition hover:bg-slate-100 hover:text-navy">
               <Icon name="cart" size={20} />
               {count > 0 && <span className="absolute right-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[color:var(--color-accent)] px-1 text-[11px] font-bold text-white">{count}</span>}
             </Link>
-            <button onClick={() => setOpen((v) => !v)} aria-label="Abrir menú" aria-expanded={open} className="grid h-11 w-11 place-items-center rounded-xl text-navy transition hover:bg-slate-100 lg:hidden">
+            <button onClick={() => setOpen((v) => !v)} aria-label="Abrir menú" aria-expanded={open} className="grid h-12 w-12 place-items-center rounded-xl text-navy transition hover:bg-slate-100 lg:hidden">
               <Icon name={open ? "close" : "menu"} size={22} />
             </button>
           </div>
@@ -111,7 +111,7 @@ export default function SiteHeader() {
       <div className={`overflow-y-auto border-t border-slate-200/70 bg-white transition-[max-height,opacity] duration-300 lg:hidden ${open ? "max-h-[calc(100vh-8rem)] opacity-100" : "max-h-0 overflow-hidden opacity-0"}`}>
         <nav className="container-x flex flex-col py-2">
           {[...NAV_PRINCIPAL, ...NAV_EMPRESA, { href: "/renta", label: "Renta y leasing" }, { href: "/cuenta", label: "Mi cuenta" }].map((l) => (
-            <Link key={l.href} href={l.href} className="flex items-center justify-between rounded-lg px-2 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy">
+            <Link key={l.href} href={l.href} className="flex min-h-12 items-center justify-between rounded-lg px-2 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy">
               {l.label}<Icon name="chevronRight" size={16} className="text-slate-400" />
             </Link>
           ))}

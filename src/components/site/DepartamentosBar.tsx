@@ -10,10 +10,10 @@ export default async function DepartamentosBar() {
 
   return (
     <div className="border-b border-slate-200 bg-white">
-      <div className="container-x flex items-center gap-1 overflow-x-auto py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="container-x flex items-center gap-1 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Link
           href="/catalogo"
-          className="flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-bold text-navy transition hover:bg-slate-100"
+          className="flex min-h-12 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-bold text-navy transition hover:bg-slate-100 lg:min-h-0 lg:py-1.5"
         >
           <Icon name="grid" size={15} /> Todos los productos
         </Link>
@@ -22,7 +22,7 @@ export default async function DepartamentosBar() {
           <Link
             key={c.id}
             href={`/catalogo?categoria=${c.slug}`}
-            className="shrink-0 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-navy"
+            className="flex min-h-12 shrink-0 items-center whitespace-nowrap rounded-lg px-2.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-navy lg:min-h-0 lg:py-1.5"
           >
             {c.name}
           </Link>

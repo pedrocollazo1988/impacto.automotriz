@@ -36,7 +36,7 @@ export default function Renta() {
             <div key={t} className="card flex flex-col p-6">
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-accent-deep)]"><Icon name={ic} size={22} /></span>
               <h3 className="mt-4 font-display text-lg font-bold text-navy">{t}</h3>
-              <p className="font-mono text-[11px] uppercase tracking-wider text-slate-400">{plazo}</p>
+              <p className="font-mono text-[11px] uppercase tracking-wider text-slate-500">{plazo}</p>
               <ul className="mt-4 space-y-2 text-sm text-slate-600">
                 {puntos.map((p) => (
                   <li key={p} className="flex gap-2"><Icon name="check" size={16} className="mt-0.5 shrink-0 text-[color:var(--color-ok)]" />{p}</li>

@@ -37,9 +37,9 @@ export default function SiteFooter() {
             <div>
               <p className="font-display text-sm font-bold text-white">Consultas</p>
               {telefono ? (
-                <a href={`tel:${telefono.replace(/\s/g, "")}`} className="mt-1 block text-sm text-white/65 transition hover:text-white">{telefono}</a>
+                <a href={`tel:${telefono.replace(/\s/g, "")}`} className="mt-1 flex min-h-11 items-center text-sm text-white/65 transition hover:text-white">{telefono}</a>
               ) : null}
-              <a href={`mailto:${SITE.email}`} className="text-sm text-white/65 transition hover:text-white">{SITE.email}</a>
+              <a href={`mailto:${SITE.email}`} className="flex min-h-11 items-center text-sm text-white/65 transition hover:text-white">{SITE.email}</a>
             </div>
           </div>
           <div className="flex gap-3">
