@@ -6,7 +6,7 @@ import { fotos360 } from "@/lib/photo360";
 
 export type CardProduct = {
   slug: string; name: string; priceUsd: unknown; compareAtUsd?: unknown; stock: number; images: string[];
-  brand?: { name: string } | null; sku?: string; createdAt?: Date | string; model3dUrl?: string | null;
+  brand?: { name: string } | null; sku?: string; createdAt?: Date | string;
   category?: { slug: string } | null;
 };
 

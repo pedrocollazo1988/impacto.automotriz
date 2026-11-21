@@ -21,9 +21,9 @@ export default function AdminShell({ links, userName, role, children }: { links:
       {open && <div className="adm-scrim lg:hidden" onClick={() => setOpen(false)} aria-hidden />}
       <aside className="adm-sidebar" data-open={open} aria-label="Navegación del panel">
         <div className="adm-sidebar-brand">
-          <span className="adm-avatar" style={{ background: "linear-gradient(180deg,#3aa0ff,#0b5fd0)" }}>IA</span>
+          <span className="adm-avatar" style={{ background: "linear-gradient(180deg,#164a8a,#0a2c5e)" }}>IA</span>
           <span className="flex flex-col leading-tight">
-            <span className="font-display text-sm font-extrabold tracking-tight">IMPACTO<span className="text-[#8fc2ff]">·</span>AUTOMOTRIZ</span>
+            <span className="font-display text-sm font-extrabold tracking-tight">IMPACTO<span className="text-[#f0c98a]">·</span>AUTOMOTRIZ</span>
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">Panel de gestión</span>
           </span>
         </div>

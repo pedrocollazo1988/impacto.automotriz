@@ -1,6 +1,4 @@
 // Ejecutar: npx tsx prisma/seed.ts
-import { existsSync } from "node:fs";
-import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
@@ -54,7 +52,7 @@ async function main() {
     return prisma.brand.upsert({ where: { slug }, update: {}, create: { slug, name } });
   };
 
-  type Demo = { slug: string; sku: string; name: string; cat: number; brand: string; price: number; compareAt?: number; stock: number; featured?: boolean; desc: string; specs?: Record<string, string>; fits?: [string, string, number, number][]; model3dUrl?: string };
+  type Demo = { slug: string; sku: string; name: string; cat: number; brand: string; price: number; compareAt?: number; stock: number; featured?: boolean; desc: string; specs?: Record<string, string>; fits?: [string, string, number, number][]; };
   const DEMO: Demo[] = [
     { slug: "pastillas-freno-delanteras", sku: "FR-1001", name: "Pastillas de freno delanteras", cat: frenos.id, brand: "Brembo", price: 25, compareAt: 32, stock: 12, featured: true, desc: "Juego de 4 pastillas de freno delanteras de compuesto cerámico. Bajo nivel de polvo y ruido, frenada estable en caliente y en frío.", specs: { "Composición": "Cerámica", "Ejes": "Delantero", "Piezas": "4", "Espesor": "17 mm" }, fits: [["Toyota", "Corolla", 2010, 2018], ["Toyota", "Yaris", 2012, 2020]] },
     { slug: "discos-freno-ventilados", sku: "FR-1002", name: "Discos de freno ventilados", cat: frenos.id, brand: "Brembo", price: 68, stock: 6, featured: true, desc: "Par de discos ventilados de fundición de alta resistencia, con recubrimiento anticorrosión.", specs: { "Diámetro": "280 mm", "Ejes": "Delantero", "Ventilado": "Sí" }, fits: [["Hyundai", "Elantra", 2011, 2019]] },
@@ -86,9 +84,7 @@ async function main() {
 
   for (const d of DEMO) {
     const b = await brandOf(d.brand);
-    const { fits, cat: catId, brand, price, compareAt, desc, specs, model3dUrl, featured, ...rest } = d;
-    // Cada producto demo trae su modelo 3D generado (npm run models:build). Si el
-    // archivo no existe todavía, se deja sin 3D para no enlazar a algo inexistente.
+    const { fits, cat: catId, brand, price, compareAt, desc, specs, featured, ...rest } = d;
     const FOTO_REAL: Record<string, string> = {
   "AC-9001": "/products/aftermarket-car-rubber-floor-mat.webp",
   "AC-9002": "/products/mobile-phone-holder.webp",
@@ -117,26 +113,32 @@ async function main() {
   "TE-4003": "/products/seattle-wa-usa-pike-street-e-scooter-2022-14.webp",
 };
 
-// Los .glb se nombran por SKU: el modelo se genera por tipo de pieza, no por slug.
-  const glb = `/models/${d.sku.toLowerCase()}.glb`;
-  const model = model3dUrl ?? (existsSync(path.join(process.cwd(), "public", "models", `${d.sku.toLowerCase()}.glb`)) ? glb : null);
     const row = await prisma.product.upsert({
       where: { slug: d.slug },
       update: {
         name: rest.name, sku: rest.sku,
         categoryId: catId, brandId: b.id, priceUsd: price, compareAtUsd: compareAt ?? null,
         images: [FOTO_REAL[d.sku] ?? `/products/${d.slug}.svg`], description: desc, specs: specs ?? undefined,
-        featured: featured ?? false, model3dUrl: model,
+        featured: featured ?? false,
       },
       create: {
         ...rest, categoryId: catId, brandId: b.id, priceUsd: price, compareAtUsd: compareAt ?? null,
         images: [FOTO_REAL[d.sku] ?? `/products/${d.slug}.svg`], description: desc, specs: specs ?? undefined,
-        featured: featured ?? false, model3dUrl: model,
+        featured: featured ?? false,
       },
     });
     if (fits?.length && !(await prisma.productFit.count({ where: { productId: row.id } })))
       await prisma.productFit.createMany({ data: fits.map(([make, model, yearFrom, yearTo]) => ({ productId: row.id, make, model, yearFrom, yearTo })) });
   }
-  console.log("Seed OK: 16 provincias, 168 municipios, métodos de entrega y catálogo demo.");
+  // Pasarelas de pago: mismas por defecto que el panel, para que el checkout
+  // tenga algo que ofrecer en el primer arranque.
+  const gw = [
+    { key: "TROPIPAY", name: "Tropipay", description: "Tarjeta y saldo Tropipay. Confirmación automática.", kind: "online", enabled: true, sortOrder: 1 },
+    { key: "QVAPAY", name: "QvaPay", description: "Pago con saldo QvaPay. Confirmación automática.", kind: "online", enabled: true, sortOrder: 2 },
+    { key: "TRANSFER", name: "Transferencia bancaria", description: "Transferencia o depósito. Confirmamos el pago a mano.", kind: "manual", enabled: true, sortOrder: 3, instructions: process.env.BANK_INSTRUCTIONS ?? "" },
+    { key: "CASH", name: "Efectivo contra entrega", description: "Pagas al recibir el pedido o al recogerlo en tienda.", kind: "manual", enabled: true, sortOrder: 4 },
+  ];
+  for (const g of gw) await prisma.paymentGateway.upsert({ where: { key: g.key }, update: {}, create: g });
+  console.log("Seed OK: 16 provincias, 168 municipios, métodos de entrega, pasarelas y catálogo demo.");
 }
 main().finally(() => prisma.$disconnect());

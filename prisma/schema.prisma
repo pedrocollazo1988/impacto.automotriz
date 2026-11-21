@@ -161,6 +161,8 @@ model Order {
   shippingUsd   Decimal        @default(0) @db.Decimal(10, 2)
   totalUsd      Decimal        @db.Decimal(10, 2)
   discountUsd   Decimal        @default(0) @db.Decimal(10, 2)
+  // Comisión de la pasarela, para que el total cuadre con el desglose.
+  paymentFeeUsd Decimal        @default(0) @db.Decimal(10, 2)
   couponCode    String?
   customerId    String?
   customer      Customer?      @relation(fields: [customerId], references: [id])
@@ -207,7 +209,10 @@ model Product {
   stock          Int                    @default(0)
   lowStockAt     Int                    @default(3)
   images         String[]
-  model3dUrl     String? // archivo .glb (visor 3D / realidad aumentada)
+  // El visor 3D se retiró y ningún código lo usa. La columna se queda con
+  // @ignore porque el build de Vercel sincroniza con `prisma db push`, que se
+  // niega a borrar columnas que todavía tienen datos.
+  model3dUrl     String? @ignore
   specs          Json? // { "Medida": "...", "Voltaje": "..." }
   featured       Boolean                @default(false)
   active         Boolean                @default(true)
@@ -532,6 +537,29 @@ model ProductCompatibility {
   note      String?
 
   @@unique([productId, targetId])
+}
+
+// Pasarelas de pago configurables desde el panel. Antes dependían solo de
+// variables de entorno: había que redesplegar para cambiar una credencial y no
+// se podía activar o desactivar un método sin tocar el código.
+model PaymentGateway {
+  id           Int      @id @default(autoincrement())
+  key          String   @unique // TROPIPAY | QVAPAY | TRANSFER | CASH
+  name         String
+  description  String   @default("")
+  kind         String   @default("online") // online | manual
+  enabled      Boolean  @default(false)
+  sandbox      Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  // Instrucciones para el cliente (transferencia, efectivo, o notas de la pasarela).
+  instructions String   @default("")
+  // Credenciales cifradas con AES-256-GCM (APP_SECRET). Nunca se devuelven al cliente.
+  credsEnc     String?
+  // Comisión que se muestra al comprador, en % sobre el total.
+  feePercent   Decimal  @default(0) @db.Decimal(5, 2)
+  minTotalUsd  Decimal? @db.Decimal(10, 2)
+  maxTotalUsd  Decimal? @db.Decimal(10, 2)
+  updatedAt    DateTime @updatedAt
 }
 
 // Archivos subidos cuando no hay BLOB_READ_WRITE_TOKEN: se guardan en la base de

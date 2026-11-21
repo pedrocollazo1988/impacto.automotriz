@@ -1,28 +1,36 @@
 # Fotos del giro 360
 
-Secuencias ya publicadas: `te-4001`, `te-4002` y `te-4003` (36 fotogramas cada
-una, 900x900 px, ~7 KB por fotograma). Son **renders del modelo 3D** del propio
-catálogo (`public/models/<sku>.glb`), no fotografías del vehículo real.
+**Ahora mismo no hay ninguna secuencia publicada.** Antes había tres
+(`te-4001`, `te-4002`, `te-4003`) generadas por código en `src/lib/shapes.ts` y
+renderizadas con `scripts/render-360.ts`, pero eran renders de un modelo 3D
+esquemático y parecían un juguete de CAD. Se retiraron: la ficha muestra la foto
+real del producto y el visor solo se activa cuando hay fotos de verdad.
 
-## Cómo se generan
+Con menos de 8 fotos el visor muestra solo la foto principal, no simula giro.
 
-Con `three.js` en un Chromium headless, una vuelta completa en 36 pasos:
+## Cómo poner fotos reales
 
-    npx tsx scripts/render-360.ts <sku>
+1. Monta el producto en un plato giratorio, cámara en trípode, luz que no cambie
+   entre tomas. Fondo liso y distinto del producto.
+2. Dispara una vuelta completa. **36 tomas** (una cada 10°) es lo habitual; el
+   visor admite de 8 a 72.
+3. Copia las fotos a una carpeta, sin renombrar: el orden es el de los nombres y
+   entiende `foto2` antes que `foto10`.
+4. Lanza:
 
-El script sirve el `.glb`, orbita la cámara alrededor de la caja envolvente y
-convierte cada vista a WebP con `sharp`. Es reproducible: si cambia el modelo,
-se vuelve a lanzar y se sobrescriben los fotogramas.
+       npx tsx scripts/fotos-360.ts TE-4001 ~/tomas/triciclo
 
-## Si algún día hay fotos reales
+El script recorta todas las tomas con la **misma** ventana, la que abarca el
+producto en su posición más extrema, para que el giro no baile. Avisa si detecta
+un salto de encuadre o un cambio de tamaño entre tomas, y escribe
+`public/products/360/<sku>-NN.webp` borrando antes la secuencia anterior del SKU.
 
-Basta con sustituir los `.webp` manteniendo el nombre. Reglas:
+Añade `--seco` para ver el análisis sin escribir nada.
 
-- Mínimo 8 fotos; con menos se muestra solo la foto principal.
-- Todas del mismo tamaño y encuadre, para que el giro no salte.
-- Una vuelta completa: 24–36 fotos dan un giro fluido; 36 es lo habitual.
+## Reglas
+
+- Todas del mismo tamaño y encuadre. Si el producto se mueve o cambia de tamaño
+  entre tomas, el giro salta.
 - Se ordenan por el número del nombre, no por fecha.
 - Van en el repositorio porque en Vercel el disco es de solo lectura.
-
-Sin secuencia, la ficha del eléctrico muestra su foto y no simula el giro.
-
+- Con menos de 8 fotos el visor muestra solo la foto principal, no simula giro.

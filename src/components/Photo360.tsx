@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Icon from "@/components/brand/Icon";
+import { envolver, iniciarArrastre, pasosDeArrastre, type EstadoArrastre } from "@/lib/arrastre";
 
 // Giro 360 con las fotos reales del vehículo: una toma por fotograma
 // (public/products/360/<sku>-01.webp, -02, ...). Sin secuencia se muestra la
@@ -11,23 +12,21 @@ export default function Photo360({ src, frames, alt }: { src?: string; frames: s
   const [indice, setIndice] = useState(0);
   const [arrastrando, setArrastrando] = useState(false);
   const [auto, setAuto] = useState(true);
-  const ultimo = useRef<number | null>(null);
-  const resto = useRef(0);
+  const arrastre = useRef<EstadoArrastre | null>(null);
 
   const avanzar = useCallback((pasos: number) => {
     if (!total) return;
-    setIndice((i) => (((i + pasos) % total) + total) % total);
+    setIndice((i) => envolver(i + pasos, total));
   }, [total]);
 
-  const iniciar = (x: number) => { setAuto(false); setArrastrando(true); ultimo.current = x; resto.current = 0; };
+  const iniciar = (x: number) => { setAuto(false); setArrastrando(true); arrastre.current = iniciarArrastre(x); };
   const seguir = (x: number) => {
-    if (ultimo.current === null || !total) return;
-    const acumulado = x - ultimo.current + resto.current;
-    const pasos = Math.trunc(acumulado / 10);
-    if (pasos) { avanzar(pasos); resto.current = acumulado - pasos * 10; }
-    else resto.current = acumulado;
+    if (!arrastre.current || !total) return;
+    const { pasos, estado } = pasosDeArrastre(arrastre.current, x);
+    arrastre.current = estado;
+    if (pasos) avanzar(pasos);
   };
-  const soltar = () => { setArrastrando(false); ultimo.current = null; resto.current = 0; };
+  const soltar = () => { setArrastrando(false); arrastre.current = null; };
 
   useEffect(() => {
     if (!auto || arrastrando || total < 2) return;
