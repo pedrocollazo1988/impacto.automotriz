@@ -46,7 +46,7 @@ export async function importRows(rows: string[][]) {
       const specs = parseSpecs(col(r, "especificaciones"));
       const { created: c } = await saveProduct({
         sku: col(r, "sku"), name: col(r, "nombre"), priceUsd: price, stock, categoryName: col(r, "categoria"), brandName: col(r, "marca") || null, description: col(r, "descripcion"),
-        images: col(r, "imagenes").split("|").map((u) => u.trim()).filter(Boolean), model3dUrl: col(r, "modelo3d") || null,
+        images: col(r, "imagenes").split("|").map((u) => u.trim()).filter(Boolean),
         specs: Object.keys(specs).length ? specs : undefined,
         featured: /^(si|sí|1|true|x)$/i.test(col(r, "destacado")), fits: head.includes("compatibilidad") ? fits : undefined,
       });

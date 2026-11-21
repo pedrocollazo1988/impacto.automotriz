@@ -17,7 +17,7 @@ export default function SiteFooter() {
           <Logo variant="light" size="md" href="/" />
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/70">
             Piezas, accesorios y medios de transporte eléctrico. Compra en línea con entrega en toda Cuba,
-            giro 360° de los vehículos eléctricos y atención directa por WhatsApp.
+            atención directa por WhatsApp.
           </p>
           <div className="mt-5 flex gap-2">
             {wa && <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener" aria-label="WhatsApp" className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 transition hover:bg-white/20"><Icon name="whatsapp" size={20} /></a>}

@@ -6,6 +6,8 @@ import { buildOrderDelivery, deliveryInput } from "@/lib/shipping";
 import { evaluateCoupon } from "@/lib/coupons";
 import { getCustomer } from "@/lib/customer-auth";
 import { createOnlinePayment } from "@/lib/payments";
+import { leerPasarelas } from "@/lib/payment-gateways";
+import { comision } from "@/lib/pasarelas";
 import { sendTransactional } from "@/lib/mailer";
 
 const Body = z.object({
@@ -25,7 +27,17 @@ export const POST = handle(async (req: Request) => {
   const coupon = await evaluateCoupon(b.coupon, cart.subtotalUsd);
   const { cashOnDelivery, ...delivery } = await buildOrderDelivery(b.delivery, r2(cart.subtotalUsd - coupon.discountUsd));
   if (b.paymentMethod === "CASH" && !cashOnDelivery) throw new HttpError(422, "Este método de entrega no admite pago en efectivo");
-  const totalUsd = r2(cart.subtotalUsd - coupon.discountUsd + delivery.feeUsd);
+  const baseUsd = r2(cart.subtotalUsd - coupon.discountUsd + delivery.feeUsd);
+  // La pasarela la define el panel: si está desactivada, fuera de rango o sin
+  // credenciales, no se acepta el pedido con ese método (evita saltarse el panel).
+  const pasarelas = await leerPasarelas();
+  const gw = pasarelas.find((p) => p.key === b.paymentMethod);
+  if (!gw || !gw.enabled) throw new HttpError(422, "Ese método de pago no está disponible");
+  if (gw.minTotalUsd != null && baseUsd < gw.minTotalUsd) throw new HttpError(422, `Ese método requiere un mínimo de ${gw.minTotalUsd} USD`);
+  if (gw.maxTotalUsd != null && baseUsd > gw.maxTotalUsd) throw new HttpError(422, `Ese método admite hasta ${gw.maxTotalUsd} USD`);
+  if (gw.kind === "online" && !gw.creds) throw new HttpError(422, "Ese método de pago no está configurado todavía");
+  const feeUsd = comision(gw, baseUsd);
+  const totalUsd = r2(baseUsd + feeUsd);
   const me = await getCustomer();
 
   // 2) Pedido + stock + cupón en una sola transacción (si algo falla, se revierte todo).
@@ -45,7 +57,7 @@ export const POST = handle(async (req: Request) => {
     return tx.order.create({
       data: {
         paymentMethod: b.paymentMethod, customerName: b.customer.name, customerEmail: b.customer.email, customerPhone: b.customer.phone, customerId: me?.id,
-        subtotalUsd: cart.subtotalUsd, discountUsd: coupon.discountUsd, couponCode: coupon.code, shippingUsd: delivery.feeUsd, totalUsd,
+        subtotalUsd: cart.subtotalUsd, discountUsd: coupon.discountUsd, couponCode: coupon.code, shippingUsd: delivery.feeUsd, paymentFeeUsd: feeUsd, totalUsd,
         items: { create: cart.lines.map((l) => ({ productId: l.productId, variantId: l.variantId, name: l.name, unitUsd: l.unitUsd, qty: l.qty })) },
         delivery: { create: delivery },
       },

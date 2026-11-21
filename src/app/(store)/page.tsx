@@ -4,10 +4,10 @@ import { getBrandsCached, getCategoriesCached } from "@/lib/catalog";
 import ProductCard from "@/components/ProductCard";
 import Icon from "@/components/brand/Icon";
 import VehicleFinder from "@/components/site/VehicleFinder";
+import { skusConGiro } from "@/lib/photo360";
 export const dynamic = "force-dynamic";
 
 const VALUE_PROPS: [string, string, string][] = [
-  ["cube", "Gira el vehículo eléctrico 360°", "En triciclos, bicicletas y patinetes eléctricos giras la foto real del vehículo antes de comprar."],
   ["car", "Compatibilidad con tu vehículo", "Guarda tu garaje y filtra solo las piezas que encajan con tu marca, modelo y año."],
   ["truck", "Entrega en toda Cuba", "Domicilio, mensajería, punto acordado o recogida en tienda, con tarifas por provincia y municipio."],
   ["card", "Pago en línea seguro", "Tropipay, QvaPay, transferencia o efectivo. Confirmación automática y comprobante de tu pedido."],
@@ -16,6 +16,7 @@ const VALUE_PROPS: [string, string, string][] = [
 const CAT_ICON: Record<string, string> = { frenos: "gauge", "sistema-electrico": "bolt", electrico: "bolt", suspension: "layers", "triciclos-electricos": "battery", motor: "wrench", accesorios: "box" };
 
 export default async function Home() {
+  const hayGiro = skusConGiro().length > 0;
   const [featured, offers, latest, categories, brands, total] = await Promise.all([
     prisma.product.findMany({ where: { active: true, featured: true }, take: 8, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true } } } }),
     prisma.product.findMany({ where: { active: true, compareAtUsd: { not: null } }, take: 4, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true } } } }),
@@ -37,11 +38,11 @@ export default async function Home() {
           <div className="animate-fade-up">
             <span className="eyebrow eyebrow-light inline-flex items-center gap-2"><Icon name="spark" size={14} /> Tienda oficial · {total}+ productos</span>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] sm:text-5xl lg:text-6xl">
-              La pieza correcta<br />para tu vehículo,<br /><span className="bg-gradient-to-r from-[#8fc2ff] to-[#ffd27a] bg-clip-text text-transparent">a la primera.</span>
+              La pieza correcta<br />para tu vehículo,<br /><span className="bg-gradient-to-r from-[#f0c98a] to-[#e9a13b] bg-clip-text text-transparent">a la primera.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/75">
               Catálogo de partes, piezas y accesorios con compatibilidad por vehículo y pago en línea.
-              Los vehículos eléctricos se pueden girar 360°.
+              {hayGiro ? "Los vehículos eléctricos se pueden girar 360°." : "Fotos reales de cada producto."}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/catalogo" className="btn btn-accent text-base"><Icon name="grid" size={18} /> Explorar catálogo</Link>

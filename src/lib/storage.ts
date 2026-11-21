@@ -10,10 +10,9 @@ const KINDS = [
   { ext: "jpg", mime: "image/jpeg", max: 5, test: (b: Buffer) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
   { ext: "png", mime: "image/png", max: 5, test: (b: Buffer) => b.subarray(0, 8).toString("hex") === "89504e470d0a1a0a" },
   { ext: "webp", mime: "image/webp", max: 5, test: (b: Buffer) => b.subarray(0, 4).toString() === "RIFF" && b.subarray(8, 12).toString() === "WEBP" },
-  { ext: "glb", mime: "model/gltf-binary", max: 25, test: (b: Buffer) => b.subarray(0, 4).toString() === "glTF" },
 ] as const;
 
-export const MIME: Record<string, string> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp", glb: "model/gltf-binary" };
+export const MIME: Record<string, string> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp" };
 export const uploadDir = () => path.resolve(process.env.UPLOAD_DIR ?? "./uploads");
 
 // La tabla se crea en el primer uso. El build de Vercel no aplica migraciones, así
@@ -64,12 +63,7 @@ async function store(name: string, buf: Buffer, mime: string) {
 export async function saveUpload(file: File) {
   const buf = Buffer.from(await file.arrayBuffer());
   const kind = KINDS.find((k) => k.test(buf));
-  if (!kind) throw new HttpError(415, "Formato no admitido (usa JPG, PNG, WebP o GLB)");
+  if (!kind) throw new HttpError(415, "Formato no admitido (usa JPG, PNG o WebP)");
   if (buf.length > kind.max * 1024 * 1024) throw new HttpError(413, `El archivo supera ${kind.max} MB`);
   return store(`${crypto.randomUUID()}.${kind.ext}`, buf, kind.mime);
-}
-
-// Guarda un modelo .glb generado por el servidor (no pasa por la validación de File).
-export async function saveModel(buf: Buffer) {
-  return store(`${crypto.randomUUID()}.glb`, buf, MIME.glb);
 }

@@ -74,11 +74,11 @@
   </g>
   
   <g class="callout" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
-    <path d="M580 468 L640 690" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
+    <path d="M580 468 L640.0 659.6" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
     <circle cx="580" cy="468" r="3.2" fill="#4a6b96"/>
-    <circle cx="640" cy="690" r="13" fill="#0b2a5b"/>
-    <text x="640" y="694.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">2</text>
-    <text x="618" y="694.4" font-size="12.5" fill="#0b2a5b"
+    <circle cx="640.0" cy="659.6" r="13" fill="#0b2a5b"/>
+    <text x="640.0" y="664.2" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+    <text x="618.0" y="664.0" font-size="12.5" fill="#0b2a5b"
           text-anchor="end">Eje con diferencial</text>
   </g>
   

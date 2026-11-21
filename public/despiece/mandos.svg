@@ -73,11 +73,11 @@
   </g>
   
   <g class="callout" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
-    <path d="M840 310 L1010 240" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
+    <path d="M840 310 L891.9 240.0" stroke="#4a6b96" stroke-width="1.1" stroke-dasharray="4 3"/>
     <circle cx="840" cy="310" r="3.2" fill="#4a6b96"/>
-    <circle cx="1010" cy="240" r="13" fill="#0b2a5b"/>
-    <text x="1010" y="244.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">3</text>
-    <text x="988" y="244.4" font-size="12.5" fill="#0b2a5b"
+    <circle cx="891.9" cy="240.0" r="13" fill="#0b2a5b"/>
+    <text x="891.9" y="244.6" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+    <text x="869.9" y="244.4" font-size="12.5" fill="#0b2a5b"
           text-anchor="end">Switch de encendido</text>
   </g>
 </g>

@@ -6,12 +6,10 @@ import { useCart } from "@/components/CartProvider";
 import DeliverySelector, { type DeliveryChoice } from "@/components/DeliverySelector";
 import Icon from "@/components/brand/Icon";
 
-const PAY_LABELS: Record<string, [string, string, string]> = {
-  TROPIPAY: ["card", "Tarjeta / Tropipay", "Pago en línea con confirmación automática"],
-  QVAPAY: ["bolt", "QvaPay", "Pago en línea con confirmación automática"],
-  TRANSFER: ["bank", "Transferencia bancaria", "Confirmamos el pago manualmente"],
-  CASH: ["box", "Efectivo contra entrega", "Pagas al recibir o en el local"],
-};
+// Los métodos los define el panel (nombre, descripción, instrucciones y
+// comisión). Aquí solo se elige el icono por clave.
+const ICONO: Record<string, string> = { TROPIPAY: "card", QVAPAY: "bolt", TRANSFER: "bank", CASH: "box" };
+type Metodo = { key: "TROPIPAY" | "QVAPAY" | "TRANSFER" | "CASH"; name: string; description: string; kind: "online" | "manual"; instructions: string; feePercent: number };
 
 export default function Checkout() {
   const { items, clear } = useCart();
@@ -19,11 +17,20 @@ export default function Checkout() {
   const [subtotal, setSubtotal] = useState(0); const [fee, setFee] = useState(0); const [delivery, setDelivery] = useState<DeliveryChoice | null>(null);
   const [c, setC] = useState({ name: "", email: "", phone: "" });
   const [pay, setPay] = useState<"TROPIPAY" | "QVAPAY" | "TRANSFER" | "CASH">("TRANSFER");
-  const [gw, setGw] = useState({ tropipay: false, qvapay: false });
+  const [metodos, setMetodos] = useState<Metodo[]>([]);
   const [code, setCode] = useState(""); const [coupon, setCoupon] = useState<{ code: string; discountUsd: number } | null>(null); const [couponMsg, setCouponMsg] = useState("");
   const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
 
-  useEffect(() => { fetch("/api/payments/methods").then((r) => r.json()).then((m) => { setGw(m); if (m.tropipay) setPay("TROPIPAY"); else if (m.qvapay) setPay("QVAPAY"); }); }, []);
+  useEffect(() => {
+    const total = Math.max(0, subtotal - (coupon?.discountUsd ?? 0)) + fee;
+    fetch(`/api/payments/methods?total=${total.toFixed(2)}`).then((r) => r.json())
+      .then((m: { methods?: Metodo[] }) => {
+        const lista = m.methods ?? [];
+        setMetodos(lista);
+        // Si el método elegido deja de estar disponible, se pasa al primero.
+        setPay((actual) => (lista.some((x) => x.key === actual) ? actual : (lista[0]?.key ?? "TRANSFER")));
+      });
+  }, [subtotal, coupon, fee]);
   useEffect(() => { fetch("/api/account/session").then((r) => r.json()).then((m) => m && setC({ name: m.name ?? "", email: m.email ?? "", phone: m.phone ?? "" })); }, []);
   useEffect(() => {
     if (!items.length) return;
@@ -34,6 +41,8 @@ export default function Checkout() {
     if (r.ok && j.code) { setCoupon(j); setCouponMsg(`Cupón ${j.code} aplicado`); } else { setCoupon(null); setCouponMsg(j.error ?? "Cupón no válido"); }
   };
   const discount = coupon?.discountUsd ?? 0; const base = Math.max(0, subtotal - discount);
+  const metodo = metodos.find((m) => m.key === pay);
+  const comisionMonto = metodo?.feePercent ? Math.round((base + fee) * (metodo.feePercent / 100) * 100) / 100 : 0;
 
   const submit = async () => {
     setBusy(true); setErr("");
@@ -75,16 +84,19 @@ export default function Checkout() {
           <section className="card p-5">
             <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><span className="grid h-6 w-6 place-items-center rounded-full bg-[color:var(--color-navy)] text-xs text-white">3</span> Pago</h2>
             <div className="mt-4 space-y-2">
-              {(["TROPIPAY", "QVAPAY", "TRANSFER", "CASH"] as const).filter((v) => (v === "TROPIPAY" ? gw.tropipay : v === "QVAPAY" ? gw.qvapay : true)).map((v) => {
-                const [ic, label, hint] = PAY_LABELS[v];
-                return (
-                  <label key={v} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition ${pay === v ? "border-[color:var(--color-accent)] bg-[color:var(--color-accent)]/5 ring-2 ring-[color:var(--color-accent)]/20" : "border-slate-200 hover:border-slate-300"}`}>
-                    <input type="radio" checked={pay === v} onChange={() => setPay(v)} className="accent-[color:var(--color-accent)]" />
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100 text-navy"><Icon name={ic === "bank" ? "card" : ic} size={18} /></span>
-                    <span><span className="block text-sm font-semibold text-slate-800">{label}</span><span className="block text-xs text-slate-500">{hint}</span></span>
-                  </label>
-                );
-              })}
+              {!metodos.length && <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">No hay métodos de pago disponibles ahora mismo. Escríbenos para coordinar el cobro.</p>}
+              {metodos.map((m) => (
+                <label key={m.key} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${pay === m.key ? "border-[color:var(--color-accent)] bg-[color:var(--color-accent)]/5 ring-2 ring-[color:var(--color-accent)]/20" : "border-slate-200 hover:border-slate-300"}`}>
+                  <input type="radio" checked={pay === m.key} onChange={() => setPay(m.key)} className="mt-1 accent-[color:var(--color-accent)]" />
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-navy"><Icon name={ICONO[m.key] ?? "card"} size={18} /></span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-slate-800">{m.name}</span>
+                    <span className="block text-xs text-slate-500">{m.description}</span>
+                    {m.feePercent > 0 && <span className="mt-0.5 block text-xs font-semibold text-[color:var(--color-accent-ink)]">+{m.feePercent} % de comisión</span>}
+                    {pay === m.key && m.instructions && <span className="mt-1.5 block whitespace-pre-line rounded-lg bg-slate-50 px-2.5 py-2 text-xs text-slate-600">{m.instructions}</span>}
+                  </span>
+                </label>
+              ))}
             </div>
           </section>
 
@@ -105,7 +117,8 @@ export default function Checkout() {
               <div className="flex justify-between"><dt className="text-slate-500">Subtotal</dt><dd className="font-semibold">{subtotal.toFixed(2)} USD</dd></div>
               {discount > 0 && <div className="flex justify-between text-[color:var(--color-ok)]"><dt>Descuento</dt><dd className="font-semibold">−{discount.toFixed(2)} USD</dd></div>}
               <div className="flex justify-between"><dt className="text-slate-500">Envío</dt><dd className="font-semibold">{fee.toFixed(2)} USD</dd></div>
-              <div className="flex justify-between border-t border-slate-100 pt-3 text-lg"><dt className="font-semibold">Total</dt><dd className="font-display font-extrabold text-navy">{(base + fee).toFixed(2)} USD</dd></div>
+              {comisionMonto > 0 && <div className="flex justify-between"><dt className="text-slate-500">Comisión de pago</dt><dd className="font-semibold">{comisionMonto.toFixed(2)} USD</dd></div>}
+              <div className="flex justify-between border-t border-slate-100 pt-3 text-lg"><dt className="font-semibold">Total</dt><dd className="font-display font-extrabold text-navy">{(base + fee + comisionMonto).toFixed(2)} USD</dd></div>
             </dl>
             {err && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{err}</p>}
             <button disabled={!ready || busy} onClick={submit} className="btn btn-primary mt-5 w-full text-base disabled:opacity-40">

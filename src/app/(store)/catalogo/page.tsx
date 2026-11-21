@@ -6,7 +6,6 @@ import ProductCard from "@/components/ProductCard";
 import Icon from "@/components/brand/Icon";
 import { getCustomer } from "@/lib/customer-auth";
 import { searchProductIds } from "@/lib/catalog";
-import { CATEGORIAS_360 } from "@/lib/vista360";
 import { skusConGiro } from "@/lib/photo360";
 
 const OPCIONES_OTROS = [
@@ -38,7 +37,9 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
     ...(s.marca ? { brand: { slug: s.marca } } : {}),
     ...(s.disponible === "1" ? { stock: { gt: 0 } } : {}),
     ...(s.oferta === "1" ? { compareAtUsd: { not: null } } : {}),
-    ...(s.vista3d === "1" ? { OR: [{ category: { slug: { in: [...CATEGORIAS_360] } } }, { sku: { in: skusConGiro() } }] } : {}),
+    // Solo los SKU con secuencia de fotos real: filtrar por categoría prometía
+  // giro en vehículos que la ficha muestra quietos.
+  ...(s.vista3d === "1" ? { sku: { in: skusConGiro() } } : {}),
     ...(min !== undefined || max !== undefined ? { priceUsd: { ...(min !== undefined ? { gte: min } : {}), ...(max !== undefined ? { lte: max } : {}) } } : {}),
     ...(s.make || s.model || year ? { fits: { some: {
       ...(s.make ? { make: { contains: s.make, mode: "insensitive" as const } } : {}),

@@ -59,34 +59,42 @@ export default function DespieceViewer({ vehicleSlug, image, pins }: Props) {
               style={{ aspectRatio: "3 / 2" }}
               onClick={() => setZoom((z) => !z)}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={image}
-                alt="Diagrama de despiece del vehículo"
-                className="h-full w-full object-contain transition-transform duration-300 ease-out"
+              {/* La imagen y los pines comparten el mismo contenedor para que el
+                  zoom los escale juntos; si solo escalara la imagen, los pines
+                  se quedarían donde estaban y dejarían de marcar su número. */}
+              <div
+                className="relative h-full w-full transition-transform duration-300 ease-out"
                 style={{ transform: zoom ? "scale(2.1)" : "none", transformOrigin: `${origen.x}% ${origen.y}%` }}
-                draggable={false}
-              />
-              {pins.map((p) => {
-                const esActivo = activo === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={(e) => { e.stopPropagation(); seleccionar(p.id); }}
-                    onMouseEnter={() => setActivo(p.id)}
-                    style={{ left: `${p.x}%`, top: `${p.y}%` }}
-                    aria-label={`Pieza ${p.number}: ${p.label ?? p.product.name}`}
-                    aria-current={esActivo ? "true" : undefined}
-                    className={`absolute grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full text-[12px] font-bold shadow-md transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--color-accent)]/40 ${
-                      esActivo
-                        ? "z-20 scale-125 bg-[color:var(--color-volt)] text-[color:var(--color-navy-deep)] ring-4 ring-[color:var(--color-volt)]/30"
-                        : "z-10 bg-[color:var(--color-navy)] text-white hover:scale-110 hover:bg-[color:var(--color-accent)]"
-                    }`}
-                  >
-                    {p.number}
-                  </button>
-                );
-              })}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={image}
+                  alt="Diagrama de despiece del vehículo"
+                  className="h-full w-full object-contain"
+                  draggable={false}
+                />
+                {pins.map((p) => {
+                  const esActivo = activo === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={(e) => { e.stopPropagation(); seleccionar(p.id); }}
+                      onMouseEnter={() => setActivo(p.id)}
+                      style={{ left: `${p.x}%`, top: `${p.y}%` }}
+                      aria-label={`Pieza ${p.number}: ${p.label ?? p.product.name}`}
+                      aria-current={esActivo ? "true" : undefined}
+                      className={`absolute grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full transition focus:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--color-accent)]/40 ${
+                        esActivo
+                          ? "z-20 bg-[color:var(--color-volt)]/25 ring-2 ring-[color:var(--color-volt)]"
+                          : "z-10 bg-transparent hover:bg-[color:var(--color-accent)]/15 hover:ring-2 hover:ring-[color:var(--color-accent)]/50"
+                      }`}
+                    >
+                      {/* El número ya lo dibuja la lámina; el pin solo lo hace táctil. */}
+                      <span className="sr-only">{p.number}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
