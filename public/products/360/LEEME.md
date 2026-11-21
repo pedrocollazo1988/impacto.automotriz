@@ -1,12 +1,12 @@
 # Fotos del giro 360
 
-Secuencias publicadas: `te-4001`, `te-4002` y `te-4003`, 36 fotogramas cada una
-de 900×900 px.
+**Ahora mismo no hay ninguna secuencia publicada.** Antes había tres
+(`te-4001`, `te-4002`, `te-4003`) generadas por código en `src/lib/shapes.ts` y
+renderizadas con `scripts/render-360.ts`, pero eran renders de un modelo 3D
+esquemático y parecían un juguete de CAD. Se retiraron: la ficha muestra la foto
+real del producto y el visor solo se activa cuando hay fotos de verdad.
 
-**Las que hay ahora mismo son renders de un modelo 3D esquemático**, generado por
-código en `src/lib/shapes.ts` y renderizado con `scripts/render-360.ts`. Sirven
-para que la ficha no esté vacía, pero no son el producto real: parecen un
-juguete de CAD. Están pendientes de sustituir por fotos de verdad.
+Con menos de 8 fotos el visor muestra solo la foto principal, no simula giro.
 
 ## Cómo poner fotos reales
 

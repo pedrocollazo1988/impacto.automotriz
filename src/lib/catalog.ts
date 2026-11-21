@@ -48,7 +48,7 @@ export const invalidarCacheCatalogo = () => {
 
 export type ProductInput = {
   sku: string; name: string; slug?: string; description?: string; priceUsd: number; compareAtUsd?: number | null; stock: number; lowStockAt?: number;
-  images?: string[]; model3dUrl?: string | null; specs?: Record<string, string> | null; featured?: boolean; active?: boolean;
+  images?: string[]; specs?: Record<string, string> | null; featured?: boolean; active?: boolean;
   variants?: { sku: string; name: string; priceUsd?: number | null; stock: number; active?: boolean }[];
   categoryName: string; brandName?: string | null; fits?: { make: string; model: string; yearFrom: number; yearTo: number }[];
 };
@@ -59,7 +59,7 @@ export async function saveProduct(i: ProductInput, id?: number) {
   const brand = i.brandName?.trim() ? await prisma.brand.upsert({ where: { slug: slugify(i.brandName) }, update: {}, create: { slug: slugify(i.brandName), name: i.brandName.trim() } }) : null;
   const data = {
     sku: i.sku.trim(), name: i.name.trim(), description: i.description ?? "", priceUsd: i.priceUsd, compareAtUsd: i.compareAtUsd ?? null, stock: i.stock,
-    lowStockAt: i.lowStockAt ?? 3, images: i.images ?? [], model3dUrl: i.model3dUrl || null, specs: i.specs ?? undefined, featured: i.featured ?? false,
+    lowStockAt: i.lowStockAt ?? 3, images: i.images ?? [], specs: i.specs ?? undefined, featured: i.featured ?? false,
     active: i.active ?? true, categoryId: category.id, brandId: brand?.id ?? null,
   };
   const existing = id ? { id } : await prisma.product.findUnique({ where: { sku: data.sku }, select: { id: true } });

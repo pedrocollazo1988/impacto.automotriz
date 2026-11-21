@@ -12,7 +12,7 @@ const site = process.env.PUBLIC_URL ?? "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(site),
   title: { default: "Impacto Automotriz | Piezas, accesorios y transporte eléctrico", template: "%s · Impacto Automotriz" },
-  description: "Piezas, accesorios y medios de transporte eléctrico. Busca por vehículo, gira los vehículos eléctricos 360°, paga en línea y recibe en tu provincia.",
+  description: "Piezas, accesorios y medios de transporte eléctrico. Busca por vehículo, paga en línea y recibe en tu provincia.",
   applicationName: "Impacto Automotriz",
   keywords: ["piezas", "autopartes", "accesorios", "transporte eléctrico", "Cuba", "repuestos"],
   openGraph: { type: "website", siteName: "Impacto Automotriz", locale: "es_CU" },

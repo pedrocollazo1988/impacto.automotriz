@@ -209,7 +209,6 @@ model Product {
   stock          Int                    @default(0)
   lowStockAt     Int                    @default(3)
   images         String[]
-  model3dUrl     String? // archivo .glb (visor 3D / realidad aumentada)
   specs          Json? // { "Medida": "...", "Voltaje": "..." }
   featured       Boolean                @default(false)
   active         Boolean                @default(true)
