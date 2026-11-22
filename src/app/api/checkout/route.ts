@@ -9,6 +9,7 @@ import { createOnlinePayment } from "@/lib/payments";
 import { leerPasarelas } from "@/lib/payment-gateways";
 import { comision } from "@/lib/pasarelas";
 import { sendTransactional } from "@/lib/mailer";
+import { orderToken, rememberOrder } from "@/lib/order-access";
 
 const Body = z.object({
   items: z.array(z.object({ productId: z.number().int(), variantId: z.number().int().nullish(), qty: z.number().int().min(1).max(99) })).min(1).max(50),
@@ -71,6 +72,7 @@ export const POST = handle(async (req: Request) => {
     catch (e) { console.error("Pasarela:", e); }
   }
   sendTransactional(b.customer.email, `Pedido #${order.number} recibido`,
-    `<p>Hola ${b.customer.name.replace(/[<>&]/g, "")}, recibimos tu pedido <b>#${order.number}</b> por <b>${totalUsd.toFixed(2)} USD</b>.</p><p>PIN de entrega: <b>${delivery.confirmationCode}</b> (dáselo a quien entrega para confirmar la recepción).</p><p>Seguimiento: ${process.env.PUBLIC_URL}/pedido/${order.id}</p>`).catch(() => {});
+    `<p>Hola ${b.customer.name.replace(/[<>&]/g, "")}, recibimos tu pedido <b>#${order.number}</b> por <b>${totalUsd.toFixed(2)} USD</b>.</p><p>PIN de entrega: <b>${delivery.confirmationCode}</b> (dáselo a quien entrega para confirmar la recepción).</p><p>Seguimiento: ${process.env.PUBLIC_URL}/pedido/${order.id}?t=${orderToken(order.id)}</p>`).catch(() => {});
+  await rememberOrder(order.id);
   return Response.json({ orderId: order.id, paymentUrl });
 });

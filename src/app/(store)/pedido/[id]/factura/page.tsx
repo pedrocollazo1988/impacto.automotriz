@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { canViewOrder } from "@/lib/order-access";
 import PrintButton from "@/components/PrintButton";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Comprobante", robots: { index: false } };
 
 // Comprobante imprimible: «Imprimir → Guardar como PDF» en el navegador.
-export default async function Factura({ params }: { params: Promise<{ id: string }> }) {
+export default async function Factura({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ t?: string }> }) {
   const o = await prisma.order.findUnique({ where: { id: (await params).id }, include: { items: true, delivery: true } });
-  if (!o) notFound();
+  if (!o || !(await canViewOrder(o, (await searchParams).t))) notFound();
   const m = (n: unknown) => `${Number(n).toFixed(2)} USD`;
   return (
     <div className="mx-auto max-w-2xl space-y-4 text-sm">
