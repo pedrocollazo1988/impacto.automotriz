@@ -1,44 +1,39 @@
 import Link from "next/link";
 import Icon from "@/components/brand/Icon";
 import { SERVICIOS, SITE } from "@/lib/site";
+import { leerSeccion } from "@/lib/contenido-server";
 
 export const metadata = { title: "Servicios" };
 
-const POSTVENTA: [string, string, string][] = [
-  ["wrench", "Mantenimiento preventivo", "Revisión por kilometraje, cambio de filtros, líquidos y frenos con repuestos del catálogo."],
-  ["gauge", "Diagnóstico y reparación", "Localizamos la avería y te decimos qué pieza hace falta antes de tocar nada."],
-  ["battery", "Sistemas eléctricos", "Baterías, cargadores y motor de vehículos eléctricos y triciclos."],
-  ["shield", "Garantía de piezas", "Cada repuesto que vendemos está respaldado; si falla, lo revisamos."],
-];
+export default async function Servicios() {
+  const postventa = await leerSeccion("servicios-postventa");
 
-export default function Servicios() {
   return (
     <div>
       <section className="relative overflow-hidden bg-[color:var(--color-navy-deep)] text-white">
         <div aria-hidden className="absolute inset-0 blueprint opacity-60" />
         <div className="container-x relative py-16">
-          <span className="eyebrow eyebrow-light">Qué hacemos</span>
-          <h1 className="mt-2 max-w-3xl font-display text-4xl font-extrabold leading-tight">Servicios</h1>
-          <p className="mt-4 max-w-2xl text-lg text-white/75">
-            Además de vender piezas, te acompañamos después: mantenimiento, diagnóstico,
-            reparación y asesoría para tu vehículo o tu flota.
-          </p>
+          <span className="eyebrow eyebrow-light">{postventa.eyebrow}</span>
+          <h1 className="mt-2 max-w-3xl font-display text-4xl font-extrabold leading-tight">{postventa.title}</h1>
+          <p className="mt-4 max-w-2xl text-lg text-white/75">{postventa.subtitle}</p>
         </div>
       </section>
 
-      <section className="container-x py-14">
-        <div className="grid gap-4 sm:grid-cols-2">
-          {POSTVENTA.map(([ic, t, d]) => (
-            <div key={t} className="card flex gap-4 p-5">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name={ic} size={22} /></span>
-              <div>
-                <h2 className="font-display font-bold text-navy">{t}</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-500">{d}</p>
+      {postventa.visible && (
+        <section className="container-x py-14">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {postventa.items.map((it) => (
+              <div key={it.titulo} className="card flex gap-4 p-5">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name={it.icono || "wrench"} size={22} /></span>
+                <div>
+                  <h2 className="font-display font-bold text-navy">{it.titulo}</h2>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-500">{it.texto}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="container-x pb-16">
         <h2 className="font-display text-2xl font-extrabold text-navy">Nuestras líneas de trabajo</h2>

@@ -4,15 +4,20 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Icon from "@/components/brand/Icon";
 import { envolver, iniciarArrastre, pasosDeArrastre, type EstadoArrastre } from "@/lib/arrastre";
 
-// Giro 360 con las fotos reales del vehículo: una toma por fotograma
-// (public/products/360/<sku>-01.webp, -02, ...). Sin secuencia se muestra la
-// foto principal: girar una sola foto plana la deja de canto a los 90°.
-export default function Photo360({ src, frames, alt }: { src?: string; frames: string[]; alt: string }) {
+// Giro 360 con dos fuentes posibles:
+//  - una secuencia de fotos (una toma por fotograma), y
+//  - un vídeo grabado girando la pieza, que es mucho más barato: un MP4 de 2 MB
+//    sustituye a 36 fotogramas de 200 KB. El arrastre mueve el vídeo, así que se
+//    siente igual que la secuencia pero sin descargar decenas de imágenes.
+// Sin secuencia se muestra la foto principal: girar una sola foto plana la deja
+// de canto a los 90°.
+export default function Photo360({ src, frames, video, alt }: { src?: string; frames: string[]; video?: string | null; alt: string }) {
   const total = frames.length;
   const [indice, setIndice] = useState(0);
   const [arrastrando, setArrastrando] = useState(false);
   const [auto, setAuto] = useState(true);
   const arrastre = useRef<EstadoArrastre | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const avanzar = useCallback((pasos: number) => {
     if (!total) return;
@@ -28,11 +33,55 @@ export default function Photo360({ src, frames, alt }: { src?: string; frames: s
   };
   const soltar = () => { setArrastrando(false); arrastre.current = null; };
 
+  // Con vídeo, arrastrar equivale a recorrer el tiempo: se mueve currentTime en
+  // vez de cambiar de fotograma.
+  const seguirVideo = (x: number) => {
+    const v = videoRef.current;
+    if (!v || !v.duration || Number.isNaN(v.duration)) return;
+    if (!arrastre.current) return;
+    const { pasos, estado } = pasosDeArrastre(arrastre.current, x);
+    arrastre.current = estado;
+    if (!pasos) return;
+    const fotogramas = Math.max(12, v.duration * 12);
+    v.currentTime = (v.currentTime + (pasos / fotogramas) * v.duration + v.duration) % v.duration;
+  };
+
   useEffect(() => {
     if (!auto || arrastrando || total < 2) return;
     const t = setInterval(() => avanzar(1), 110);
     return () => clearInterval(t);
   }, [auto, arrastrando, total, avanzar]);
+
+  // Quitar el atributo autoPlay no detiene un vídeo que ya está en marcha: sin
+  // esto, al arrastrar el tiempo seguiría corriendo y el giro se iría solo.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (arrastrando) v.pause();
+    else if (auto) void v.play().catch(() => {});
+  }, [arrastrando, auto]);
+
+  if (video) {
+    return (
+      <div
+        className="card relative aspect-square select-none overflow-hidden bg-black"
+        style={{ cursor: arrastrando ? "grabbing" : "grab", touchAction: "pan-y" }}
+        // Con vídeo no se apaga el giro automático: al soltar debe seguir
+        // reproduciéndose, no quedarse congelado en el último fotograma.
+        onPointerDown={(e) => { e.currentTarget.setPointerCapture?.(e.pointerId); setArrastrando(true); arrastre.current = iniciarArrastre(e.clientX); }}
+        onPointerMove={(e) => seguirVideo(e.clientX)}
+        onPointerUp={soltar}
+        onPointerCancel={soltar}
+        onPointerLeave={soltar}
+      >
+        <video ref={videoRef} src={video} className="h-full w-full object-contain" muted loop playsInline preload="metadata"
+          autoPlay={auto} aria-label={`Giro 360 de ${alt}`} />
+        <span className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-navy/85 px-3 py-1.5 text-xs font-medium text-white shadow">
+          <Icon name="refresh" size={12} /> Arrastra para girar 360°
+        </span>
+      </div>
+    );
+  }
 
   if (!total) {
     return (

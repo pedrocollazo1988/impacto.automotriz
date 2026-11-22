@@ -8,18 +8,18 @@ import SectionHead from "@/components/site/SectionHead";
 import PasosCompra from "@/components/site/PasosCompra";
 import Reveal from "@/components/site/Reveal";
 import { skusConGiro } from "@/lib/photo360";
+import { leerSeccion } from "@/lib/contenido-server";
 export const dynamic = "force-dynamic";
-
-const VALUE_PROPS: [string, string, string][] = [
-  ["car", "Compatibilidad con tu vehículo", "Guarda tu garaje y filtra solo las piezas que encajan con tu marca, modelo y año."],
-  ["truck", "Entrega en toda Cuba", "Domicilio, mensajería, punto acordado o recogida en tienda, con tarifas por provincia y municipio."],
-  ["card", "Pago en línea seguro", "Tropipay, QvaPay, transferencia o efectivo. Confirmación automática y comprobante de tu pedido."],
-];
 
 const CAT_ICON: Record<string, string> = { frenos: "gauge", "sistema-electrico": "bolt", electrico: "bolt", suspension: "layers", "triciclos-electricos": "battery", motor: "wrench", accesorios: "box" };
 
 export default async function Home() {
   const hayGiro = skusConGiro().length > 0;
+  const [valor, confianza, accesos] = await Promise.all([
+    leerSeccion("portada-valor"),
+    leerSeccion("portada-confianza"),
+    leerSeccion("portada-accesos"),
+  ]);
   const [todos, offers, categories, brands, total] = await Promise.all([
     prisma.product.findMany({ where: { active: true }, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true, name: true } } } }),
     prisma.product.findMany({ where: { active: true, compareAtUsd: { not: null } }, take: 4, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true, name: true } } } }),
@@ -74,62 +74,58 @@ export default async function Home() {
       </section>
 
       {/* ── Franja de confianza: lo que el cliente necesita saber antes de comprar ── */}
-      <section aria-label="Ventajas de comprar aquí" className="border-b border-slate-200 bg-white">
-        <div className="container-x grid grid-cols-2 gap-x-6 gap-y-4 py-5 sm:grid-cols-4">
-          {([
-            ["shield", "Pago seguro", "Tropipay, QvaPay o al recibir"],
-            ["truck", "Entrega en Cuba", "Las 15 provincias"],
-            ["refresh", "Garantía", "30 días para reclamar"],
-            ["phone", "Asesoría", "Te decimos qué pieza es"],
-          ] as [string, string, string][]).map(([ic, t, d]) => (
-            <div key={t} className="flex items-center gap-2.5">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[color:var(--color-action)]/10 text-[color:var(--color-action)]">
-                <Icon name={ic} size={17} />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[13px] font-bold leading-tight text-navy">{t}</p>
-                <p className="truncate text-[11px] text-slate-500">{d}</p>
+      {confianza.visible && confianza.items.length > 0 && (
+        <section aria-label="Ventajas de comprar aquí" className="border-b border-slate-200 bg-white">
+          <div className="container-x grid grid-cols-2 gap-x-6 gap-y-4 py-5 sm:grid-cols-4">
+            {confianza.items.map((it) => (
+              <div key={it.titulo} className="flex items-center gap-2.5">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[color:var(--color-action)]/10 text-[color:var(--color-action)]">
+                  <Icon name={it.icono || "check"} size={17} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-bold leading-tight text-navy">{it.titulo}</p>
+                  <p className="truncate text-[11px] text-slate-500">{it.texto}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Accesos rápidos, como los botones de MCV ── */}
-      <section className="container-x mt-10">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ["/catalogo", "grid", "Tienda virtual", "Todo el catálogo con filtros por vehículo"],
-            ["/despiece", "layers", "Despiece", "Localiza la pieza sobre el plano"],
-            ["/renta", "truck", "Renta y leasing", "Flotas con mantenimiento incluido"],
-            ["/marcas-y-modelos", "car", "Marcas y modelos", "Consulta qué tenemos para tu vehículo"],
-          ].map(([href, ic, t, d]) => (
-            <Link key={href} href={href} className="card card-hover group flex items-start gap-3 p-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)] text-white transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-[color:var(--color-action)] group-hover:text-white">
-                <Icon name={ic} size={21} />
-              </span>
-              <span className="min-w-0">
-                <span className="block font-display text-sm font-bold text-navy">{t}</span>
-                <span className="mt-0.5 block text-xs leading-snug text-slate-500">{d}</span>
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {accesos.visible && accesos.items.length > 0 && (
+        <section className="container-x mt-10">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {accesos.items.map((it) => (
+              <Link key={it.href ?? it.titulo} href={it.href || "/catalogo"} className="card card-hover group flex items-start gap-3 p-4">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)] text-white transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-[color:var(--color-action)] group-hover:text-white">
+                  <Icon name={it.icono || "grid"} size={21} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-display text-sm font-bold text-navy">{it.titulo}</span>
+                  <span className="mt-0.5 block text-xs leading-snug text-slate-500">{it.texto}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Valor ── */}
-      <section className="container-x mt-4 relative z-10">
-        <h2 className="sr-only">Por qué comprar en Impacto Automotriz</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {VALUE_PROPS.map(([ic, t, d], i) => (
-            <div key={t} className={`card p-5 animate-fade-up delay-${i + 1}`}>
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name={ic} size={22} /></span>
-              <h3 className="mt-3.5 font-display text-sm font-bold text-navy">{t}</h3>
-              <p className="mt-1 text-xs leading-relaxed text-slate-500">{d}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {valor.visible && valor.items.length > 0 && (
+        <section className="container-x mt-4 relative z-10">
+          <h2 className="sr-only">{valor.title || "Por qué comprar en Impacto Automotriz"}</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {valor.items.map((it, i) => (
+              <div key={it.titulo} className={`card p-5 animate-fade-up delay-${(i % 4) + 1}`}>
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name={it.icono || "check"} size={22} /></span>
+                <h3 className="mt-3.5 font-display text-sm font-bold text-navy">{it.titulo}</h3>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">{it.texto}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Categorías ── */}
       {categories.length > 0 && (
@@ -139,11 +135,13 @@ export default async function Home() {
             {categories.map((c) => (
               <Link key={c.id} href={`/catalogo?categoria=${c.slug}`} className="card card-hover group flex items-center gap-3 p-4">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[color:var(--color-navy)] to-[color:var(--color-action)] text-white transition group-hover:scale-105">
-                  <Icon name={CAT_ICON[c.slug] ?? "box"} size={22} />
+                  <Icon name={c.icon || CAT_ICON[c.slug] || "box"} size={22} />
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate font-display text-sm font-bold text-navy">{c.name}</span>
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500">{c._count.products} productos</span>
+                  <span className="block truncate font-mono text-[10px] uppercase tracking-wider text-slate-500">
+                    {c.description || `${c._count.products} productos`}
+                  </span>
                 </span>
                 <Icon name="chevronRight" size={16} className="ml-auto shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[color:var(--color-action)]" />
               </Link>

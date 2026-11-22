@@ -1,18 +1,14 @@
 import Icon from "@/components/brand/Icon";
 import GarantiaForm from "./GarantiaForm";
+import { leerSeccion } from "@/lib/contenido-server";
 
 export const metadata = {
   title: "Reclamar garantía",
   description: "Reclama la garantía de una pieza comprada en Impacto Automotriz. 30 días desde la entrega.",
 };
 
-const PLAZOS: [string, string, string][] = [
-  ["clock", "30 días", "Desde la fecha de entrega para reclamar por defecto de fabricación."],
-  ["wrench", "Piezas y mano de obra", "Si la pieza falla por defecto, la reponemos o devolvemos el importe."],
-  ["info", "No cubre el desgaste", "El uso normal, una instalación incorrecta o daños por accidente no entran en garantía."],
-];
-
-export default function Garantia() {
+export default async function Garantia() {
+  const plazos = await leerSeccion("garantia-plazos");
   return (
     <div>
       <section className="relative overflow-hidden bg-[color:var(--color-navy-deep)] text-white">
@@ -32,14 +28,14 @@ export default function Garantia() {
           <div>
             <h2 className="font-display text-xl font-extrabold text-navy">Qué cubre la garantía</h2>
             <ul className="mt-4 space-y-3">
-              {PLAZOS.map(([ic, t, d]) => (
-                <li key={t} className="card flex gap-3 p-4">
+              {plazos.visible && plazos.items.map((it) => (
+                <li key={it.titulo} className="card flex gap-3 p-4">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[color:var(--color-action)]/10 text-[color:var(--color-action)]">
-                    <Icon name={ic} size={19} />
+                    <Icon name={it.icono || "info"} size={19} />
                   </span>
                   <div>
-                    <p className="font-display text-sm font-bold text-navy">{t}</p>
-                    <p className="mt-0.5 text-sm leading-relaxed text-slate-600">{d}</p>
+                    <p className="font-display text-sm font-bold text-navy">{it.titulo}</p>
+                    <p className="mt-0.5 text-sm leading-relaxed text-slate-600">{it.texto}</p>
                   </div>
                 </li>
               ))}

@@ -2,20 +2,25 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Icon from "@/components/brand/Icon";
+import { esVideo } from "@/lib/medios";
 
 // El visor de Google pesa ~300 KB: se carga solo cuando la ficha lo necesita.
 // Si el modelo no llega a cargar (404, red caída) se vuelve a la foto, no a un hueco.
+// Acepta también un vídeo: no todo el mundo tiene un GLB de su pieza, y un vídeo
+// girando sobre el plato se ve igual de bien para decidir la compra.
 export default function Modelo3D({ src, poster, alt }: { src: string; poster?: string; alt: string }) {
   const [listo, setListo] = useState(false);
   const [fallo, setFallo] = useState(false);
+  const video = esVideo(src);
 
   useEffect(() => {
+    if (video) return;
     let vivo = true;
     import("@google/model-viewer")
       .then(() => vivo && setListo(true))
       .catch(() => vivo && setFallo(true));
     return () => { vivo = false; };
-  }, []);
+  }, [video]);
 
   if (fallo) {
     return (
@@ -25,6 +30,17 @@ export default function Modelo3D({ src, poster, alt }: { src: string; poster?: s
         ) : (
           <p className="px-6 text-center text-sm text-slate-500">No se pudo cargar el modelo 3D.</p>
         )}
+      </div>
+    );
+  }
+
+  if (video) {
+    return (
+      <div className="card relative aspect-square overflow-hidden bg-black">
+        <video src={src} className="h-full w-full object-contain" controls loop muted playsInline preload="metadata" poster={poster} aria-label={`Vídeo 3D de ${alt}`} />
+        <span className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-navy/85 px-3 py-1.5 text-xs font-medium text-white shadow">
+          <Icon name="play" size={12} /> Vídeo de la pieza girando
+        </span>
       </div>
     );
   }

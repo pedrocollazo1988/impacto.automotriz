@@ -5,6 +5,7 @@ import AdminShell, { type NavLink } from "@/components/admin/AdminShell";
 const LINKS: [string, string, Perm, string][] = [
   ["/admin", "Pedidos", "orders", "box"],
   ["/admin/productos", "Productos", "products", "cube"],
+  ["/admin/categorias", "Categorías", "products", "grid"],
   ["/admin/despiece", "Despiece", "products", "layers"],
   ["/admin/cupones", "Cupones", "coupons", "tag"],
   ["/admin/pagos", "Pagos", "payments", "card"],
@@ -12,6 +13,7 @@ const LINKS: [string, string, Perm, string][] = [
   ["/admin/campanas", "Email marketing", "email", "mail"],
   ["/admin/reportes", "Reportes", "reports", "chart"],
   ["/admin/resenas", "Reseñas", "reviews", "star"],
+  ["/admin/contenido", "Contenido", "content", "image"],
   ["/admin/equipo", "Equipo", "team", "user"],
   ["/admin/auditoria", "Actividad", "team", "clock"],
 ];

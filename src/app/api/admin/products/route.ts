@@ -2,13 +2,21 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit, handle, requireAdmin } from "@/lib/auth";
 import { saveProduct } from "@/lib/catalog";
+import { MAX_FOTOGRAMAS_360, MAX_FOTOS, MAX_VIDEOS } from "@/lib/medios";
 import { VISTAS } from "@/lib/viewer";
 
 const ProductBody = z.object({
   id: z.number().int().optional(), slug: z.string().max(80).optional(), sku: z.string().min(2).max(40), name: z.string().min(2).max(160),
   description: z.string().max(5000).default(""), priceUsd: z.number().min(0), compareAtUsd: z.number().min(0).nullish(),
-  stock: z.number().int().min(0), lowStockAt: z.number().int().min(0).default(3), images: z.array(z.string().max(500)).max(10).default([]),
-  model3dUrl: z.string().max(500).nullish(), viewerMode: z.enum(VISTAS).optional(),
+  stock: z.number().int().min(0), lowStockAt: z.number().int().min(0).default(3),
+  // Los topes se validan aquí además de en el panel: el formulario es comodidad,
+  // la API es la que manda (una petición a mano no puede meter 200 fotos).
+  images: z.array(z.string().max(500)).max(MAX_FOTOS).default([]),
+  videos: z.array(z.string().max(500)).max(MAX_VIDEOS).default([]),
+  model3dUrl: z.string().max(500).nullish(), model3dVideo: z.string().max(500).nullish(),
+  spin360Frames: z.array(z.string().max(500)).max(MAX_FOTOGRAMAS_360).default([]),
+  spin360Video: z.string().max(500).nullish(),
+  viewerMode: z.enum(VISTAS).optional(),
   specs: z.record(z.string()).nullish(), featured: z.boolean().default(false), active: z.boolean().default(true),
   variants: z.array(z.object({ sku: z.string().min(2).max(40), name: z.string().min(1).max(80), priceUsd: z.number().min(0).nullish(), stock: z.number().int().min(0), active: z.boolean().default(true) })).max(50).optional(),
   categoryName: z.string().min(2).max(60), brandName: z.string().max(60).nullish(),
