@@ -11,6 +11,13 @@ const config: NextConfig = {
     ],
     // Escalones más finos en la zona móvil: sin 320/360/420 el navegador salta
     // de 256 a 384 px y descarga hasta un 40 % más de bytes de los necesarios.
+    // AVIF pesa ~22 % menos que WebP en estas fotos; el navegador elige por
+    // Accept y los navegadores viejos siguen recibiendo WebP.
+    formats: ["image/avif", "image/webp"],
+    // Sin esto Next cachea 60 s y el navegador revalida en cada visita: las
+    // fotos se vuelven a descargar enteras. Son assets que no cambian de
+    // contenido (si cambia el producto, cambia el nombre del archivo).
+    minimumCacheTTL: 2678400,
     deviceSizes: [320, 360, 420, 480, 640, 768, 1024, 1280, 1920, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 192, 256, 384],
   },
