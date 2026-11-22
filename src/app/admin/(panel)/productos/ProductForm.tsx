@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Icon from "@/components/brand/Icon";
 import { inputCls } from "@/components/admin/ui";
+import { ETIQUETA_VISTA, VISTAS } from "@/lib/viewer";
 
-export type PInit = { id?: number; sku: string; name: string; description: string; priceUsd: number; compareAtUsd: number | null; stock: number; lowStockAt: number; images: string[];
+export type PInit = { id?: number; sku: string; name: string; description: string; priceUsd: number; compareAtUsd: number | null; stock: number; lowStockAt: number; images: string[]; model3dUrl?: string | null; viewerMode?: string;
   variants: { sku: string; name: string; priceUsd: number | null; stock: number }[]; specs: Record<string, string> | null; featured: boolean; active: boolean; categoryName: string; brandName: string; fits: { make: string; model: string; yearFrom: number; yearTo: number }[] };
-const EMPTY: PInit = { sku: "", name: "", description: "", priceUsd: 0, compareAtUsd: null, stock: 0, lowStockAt: 3, images: [], variants: [], specs: null, featured: false, active: true, categoryName: "", brandName: "", fits: [] };
+const EMPTY: PInit = { sku: "", name: "", description: "", priceUsd: 0, compareAtUsd: null, stock: 0, lowStockAt: 3, images: [], model3dUrl: null, viewerMode: "photos", variants: [], specs: null, featured: false, active: true, categoryName: "", brandName: "", fits: [] };
 
 export default function ProductForm({ initial = EMPTY, categories, brands }: { initial?: PInit; categories: string[]; brands: string[] }) {
   const router = useRouter(); const [f, setF] = useState(initial); const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
@@ -17,6 +18,7 @@ export default function ProductForm({ initial = EMPTY, categories, brands }: { i
   const [specs, setSpecs] = useState(Object.entries(initial.specs ?? {}).map(([k, v]) => `${k}: ${v}`).join("\n"));
   const [variants, setVariants] = useState(initial.variants.map((v) => `${v.sku};${v.name};${v.priceUsd ?? ""};${v.stock}`).join("\n"));
   const [up, setUp] = useState("");
+  const [subiendoModelo, setSubiendoModelo] = useState(false);
   const upload = async (files: FileList | null) => {
     if (!files?.length) return;
     setErr(""); setUp("");
@@ -35,6 +37,19 @@ export default function ProductForm({ initial = EMPTY, categories, brands }: { i
       setUp(""); setErr(e instanceof Error ? e.message : "No se pudo subir el archivo");
     } finally { setSubiendo(false); }
   };
+  const subirModelo = async (file?: File | null) => {
+    if (!file) return;
+    setErr(""); setUp(""); setSubiendoModelo(true);
+    try {
+      const fd = new FormData(); fd.append("file", file);
+      const r = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error ?? `No se pudo subir ${file.name} (HTTP ${r.status})`);
+      set("model3dUrl", j.url); setUp("Modelo 3D añadido");
+    } catch (e) {
+      setUp(""); setErr(e instanceof Error ? e.message : "No se pudo subir el modelo");
+    } finally { setSubiendoModelo(false); }
+  };
   const quitarFoto = (i: number) => setFotos((p) => p.filter((_, n) => n !== i));
   const moverFoto = (i: number, d: number) => setFotos((p) => {
     const a = [...p]; const j = i + d;
@@ -48,7 +63,7 @@ export default function ProductForm({ initial = EMPTY, categories, brands }: { i
     setBusy(true); setErr("");
     try {
       const body = {
-        ...f, images: fotos, brandName: f.brandName || null,
+        ...f, images: fotos, brandName: f.brandName || null, model3dUrl: f.model3dUrl || null,
         specs: Object.fromEntries(specs.split("\n").map((l) => l.split(/:(.*)/s).map((s) => s.trim())).filter(([k, v]) => k && v)),
         variants: variants.split("\n").map((l) => l.split(";").map((s) => s.trim())).filter((a) => a.length >= 4 && a[0] && a[1]).map(([sku, name, price, stock]) => ({ sku, name, priceUsd: price ? Number(price.replace(",", ".")) : null, stock: Number(stock) || 0 })),
         fits: fits.split("\n").map((l) => l.split(";").map((s) => s.trim())).filter((a) => a.length === 4).map(([make, model, a, b]) => ({ make, model, yearFrom: +a, yearTo: +b })),
@@ -114,6 +129,57 @@ export default function ProductForm({ initial = EMPTY, categories, brands }: { i
             <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={(e) => { void upload(e.target.files); e.currentTarget.value = ""; }} />
           </label>
         )}
+      </section>
+
+      <section className="md:col-span-2 rounded-xl border border-slate-200 bg-white p-4">
+        <header className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-navy"><Icon name="cube" size={15} /> Modelo 3D</h3>
+            <p className="mt-0.5 text-xs text-slate-500">Archivo .glb o .gltf hasta 25 MB. Es opcional: sin modelo, la ficha enseña solo las fotos.</p>
+          </div>
+          <label className={`btn btn-ghost btn-sm ${subiendoModelo ? "opacity-60" : ""}`}>
+            <Icon name={subiendoModelo ? "spinner" : "upload"} size={13} className={subiendoModelo ? "animate-spin" : ""} />
+            {subiendoModelo ? "Subiendo…" : f.model3dUrl ? "Cambiar modelo" : "Subir modelo"}
+            <input type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" className="hidden" disabled={subiendoModelo}
+              onChange={(e) => { void subirModelo(e.target.files?.[0]); e.currentTarget.value = ""; }} />
+          </label>
+        </header>
+
+        {f.model3dUrl ? (
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <Icon name="cube" size={18} className="shrink-0 text-[color:var(--color-accent-deep)]" />
+            <code className="min-w-0 flex-1 truncate text-xs text-slate-600">{f.model3dUrl}</code>
+            <a href={f.model3dUrl} target="_blank" rel="noopener" className="btn btn-ghost btn-sm">Ver</a>
+            <button type="button" onClick={() => set("model3dUrl", null)} className="btn btn-ghost btn-sm !text-red-600">
+              <Icon name="trash" size={13} /> Quitar
+            </button>
+          </div>
+        ) : (
+          <label className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-slate-300 px-4 py-6 text-center transition-colors hover:border-navy/40 hover:bg-slate-50">
+            <Icon name="cube" size={22} className="text-slate-400" />
+            <span className="text-sm font-medium text-navy">Arrastra el archivo 3D o pulsa para elegirlo</span>
+            <input type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" className="hidden"
+              onChange={(e) => { void subirModelo(e.target.files?.[0]); e.currentTarget.value = ""; }} />
+          </label>
+        )}
+
+        <fieldset className="mt-4">
+          <legend className="text-xs font-medium text-slate-600">Qué se muestra al abrir la ficha</legend>
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            {VISTAS.map((v) => {
+              const noDisponible = (v === "model3d" && !f.model3dUrl) || (v === "spin360" && fotos.length < 2);
+              return (
+                <label key={v} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${noDisponible ? "border-slate-200 bg-slate-50 text-slate-400" : "border-slate-300 text-slate-700 hover:border-navy/40"}`}>
+                  <input type="radio" name="viewerMode" value={v} disabled={noDisponible}
+                    checked={(f.viewerMode ?? "photos") === v} onChange={() => set("viewerMode", v)} />
+                  {ETIQUETA_VISTA[v]}
+                  {noDisponible && <span className="text-[10px]">(sin medio)</span>}
+                </label>
+              );
+            })}
+          </div>
+          <p className="mt-1.5 text-xs text-slate-500">El visitante puede cambiar de vista en la ficha; esto solo decide cuál ve primero.</p>
+        </fieldset>
       </section>
 
       <L t="Especificaciones (una por línea: Medida: 16 pulgadas)"><textarea rows={4} className={i} value={specs} onChange={(e) => setSpecs(e.target.value)} /></L>

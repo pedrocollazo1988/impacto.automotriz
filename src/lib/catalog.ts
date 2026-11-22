@@ -1,5 +1,7 @@
 import { revalidateTag, unstable_cache } from "next/cache";
 import { prisma } from "./prisma";
+import { esVista } from "./viewer";
+import { asegurarVista } from "./viewer-server";
 
 export const slugify = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 
@@ -48,18 +50,24 @@ export const invalidarCacheCatalogo = () => {
 
 export type ProductInput = {
   sku: string; name: string; slug?: string; description?: string; priceUsd: number; compareAtUsd?: number | null; stock: number; lowStockAt?: number;
-  images?: string[]; specs?: Record<string, string> | null; featured?: boolean; active?: boolean;
+  images?: string[]; model3dUrl?: string | null; viewerMode?: string; specs?: Record<string, string> | null; featured?: boolean; active?: boolean;
   variants?: { sku: string; name: string; priceUsd?: number | null; stock: number; active?: boolean }[];
   categoryName: string; brandName?: string | null; fits?: { make: string; model: string; yearFrom: number; yearTo: number }[];
 };
 
 // Alta o actualización (por id o, si no hay, por SKU). Crea categoría y marca si no existen.
 export async function saveProduct(i: ProductInput, id?: number) {
+  await asegurarVista();
   const category = await prisma.category.upsert({ where: { slug: slugify(i.categoryName) }, update: {}, create: { slug: slugify(i.categoryName), name: i.categoryName.trim() } });
   const brand = i.brandName?.trim() ? await prisma.brand.upsert({ where: { slug: slugify(i.brandName) }, update: {}, create: { slug: slugify(i.brandName), name: i.brandName.trim() } }) : null;
   const data = {
     sku: i.sku.trim(), name: i.name.trim(), description: i.description ?? "", priceUsd: i.priceUsd, compareAtUsd: i.compareAtUsd ?? null, stock: i.stock,
-    lowStockAt: i.lowStockAt ?? 3, images: i.images ?? [], specs: i.specs ?? undefined, featured: i.featured ?? false,
+    lowStockAt: i.lowStockAt ?? 3, images: i.images ?? [],
+    // Omitir la clave (no enviarla como null) evita que una reimportación del
+    // catálogo borre el modelo 3D o la vista que el admin ya había elegido.
+    ...(i.model3dUrl !== undefined ? { model3dUrl: i.model3dUrl } : {}),
+    ...(esVista(i.viewerMode) ? { viewerMode: i.viewerMode } : {}),
+    specs: i.specs ?? undefined, featured: i.featured ?? false,
     active: i.active ?? true, categoryId: category.id, brandId: brand?.id ?? null,
   };
   const existing = id ? { id } : await prisma.product.findUnique({ where: { sku: data.sku }, select: { id: true } });

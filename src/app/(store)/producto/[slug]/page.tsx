@@ -4,9 +4,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import AddToCart from "@/components/AddToCart";
-import Photo360 from "@/components/Photo360";
+import ProductViewer from "@/components/ProductViewer";
 import ProductCard from "@/components/ProductCard";
-import ProductGallery from "@/components/ProductGallery";
 import WishlistButton from "@/components/WishlistButton";
 import CompareToggle from "@/components/CompareToggle";
 import ReviewForm from "@/components/ReviewForm";
@@ -14,22 +13,27 @@ import Icon from "@/components/brand/Icon";
 import { getCustomer } from "@/lib/customer-auth";
 import { fotos360 } from "@/lib/photo360";
 import { tieneVista360 } from "@/lib/vista360";
+import { esVista, type Vista } from "@/lib/viewer";
+import { asegurarVista } from "@/lib/viewer-server";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
-const get = (slug: string) => prisma.product.findFirst({
-  where: { slug, active: true },
-  include: {
-    brand: true, category: true, fits: true,
-    variants: { where: { active: true }, orderBy: { id: "asc" } },
-    system: true,
-    compatWith: { include: { target: { select: { slug: true, name: true, sku: true } } } },
-    pins: {
-      take: 3,
-      include: { diagram: { include: { vehicle: { select: { slug: true, brand: true, model: true, version: true } }, system: { select: { slug: true, name: true } } } } },
+const get = async (slug: string) => {
+  await asegurarVista();
+  return prisma.product.findFirst({
+    where: { slug, active: true },
+    include: {
+      brand: true, category: true, fits: true,
+      variants: { where: { active: true }, orderBy: { id: "asc" } },
+      system: true,
+      compatWith: { include: { target: { select: { slug: true, name: true, sku: true } } } },
+      pins: {
+        take: 3,
+        include: { diagram: { include: { vehicle: { select: { slug: true, brand: true, model: true, version: true } }, system: { select: { slug: true, name: true } } } } },
+      },
     },
-  },
-});
+  });
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await get((await params).slug);
@@ -48,12 +52,13 @@ export default async function Producto({ params }: Props) {
   ]);
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
   const related = await prisma.product.findMany({ where: { active: true, categoryId: p.categoryId, id: { not: p.id } }, take: 4, include: { brand: true, category: { select: { slug: true } } } });
-  const girar360 = tieneVista360(p.category.slug);
-  const frames = girar360 ? fotos360(p.sku) : [];
+  const frames = tieneVista360(p.category.slug) ? fotos360(p.sku) : [];
+  const vista: Vista = esVista(p.viewerMode) ? p.viewerMode : "photos";
   const wa = process.env.NEXT_PUBLIC_WHATSAPP;
   const specs = Object.entries((p.specs ?? {}) as Record<string, string>);
   const off = p.compareAtUsd && Number(p.compareAtUsd) > Number(p.priceUsd) ? Math.round(((Number(p.compareAtUsd) - Number(p.priceUsd)) / Number(p.compareAtUsd)) * 100) : 0;
   const ld = { "@context": "https://schema.org", "@type": "Product", name: p.name, sku: p.sku, description: p.description, image: p.images, brand: p.brand ? { "@type": "Brand", name: p.brand.name } : undefined,
+    ...(p.model3dUrl ? { subjectOf: { "@type": "3DModel", name: p.name, encoding: { "@type": "MediaObject", contentUrl: p.model3dUrl, encodingFormat: "model/gltf-binary" } } } : {}),
     ...(reviews.length ? { aggregateRating: { "@type": "AggregateRating", ratingValue: avg.toFixed(1), reviewCount: reviews.length } } : {}),
     offers: { "@type": "Offer", priceCurrency: "USD", price: Number(p.priceUsd), availability: p.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" } };
 
@@ -70,11 +75,7 @@ export default async function Producto({ params }: Props) {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="space-y-4">
-          {girar360 ? (
-            <Photo360 src={p.images[0]} frames={frames} alt={p.name} />
-          ) : (
-            <ProductGallery images={p.images} name={p.name} />
-          )}
+          <ProductViewer images={p.images} name={p.name} model3dUrl={p.model3dUrl} frames={frames} initial={vista} />
           {p.sku === "TE-4001" && (
             <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
               Imagen ilustrativa de un triciclo de carga equivalente. Las medidas y el equipamiento de la ficha son los del DDS-OD.

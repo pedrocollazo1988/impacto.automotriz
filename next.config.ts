@@ -28,7 +28,9 @@ const config: NextConfig = {
     // scripts de terceros ni enviar datos a dominios ajenos (connect/img/form).
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      // 'wasm-unsafe-eval' lo exige el visor 3D de Google: compila WebAssembly
+      // para decodificar el glTF. No abre eval() de JavaScript, solo WASM.
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
