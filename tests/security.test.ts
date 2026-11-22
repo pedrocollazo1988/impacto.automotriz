@@ -72,3 +72,28 @@ describe("acceso a un pedido (IDOR)", () => {
     expect(orderToken("pedido-1")).not.toBe(a);
   });
 });
+
+describe("cookie de pedidos (compra como invitado)", () => {
+  // Tras comprar se deja una cookie firmada con los pedidos propios, para que
+  // el invitado vea el suyo sin cuenta. La firma impide añadir ids ajenos.
+  it("acepta la cookie firmada por el servidor", async () => {
+    process.env.APP_SECRET = "secreto-cookie";
+    const { packOrderIds, unpackOrderIds } = await import("@/lib/order-access");
+    const raw = packOrderIds(["pedido-a", "pedido-b"]);
+    expect(unpackOrderIds(raw)).toEqual(["pedido-a", "pedido-b"]);
+  });
+
+  it("rechaza la cookie si se le añade un pedido a mano", async () => {
+    process.env.APP_SECRET = "secreto-cookie";
+    const { packOrderIds, unpackOrderIds } = await import("@/lib/order-access");
+    const raw = packOrderIds(["pedido-a"]);
+    const [ids, sig] = [raw.slice(0, raw.lastIndexOf("|")), raw.slice(raw.lastIndexOf("|") + 1)];
+    // el atacante añade su propio id conservando la firma vieja
+    expect(unpackOrderIds(`pedido-a,pedido-ajeno|${sig}`)).toEqual([]);
+    expect(unpackOrderIds(`pedido-ajeno|${sig}`)).toEqual([]);
+    // y sin firma tampoco
+    expect(unpackOrderIds("pedido-a")).toEqual([]);
+    expect(unpackOrderIds(undefined)).toEqual([]);
+    expect(ids).toBe("pedido-a");
+  });
+});

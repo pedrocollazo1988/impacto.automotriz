@@ -24,27 +24,39 @@ export function tokenMatches(id: string, token: string | undefined) {
   return safeEq(orderToken(id), token);
 }
 
-const readCookie = async () => {
-  const raw = (await cookies()).get(COOKIE)?.value;
-  if (!raw) return { ids: [] as string[], sig: "" };
-  const [ids = "", sig = ""] = raw.split("|");
-  return { ids: ids.split(",").filter(Boolean), sig };
+const readCookie = async () => ({
+  ids: unpackOrderIds((await cookies()).get(COOKIE)?.value),
+});
+
+// Empaquetado y verificación separados del acceso a cookies para poder probarlos
+// sin una petición: la firma es lo que impide añadir un id a mano.
+export const packOrderIds = (ids: string[]) => {
+  const value = ids.join(",");
+  return `${value}|${hmac(value)}`;
 };
+
+export function unpackOrderIds(raw: string | undefined): string[] {
+  if (!process.env.APP_SECRET || !raw) return [];
+  const i = raw.lastIndexOf("|");
+  if (i < 0) return [];
+  const value = raw.slice(0, i), sig = raw.slice(i + 1);
+  if (!value || !sig || !safeEq(sig, hmac(value))) return [];
+  return value.split(",").filter(Boolean);
+}
 
 export async function rememberOrder(id: string) {
   if (!process.env.APP_SECRET) return;
   const { ids } = await readCookie();
   const next = [id, ...ids.filter((x) => x !== id)].slice(0, MAX);
-  const value = next.join(",");
-  (await cookies()).set(COOKIE, `${value}|${hmac(value)}`, {
+  (await cookies()).set(COOKIE, packOrderIds(next), {
     httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 30 * 86400,
   });
 }
 
 export async function canViewOrder(order: { id: string; customerId: string | null; customerEmail: string }, token?: string) {
   if (tokenMatches(order.id, token)) return true;
-  const { ids, sig } = await readCookie();
-  if (ids.includes(order.id) && sig && safeEq(sig, hmac(ids.join(",")))) return true;
+  const { ids } = await readCookie();
+  if (ids.includes(order.id)) return true;
   const me = await getCustomer();
   if (!me) return false;
   if (order.customerId) return order.customerId === me.id;
