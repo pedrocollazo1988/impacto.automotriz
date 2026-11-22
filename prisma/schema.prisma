@@ -192,10 +192,16 @@ model Brand {
 }
 
 model Category {
-  id       Int       @id @default(autoincrement())
-  slug     String    @unique
-  name     String
-  products Product[]
+  id          Int       @id @default(autoincrement())
+  slug        String    @unique
+  name        String
+  description String    @default("")
+  icon        String    @default("")
+  position    Int       @default(0)
+  visible     Boolean   @default(true)
+  products    Product[]
+
+  @@index([position])
 }
 
 model Product {
@@ -220,7 +226,7 @@ model Product {
   // Giro 360 con fotogramas subidos desde el panel (además de la secuencia
   // automática de /public/products/360). El vídeo 360 es la vía barata: un MP4
   // que se reproduce en bucle al arrastrar, sin descargar 36 fotogramas.
-  spin360Frames String[]
+  spin360Frames  String[]
   spin360Video   String?
   // Qué enseña la ficha por defecto: la galería de fotos, el visor 3D o el giro 360.
   viewerMode     String                 @default("photos")
@@ -584,4 +590,20 @@ model MediaFile {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+// Contenido editable de la web pública (textos de portada, servicios, contacto,
+// preguntas frecuentes...). Una fila por sección: `key` es el ancla que usan las
+// páginas y `items` guarda la lista en JSON para no crear una tabla por sección.
+// Si una sección no existe, la página usa el texto por defecto del código.
+model ContentBlock {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  eyebrow   String   @default("")
+  title     String   @default("")
+  subtitle  String   @default("")
+  items     Json     @default("[]")
+  visible   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+  updatedBy String   @default("")
 }

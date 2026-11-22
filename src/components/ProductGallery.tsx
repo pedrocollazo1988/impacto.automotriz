@@ -75,14 +75,14 @@ export default function ProductGallery({ images, videos = [], name }: { images: 
     <div className="space-y-3">
       <div
         ref={marco}
-        className="card relative aspect-square overflow-hidden"
+        className={`card relative overflow-hidden ${esVideoActual ? "aspect-video" : "aspect-square"}`}
         onPointerEnter={(e) => { if (e.pointerType === "mouse" && !esVideoActual) setLupa(true); }}
         onPointerLeave={() => setLupa(false)}
         onPointerMove={esVideoActual ? undefined : mover}
         style={esVideoActual ? undefined : { cursor: ampliada ? "zoom-out" : "zoom-in" }}
       >
         {esVideoActual ? (
-          <video key={actual.url} src={actual.url} className="h-full w-full bg-black object-contain" controls playsInline preload="metadata" aria-label={`Vídeo de ${name}`} />
+          <video key={actual.url} src={actual.url} className="h-full w-full bg-black object-cover" controls playsInline preload="metadata" aria-label={`Vídeo de ${name}`} />
         ) : (
           <Image
             src={actual.url}

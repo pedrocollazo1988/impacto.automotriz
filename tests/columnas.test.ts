@@ -11,7 +11,17 @@ describe("aplicarColumnas", () => {
     const { sql, cliente } = espia();
     await aplicarColumnas(cliente);
     expect(sql.length).toBeGreaterThan(0);
-    for (const s of sql) expect(s).toContain("ADD COLUMN IF NOT EXISTS");
+    const columnas = sql.filter((s) => s.includes("ALTER TABLE"));
+    expect(columnas.length).toBeGreaterThan(0);
+    for (const s of columnas) expect(s).toContain("ADD COLUMN IF NOT EXISTS");
+  });
+
+  it("crea la tabla de contenido editable de forma idempotente", async () => {
+    const { sql, cliente } = espia();
+    await aplicarColumnas(cliente);
+    const todo = sql.join("\n");
+    expect(todo).toContain('CREATE TABLE IF NOT EXISTS "ContentBlock"');
+    expect(todo).toContain('CREATE UNIQUE INDEX IF NOT EXISTS "ContentBlock_key_key"');
   });
 
   it("cubre las columnas que el esquema añadió después del despliegue", async () => {

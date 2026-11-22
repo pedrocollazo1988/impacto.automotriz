@@ -49,7 +49,11 @@ const paths: Record<string, React.ReactNode> = {
   info: <><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5M12 8.2v.1" /></>,
   ruler: <><path d="M3 15 15 3l6 6L9 21z" /><path d="m7.5 13.5 2 2M10.5 10.5l2 2M13.5 7.5l2 2" /></>,
   battery: <><rect x="3" y="8" width="15" height="8" rx="2" /><path d="M21 11v2M6.5 11h6" /></>,
+  edit: <><path d="M4 20h4l10-10a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5z" /><path d="M13.5 6.5 17.5 10.5" /></>,
 };
+
+/** Nombres válidos, para que el panel ofrezca un selector en vez de texto libre. */
+export const NOMBRES_ICONO = Object.keys(paths);
 
 export default function Icon({ name, size = "1em", strokeWidth = 1.8, ...rest }: { name: keyof typeof paths | string; size?: number | string; strokeWidth?: number } & SVGProps<SVGSVGElement>) {
   return (

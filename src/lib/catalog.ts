@@ -29,8 +29,14 @@ export async function searchProductIds(term: string): Promise<number[]> {
 const CATEGORIAS_TAG = "categorias";
 const MARCAS_TAG = "marcas";
 
+// Solo las visibles: una categoría oculta desde el panel desaparece de la
+// portada, del catálogo y de la barra de departamentos a la vez.
 export const getCategoriesCached = unstable_cache(
-  async () => prisma.category.findMany({ orderBy: { name: "asc" }, include: { _count: { select: { products: true } } } }),
+  async () => prisma.category.findMany({
+    where: { visible: true },
+    orderBy: [{ position: "asc" }, { name: "asc" }],
+    include: { _count: { select: { products: true } } },
+  }),
   ["categorias-con-conteo"],
   { revalidate: 3600, tags: [CATEGORIAS_TAG] },
 );
