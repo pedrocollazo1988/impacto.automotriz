@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
@@ -168,8 +169,7 @@ export default async function Producto({ params }: Props) {
           {p.connectorImage && (
             <div className="card overflow-hidden">
               <h3 className="flex items-center gap-2 border-b border-slate-100 px-4 py-3 font-display text-sm font-bold text-navy"><Icon name="bolt" size={16} /> Conectores y pines</h3>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.connectorImage} alt={`Conectores de ${p.name}`} className="w-full bg-slate-50 object-contain" />
+              <Image src={p.connectorImage} alt={`Conectores de ${p.name}`} width={800} height={800} sizes="(max-width:1024px) 100vw, 40vw" className="h-auto w-full bg-slate-50 object-contain" unoptimized={!p.connectorImage.startsWith("/") || p.connectorImage.endsWith(".svg")} />
               <p className="px-4 py-2 text-xs text-slate-500">Compara colores de cable y forma del enchufe con tu unidad antes de pedir.</p>
             </div>
           )}
