@@ -1,6 +1,7 @@
 import { revalidateTag, unstable_cache } from "next/cache";
 import { prisma } from "./prisma";
 import { esVista } from "./viewer";
+import { asegurarVista } from "./viewer-server";
 
 export const slugify = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 
@@ -56,6 +57,7 @@ export type ProductInput = {
 
 // Alta o actualización (por id o, si no hay, por SKU). Crea categoría y marca si no existen.
 export async function saveProduct(i: ProductInput, id?: number) {
+  await asegurarVista();
   const category = await prisma.category.upsert({ where: { slug: slugify(i.categoryName) }, update: {}, create: { slug: slugify(i.categoryName), name: i.categoryName.trim() } });
   const brand = i.brandName?.trim() ? await prisma.brand.upsert({ where: { slug: slugify(i.brandName) }, update: {}, create: { slug: slugify(i.brandName), name: i.brandName.trim() } }) : null;
   const data = {

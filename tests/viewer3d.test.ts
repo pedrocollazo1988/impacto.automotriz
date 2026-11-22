@@ -14,6 +14,7 @@ const { capturado, prismaFalso } = vi.hoisted(() => {
       product: { findUnique: async () => ({ id: 7 }), update: guardar, create: guardar },
       productFit: { deleteMany: async () => {}, createMany: async () => {} },
       productVariant: { upsert: async () => {}, updateMany: async () => {} },
+      $executeRawUnsafe: async () => 0,
     },
   };
 });

@@ -14,22 +14,26 @@ import { getCustomer } from "@/lib/customer-auth";
 import { fotos360 } from "@/lib/photo360";
 import { tieneVista360 } from "@/lib/vista360";
 import { esVista, type Vista } from "@/lib/viewer";
+import { asegurarVista } from "@/lib/viewer-server";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
-const get = (slug: string) => prisma.product.findFirst({
-  where: { slug, active: true },
-  include: {
-    brand: true, category: true, fits: true,
-    variants: { where: { active: true }, orderBy: { id: "asc" } },
-    system: true,
-    compatWith: { include: { target: { select: { slug: true, name: true, sku: true } } } },
-    pins: {
-      take: 3,
-      include: { diagram: { include: { vehicle: { select: { slug: true, brand: true, model: true, version: true } }, system: { select: { slug: true, name: true } } } } },
+const get = async (slug: string) => {
+  await asegurarVista();
+  return prisma.product.findFirst({
+    where: { slug, active: true },
+    include: {
+      brand: true, category: true, fits: true,
+      variants: { where: { active: true }, orderBy: { id: "asc" } },
+      system: true,
+      compatWith: { include: { target: { select: { slug: true, name: true, sku: true } } } },
+      pins: {
+        take: 3,
+        include: { diagram: { include: { vehicle: { select: { slug: true, brand: true, model: true, version: true } }, system: { select: { slug: true, name: true } } } } },
+      },
     },
-  },
-});
+  });
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await get((await params).slug);
