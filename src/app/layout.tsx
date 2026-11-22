@@ -16,7 +16,13 @@ export const metadata: Metadata = {
   description: "Piezas, accesorios y medios de transporte eléctrico. Busca por vehículo, paga en línea y recibe en tu provincia.",
   applicationName: "Impacto Automotriz",
   keywords: ["piezas", "autopartes", "accesorios", "transporte eléctrico", "Cuba", "repuestos"],
-  openGraph: { type: "website", siteName: "Impacto Automotriz", locale: "es_CU" },
+  openGraph: {
+    type: "website", siteName: "Impacto Automotriz", locale: "es_CU",
+    // Sin imagen, el enlace compartido sale sin miniatura y los asistentes que
+    // citan la página no tienen nada que mostrar.
+    images: [{ url: "/brand/logo.png", width: 480, height: 435, alt: "Impacto Automotriz" }],
+  },
+  twitter: { card: "summary", images: ["/brand/logo.png"] },
   robots: { index: true, follow: true },
 };
 
