@@ -67,7 +67,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
 
   const Filter = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="border-t border-slate-100 py-4 first:border-t-0 first:pt-0">
-      <h3 className="mb-2 font-display text-xs font-bold uppercase tracking-wider text-navy">{title}</h3>
+      <h2 className="mb-2 font-display text-xs font-bold uppercase tracking-wider text-navy">{title}</h2>
       {children}
     </div>
   );
@@ -76,8 +76,8 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
     <div className="container-x py-8">
       {/* Cabecera */}
       <div className="mb-6">
-        <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-400">
-          <Link href="/" className="hover:text-navy">Inicio</Link><Icon name="chevronRight" size={12} /><span className="text-slate-500">Catálogo</span>
+        <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
+          <Link href="/" className="inline-flex min-h-12 items-center hover:text-navy lg:min-h-0">Inicio</Link><Icon name="chevronRight" size={12} /><span className="text-slate-500">Catálogo</span>
         </nav>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -86,10 +86,10 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
           </div>
           <form action="/catalogo" className="flex items-center gap-2">
             <input type="hidden" name="categoria" value={s.categoria ?? ""} />
-            <select name="orden" defaultValue={s.orden ?? "novedad"} className="input-select w-52">
+            <select name="orden" aria-label="Ordenar productos" defaultValue={s.orden ?? "novedad"} className="input-select min-h-12 w-52 lg:min-h-0">
               {ORDENES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
-            <button className="btn btn-ghost">Aplicar</button>
+            <button className="btn btn-ghost min-h-12 lg:min-h-0">Aplicar</button>
           </form>
         </div>
       </div>
@@ -105,8 +105,8 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
               <div className="space-y-1 text-sm">
                 {categories.map((c) => (
                   <Link key={c.id} href={link({ categoria: s.categoria === c.slug ? undefined : c.slug })}
-                    className={`flex items-center justify-between rounded-lg px-2 py-1.5 transition ${s.categoria === c.slug ? "bg-[color:var(--color-navy)] font-semibold text-white" : "hover:bg-slate-50"}`}>
-                    <span>{c.name}</span><span className={`font-mono text-[10px] ${s.categoria === c.slug ? "text-white/70" : "text-slate-400"}`}>{c._count.products}</span>
+                    className={`flex min-h-12 items-center justify-between rounded-lg px-2 py-1.5 transition lg:min-h-0 ${s.categoria === c.slug ? "bg-[color:var(--color-navy)] font-semibold text-white" : "hover:bg-slate-50"}`}>
+                    <span>{c.name}</span><span className={`font-mono text-[10px] ${s.categoria === c.slug ? "text-white/70" : "text-slate-500"}`}>{c._count.products}</span>
                   </Link>
                 ))}
               </div>
@@ -114,25 +114,25 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
             <Filter title="Marca">
               <div className="flex flex-wrap gap-1.5">
                 {brands.map((b) => (
-                  <Link key={b.id} href={link({ marca: s.marca === b.slug ? undefined : b.slug })} className={`chip ${s.marca === b.slug ? "chip-active" : ""}`}>{b.name}</Link>
+                  <Link key={b.id} href={link({ marca: s.marca === b.slug ? undefined : b.slug })} className={`chip min-h-12 lg:min-h-0 ${s.marca === b.slug ? "chip-active" : ""}`}>{b.name}</Link>
                 ))}
-                {brands.length === 0 && <p className="text-xs text-slate-400">Aún no hay marcas.</p>}
+                {brands.length === 0 && <p className="text-xs text-slate-500">Aún no hay marcas.</p>}
               </div>
             </Filter>
             <Filter title="Precio (USD)">
               <form action="/catalogo" className="flex items-center gap-2">
                 <input type="hidden" name="categoria" value={s.categoria ?? ""} /><input type="hidden" name="marca" value={s.marca ?? ""} />
                 <input name="min" type="number" min="0" placeholder="Mín" defaultValue={s.min ?? ""} className="input px-2 py-1.5 text-sm" />
-                <span className="text-slate-400">—</span>
+                <span className="text-slate-500">—</span>
                 <input name="max" type="number" min="0" placeholder="Máx" defaultValue={s.max ?? ""} className="input px-2 py-1.5 text-sm" />
-                <button className="btn btn-primary px-3 py-1.5 text-xs">Ir</button>
+                <button className="btn btn-primary min-h-12 px-3 text-xs lg:min-h-0 lg:py-1.5">Ir</button>
               </form>
             </Filter>
             <Filter title="Otros">
               <div className="space-y-1 text-sm">
                 {(OPCIONES_OTROS.filter(([k]) => k !== "vista3d" || hayGiro)).map(([key, label]) => (
                   <Link key={key} href={link({ [key]: s[key] === "1" ? undefined : "1" })}
-                    className={`flex items-center gap-2 rounded-lg px-2 py-1.5 transition ${s[key] === "1" ? "bg-[color:var(--color-navy)]/6 font-semibold text-navy" : "hover:bg-slate-50"}`}>
+                    className={`flex min-h-12 items-center gap-2 rounded-lg px-2 py-1.5 transition lg:min-h-0 ${s[key] === "1" ? "bg-[color:var(--color-navy)]/6 font-semibold text-navy" : "hover:bg-slate-50"}`}>
                     <span className={`grid h-4 w-4 place-items-center rounded border ${s[key] === "1" ? "border-[color:var(--color-accent)] bg-[color:var(--color-accent)] text-white" : "border-slate-300"}`}>
                       {s[key] === "1" && <Icon name="check" size={11} strokeWidth={3} />}
                     </span>

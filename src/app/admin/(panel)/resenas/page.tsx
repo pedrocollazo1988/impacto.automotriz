@@ -14,7 +14,7 @@ export default async function Resenas() {
               <span className="font-semibold text-navy">{r.product.name}</span>
               <span className="flex items-center gap-2">{!r.visible && <Badge tone="mute">Oculta</Badge>}<ReviewToggle id={r.id} visible={r.visible} /></span>
             </div>
-            <p className="mt-1 text-slate-500">{r.customer.name} · <span className="text-[color:var(--color-volt)]">{"★".repeat(r.rating)}</span><span className="text-slate-300">{"★".repeat(5 - r.rating)}</span></p>
+            <p className="mt-1 text-slate-500">{r.customer.name} · <span className="text-amber-700">{"★".repeat(r.rating)}</span><span className="text-slate-300">{"★".repeat(5 - r.rating)}</span></p>
             <p className="mt-0.5">{r.comment}</p>
           </div>))}
         </div>

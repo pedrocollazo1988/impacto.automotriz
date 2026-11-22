@@ -44,13 +44,13 @@ export default async function DespieceIndex() {
             <article key={v.id} className="adm-panel">
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 p-4">
                 <div>
-                  <p className="font-mono text-[11px] uppercase tracking-widest text-slate-400">{v.brand}</p>
+                  <p className="font-mono text-[11px] uppercase tracking-widest text-slate-500">{v.brand}</p>
                   <h2 className="font-display text-2xl font-extrabold text-navy">{v.model}</h2>
                   <p className="mt-0.5 text-xs text-slate-500">{v.version} · {v.voltage} · {v.power}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-display text-2xl font-extrabold text-navy">{piezas}</p>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-400">piezas</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">piezas</p>
                 </div>
               </div>
               {v.summary && <p className="border-b border-slate-100 p-4 text-sm leading-relaxed text-slate-600">{v.summary}</p>}
@@ -60,7 +60,7 @@ export default async function DespieceIndex() {
                     <Link href={`/despiece/${v.slug}/${dg.system.slug}`} className="flex h-full flex-col gap-1 bg-white p-3 transition hover:bg-slate-50">
                       <Icon name={dg.system.icon} size={16} className="text-[color:var(--color-accent)]" />
                       <span className="text-xs font-bold leading-tight text-navy">{dg.system.name}</span>
-                      <span className="font-mono text-[10px] text-slate-400">{dg._count.pins} piezas</span>
+                      <span className="font-mono text-[10px] text-slate-500">{dg._count.pins} piezas</span>
                     </Link>
                   </li>
                 ))}

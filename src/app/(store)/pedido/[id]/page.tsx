@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { canViewOrder } from "@/lib/order-access";
 import Icon from "@/components/brand/Icon";
 import PayRetry from "./PayRetry";
 export const dynamic = "force-dynamic";
@@ -10,9 +11,10 @@ const STEPS = ["PENDING_PAYMENT", "PAID", "PREPARING", "SHIPPED", "DELIVERED"] a
 const L: Record<string, string> = { PENDING_PAYMENT: "Pendiente de pago", PAID: "Pagado", PREPARING: "En preparación", SHIPPED: "Enviado", DELIVERED: "Entregado", CANCELED: "Cancelado" };
 const ICONS: Record<string, string> = { PENDING_PAYMENT: "card", PAID: "check", PREPARING: "box", SHIPPED: "truck", DELIVERED: "pin" };
 
-export default async function Pedido({ params }: { params: Promise<{ id: string }> }) {
+export default async function Pedido({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ t?: string }> }) {
   const o = await prisma.order.findUnique({ where: { id: (await params).id }, include: { items: true, delivery: true } });
-  if (!o) notFound();
+  if (!o || !(await canViewOrder(o, (await searchParams).t))) notFound();
+  const tok = (await searchParams).t;
   const idx = STEPS.indexOf(o.status as (typeof STEPS)[number]);
   const canceled = o.status === "CANCELED";
   return (
@@ -20,7 +22,7 @@ export default async function Pedido({ params }: { params: Promise<{ id: string 
       <div className="mx-auto max-w-3xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div><span className="eyebrow">Pedido</span><h1 className="mt-1 font-display text-3xl font-extrabold text-navy">#{o.number}</h1></div>
-          <Link href={`/pedido/${o.id}/factura`} className="btn btn-ghost"><Icon name="box" size={16} /> Ver comprobante</Link>
+          <Link href={`/pedido/${o.id}/factura${tok ? `?t=${tok}` : ""}`} className="btn btn-ghost"><Icon name="box" size={16} /> Ver comprobante</Link>
         </div>
 
         {canceled ? (
@@ -54,7 +56,7 @@ export default async function Pedido({ params }: { params: Promise<{ id: string 
           </ul>
           <div className="ml-auto w-full max-w-xs space-y-1 px-5 py-4 text-sm">
             <p className="flex justify-between"><span className="text-slate-500">Subtotal</span>{Number(o.subtotalUsd).toFixed(2)} USD</p>
-            {Number(o.discountUsd) > 0 && <p className="flex justify-between text-[color:var(--color-ok)]"><span>Descuento</span>−{Number(o.discountUsd).toFixed(2)} USD</p>}
+            {Number(o.discountUsd) > 0 && <p className="flex justify-between text-emerald-700"><span>Descuento</span>−{Number(o.discountUsd).toFixed(2)} USD</p>}
             <p className="flex justify-between"><span className="text-slate-500">Envío</span>{Number(o.shippingUsd).toFixed(2)} USD</p>
             <p className="flex justify-between border-t border-slate-100 pt-2 text-base font-bold text-navy"><span>Total</span>{Number(o.totalUsd).toFixed(2)} USD</p>
           </div>

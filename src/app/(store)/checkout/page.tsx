@@ -106,7 +106,7 @@ export default function Checkout() {
               <input className="input" placeholder="Código de descuento" value={code} onChange={(e) => setCode(e.target.value)} />
               <button className="btn btn-ghost" onClick={applyCoupon}>Aplicar</button>
             </div>
-            {couponMsg && <p className={`mt-2 text-sm ${coupon ? "text-[color:var(--color-ok)]" : "text-red-600"}`}>{couponMsg}</p>}
+            {couponMsg && <p className={`mt-2 text-sm ${coupon ? "text-emerald-700" : "text-red-600"}`}>{couponMsg}</p>}
           </section>
         </div>
 
@@ -115,7 +115,7 @@ export default function Checkout() {
             <h2 className="font-display text-lg font-bold text-navy">Tu pedido</h2>
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between"><dt className="text-slate-500">Subtotal</dt><dd className="font-semibold">{subtotal.toFixed(2)} USD</dd></div>
-              {discount > 0 && <div className="flex justify-between text-[color:var(--color-ok)]"><dt>Descuento</dt><dd className="font-semibold">−{discount.toFixed(2)} USD</dd></div>}
+              {discount > 0 && <div className="flex justify-between text-emerald-700"><dt>Descuento</dt><dd className="font-semibold">−{discount.toFixed(2)} USD</dd></div>}
               <div className="flex justify-between"><dt className="text-slate-500">Envío</dt><dd className="font-semibold">{fee.toFixed(2)} USD</dd></div>
               {comisionMonto > 0 && <div className="flex justify-between"><dt className="text-slate-500">Comisión de pago</dt><dd className="font-semibold">{comisionMonto.toFixed(2)} USD</dd></div>}
               <div className="flex justify-between border-t border-slate-100 pt-3 text-lg"><dt className="font-semibold">Total</dt><dd className="font-display font-extrabold text-navy">{(base + fee + comisionMonto).toFixed(2)} USD</dd></div>

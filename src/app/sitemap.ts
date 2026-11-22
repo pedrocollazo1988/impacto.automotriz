@@ -6,6 +6,7 @@ const site = process.env.PUBLIC_URL ?? "http://localhost:3000";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     "", "/catalogo", "/ofertas", "/nosotros", "/contacto", "/preguntas-frecuentes",
+    "/marcas-y-modelos", "/renta", "/servicios", "/novedades", "/testimonios",
     "/politicas/envios", "/politicas/devoluciones", "/politicas/privacidad", "/politicas/terminos",
   ].map((p) => ({ url: `${site}${p}`, changeFrequency: "weekly" as const, priority: p === "" ? 1 : 0.7 }));
 

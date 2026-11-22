@@ -21,7 +21,7 @@ export default function MiVehiculoBar({ vehicles }: { vehicles: MiVehiculo[] }) 
             setVehicle(v);
           }}
           aria-label="Elegir mi vehículo"
-          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-navy outline-none focus:border-[color:var(--color-accent)]"
+          className="min-h-12 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-navy outline-none focus:border-[color:var(--color-accent)] lg:min-h-0 lg:py-1"
         >
           <option value="">Sin seleccionar</option>
           {vehicles.map((v) => (
@@ -30,7 +30,7 @@ export default function MiVehiculoBar({ vehicles }: { vehicles: MiVehiculo[] }) 
         </select>
         {vehicle ? (
           <>
-            <span className="hidden items-center gap-1 font-semibold text-[color:var(--color-ok)] sm:flex">
+            <span className="hidden items-center gap-1 font-semibold text-emerald-700 sm:flex">
               <Icon name="check" size={12} /> Verás la compatibilidad marcada
             </span>
             <Link href={`/despiece/${vehicle.slug}`} className="font-semibold text-[color:var(--color-accent-deep)] hover:underline">
@@ -41,7 +41,7 @@ export default function MiVehiculoBar({ vehicles }: { vehicles: MiVehiculo[] }) 
             </button>
           </>
         ) : (
-          <span className="text-slate-400">Elígelo una vez y te lo recordamos.</span>
+          <span className="text-slate-500">Elígelo una vez y te lo recordamos.</span>
         )}
       </div>
     </div>

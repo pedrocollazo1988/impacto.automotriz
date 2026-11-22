@@ -32,7 +32,7 @@ export default function AddToCart({ productId, stock, basePriceUsd, variants = [
     <div className="space-y-4">
       {variants.length > 0 && (
         <div>
-          <p className="eyebrow mb-2 !text-[10px] text-slate-400">Elige una opción</p>
+          <p className="eyebrow mb-2 !text-[10px] text-slate-500">Elige una opción</p>
           <div className="flex flex-wrap gap-2">
             {variants.map((x) => (
               <button key={x.id} disabled={x.stock <= 0} onClick={() => { setVid(x.id); setQty(1); }}
@@ -45,7 +45,7 @@ export default function AddToCart({ productId, stock, basePriceUsd, variants = [
       )}
       <p className="flex items-baseline gap-2">
         <span className="font-display text-3xl font-extrabold text-navy">{price.toFixed(2)} <span className="text-base font-bold text-slate-500">USD</span></span>
-        {avail > 0 && <span className="text-xs font-medium text-[color:var(--color-ok)]">{avail} disponibles</span>}
+        {avail > 0 && <span className="text-xs font-medium text-emerald-700">{avail} disponibles</span>}
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center rounded-xl border border-slate-200 bg-white">

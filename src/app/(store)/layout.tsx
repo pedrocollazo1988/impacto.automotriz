@@ -5,6 +5,7 @@ import { getVehiclesCached } from "@/lib/despiece";
 import PwaRegister from "@/components/PwaRegister";
 import Analytics from "@/components/Analytics";
 import SiteHeader from "@/components/site/SiteHeader";
+import DepartamentosBar from "@/components/site/DepartamentosBar";
 import SiteFooter from "@/components/site/SiteFooter";
 import WhatsAppFab from "@/components/site/WhatsAppFab";
 
@@ -16,6 +17,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       <PwaRegister />
       <Analytics />
       <SiteHeader />
+      <DepartamentosBar />
       <MiVehiculoBar vehicles={vehicles.map((v) => ({ slug: v.slug, brand: v.brand, model: v.model, version: v.version }))} />
       <main className="min-h-[60vh]">{children}</main>
       <SiteFooter />

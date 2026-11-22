@@ -17,7 +17,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
         <div className="mb-5 flex flex-col items-center gap-2 text-center text-white">
           <span className="adm-avatar" style={{ width: "3rem", height: "3rem", background: "linear-gradient(180deg,#164a8a,#0a2c5e)", fontSize: "1.1rem" }}>IA</span>
-          <h1 className="font-display text-lg font-extrabold tracking-tight">IMPACTO<span className="text-[#f0c98a]">·</span>AUTOMOTRIZ</h1>
+          <h1 className="font-display text-lg font-extrabold tracking-tight">IMPACTO<span className="text-[color:var(--color-volt-hi)]">·</span>AUTOMOTRIZ</h1>
           <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/50">Panel de administración</p>
         </div>
         <div className="space-y-3 rounded-2xl bg-white p-6 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.5)]">
