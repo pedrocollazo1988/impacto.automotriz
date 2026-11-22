@@ -4,6 +4,9 @@ import { getBrandsCached, getCategoriesCached } from "@/lib/catalog";
 import ProductCard from "@/components/ProductCard";
 import Icon from "@/components/brand/Icon";
 import VehicleFinder from "@/components/site/VehicleFinder";
+import SectionHead from "@/components/site/SectionHead";
+import PasosCompra from "@/components/site/PasosCompra";
+import Reveal from "@/components/site/Reveal";
 import { skusConGiro } from "@/lib/photo360";
 export const dynamic = "force-dynamic";
 
@@ -80,7 +83,7 @@ export default async function Home() {
             ["/marcas-y-modelos", "car", "Marcas y modelos", "Consulta qué tenemos para tu vehículo"],
           ].map(([href, ic, t, d]) => (
             <Link key={href} href={href} className="card card-hover group flex items-start gap-3 p-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)] text-white transition group-hover:bg-[color:var(--color-accent)] group-hover:text-[color:var(--color-navy-deep)]">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)] text-white transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-[color:var(--color-accent)] group-hover:text-[color:var(--color-navy-deep)]">
                 <Icon name={ic} size={21} />
               </span>
               <span className="min-w-0">
@@ -109,11 +112,8 @@ export default async function Home() {
       {/* ── Categorías ── */}
       {categories.length > 0 && (
         <section className="container-x mt-16">
-          <div className="flex items-end justify-between gap-4">
-            <div><span className="eyebrow">Explora por categoría</span><h2 className="mt-1 font-display text-2xl font-extrabold text-navy sm:text-3xl">Encuentra lo que buscas</h2></div>
-            <Link href="/catalogo" className="btn btn-ghost hidden sm:inline-flex">Ver todo <Icon name="arrowRight" size={16} /></Link>
-          </div>
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <SectionHead eyebrow="Explora por categoría" title="Encuentra lo que buscas" href="/catalogo" />
+          <Reveal className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {categories.map((c) => (
               <Link key={c.id} href={`/catalogo?categoria=${c.slug}`} className="card card-hover group flex items-center gap-3 p-4">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[color:var(--color-navy)] to-[color:var(--color-accent)] text-white transition group-hover:scale-105">
@@ -126,7 +126,7 @@ export default async function Home() {
                 <Icon name="chevronRight" size={16} className="ml-auto shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[color:var(--color-accent)]" />
               </Link>
             ))}
-          </div>
+          </Reveal>
         </section>
       )}
 
@@ -151,10 +151,7 @@ export default async function Home() {
       {/* ── Destacados ── */}
       {featured.length > 0 && (
         <section className="container-x mt-16">
-          <div className="flex items-end justify-between gap-4">
-            <div><span className="eyebrow">Lo más buscado</span><h2 className="mt-1 font-display text-2xl font-extrabold text-navy sm:text-3xl">Productos destacados</h2></div>
-            <Link href="/catalogo" className="btn btn-ghost hidden sm:inline-flex">Ver catálogo <Icon name="arrowRight" size={16} /></Link>
-          </div>
+          <SectionHead eyebrow="Lo más buscado" title="Productos destacados" href="/catalogo" linkLabel="Ver catálogo" />
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {featured.map((p) => <ProductCard key={p.id} p={p} />)}
           </div>
@@ -179,7 +176,7 @@ export default async function Home() {
       {/* ── Novedades ── */}
       {latest.length > 0 && (
         <section className="container-x mt-16">
-          <div><span className="eyebrow">Recién llegado</span><h2 className="mt-1 font-display text-2xl font-extrabold text-navy sm:text-3xl">Novedades</h2></div>
+          <SectionHead eyebrow="Recién llegado" title="Novedades" href="/catalogo" />
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {latest.map((p) => <ProductCard key={p.id} p={p} />)}
           </div>
@@ -201,6 +198,8 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      <PasosCompra />
 
       {/* ── CTA final ── */}
       <section className="container-x mt-16">

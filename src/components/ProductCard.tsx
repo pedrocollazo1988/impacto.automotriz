@@ -45,7 +45,7 @@ export default function ProductCard({ p }: { p: CardProduct }) {
         <div className="mt-auto pt-3">
           <div className="flex items-end gap-2">
             <span className="font-display text-lg font-extrabold text-navy">{Number(p.priceUsd).toFixed(2)} <span className="text-xs font-bold text-slate-500">USD</span></span>
-            {off > 0 && <s className="pb-0.5 text-xs text-slate-400">{Number(p.compareAtUsd).toFixed(2)}</s>}
+            {off > 0 && <s className="pb-0.5 text-xs text-slate-500">{Number(p.compareAtUsd).toFixed(2)}</s>}
           </div>
           <p className={`mt-1 flex items-center gap-1 text-xs font-medium ${p.stock > 0 ? "text-emerald-700" : "text-red-600"}`}>
             <span className={`inline-block h-1.5 w-1.5 rounded-full ${p.stock > 0 ? "bg-[color:var(--color-ok)]" : "bg-red-500"}`} />
