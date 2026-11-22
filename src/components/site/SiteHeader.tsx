@@ -25,7 +25,7 @@ export default function SiteHeader() {
     <header className="sticky top-0 z-40">
       {/* Barra de utilidad: se recoge al bajar para dejar sitio al contenido */}
       <div
-        className={`hidden overflow-hidden bg-[color:var(--color-navy-deep)] text-white/80 transition-[max-height,opacity] duration-300 lg:block ${scrolled ? "max-h-0 opacity-0" : "max-h-9 opacity-100"}`}
+        className={`hidden overflow-hidden bg-[color:var(--color-navy-deep)] text-white/75 transition-[max-height,opacity] duration-300 lg:block ${scrolled ? "max-h-0 opacity-0" : "max-h-9 opacity-100"}`}
       >
         <div className="container-x flex h-9 items-center justify-between gap-4 text-xs">
           <p className="flex items-center gap-4">
@@ -43,7 +43,7 @@ export default function SiteHeader() {
             {NAV_EMPRESA.map((l) => (
               <Link key={l.href} href={l.href} className="transition hover:text-white">{l.label}</Link>
             ))}
-            <Link href="/cuenta" className="flex items-center gap-1.5 font-semibold text-white transition hover:text-[color:var(--color-volt)]">
+            <Link href="/cuenta" className="flex items-center gap-1.5 font-semibold text-white transition hover:text-[color:var(--color-action-hi)]">
               <Icon name="user" size={13} /> Mi cuenta
             </Link>
           </nav>
@@ -55,15 +55,15 @@ export default function SiteHeader() {
         <div className="container-x flex items-center gap-2 py-3 sm:gap-5">
           <Logo size="sm" tagline={false} className="min-w-0" />
 
-          <form action="/catalogo" className="relative hidden flex-1 md:block">
-            <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <form action="/catalogo" role="search" className="relative hidden flex-1 md:block">
+            <Icon name="search" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               name="q"
               placeholder="Busca por nombre, código o referencia…"
               aria-label="Buscar productos"
-              className="input h-11 pl-10 pr-24"
+              className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 pl-11 pr-28 text-sm outline-none transition focus:border-[color:var(--color-action)] focus:bg-white focus:ring-4 focus:ring-[color:var(--color-action)]/15"
             />
-            <button className="btn btn-primary absolute right-1.5 top-1/2 h-8 -translate-y-1/2 px-3 text-xs">Buscar</button>
+            <button className="btn btn-accent absolute right-1 top-1/2 h-9 -translate-y-1/2 rounded-full px-4 text-xs">Buscar</button>
           </form>
 
           <div className="ml-auto flex shrink-0 items-center gap-1 lg:ml-0">
@@ -72,7 +72,7 @@ export default function SiteHeader() {
             </Link>
             <Link href="/carrito" aria-label="Carrito" className="relative grid h-12 w-12 place-items-center rounded-xl lg:h-11 lg:w-11 text-slate-700 transition hover:bg-slate-100 hover:text-navy">
               <Icon name="cart" size={20} />
-              {count > 0 && <span className="absolute right-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[color:var(--color-accent)] px-1 text-[11px] font-bold text-white">{count}</span>}
+              {count > 0 && <span className="absolute right-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[color:var(--color-action)] px-1 text-[11px] font-bold text-white ring-2 ring-white">{count}</span>}
             </Link>
             <button onClick={() => setOpen((v) => !v)} aria-label="Abrir menú" aria-expanded={open} className="grid h-12 w-12 place-items-center rounded-xl text-navy transition hover:bg-slate-100 lg:hidden">
               <Icon name={open ? "close" : "menu"} size={22} />
@@ -83,8 +83,8 @@ export default function SiteHeader() {
         {/* Buscador móvil */}
         <form action="/catalogo" className="container-x pb-3 md:hidden">
           <div className="relative">
-            <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input name="q" placeholder="Buscar piezas…" aria-label="Buscar productos" className="input h-11 pl-10" />
+            <Icon name="search" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input name="q" placeholder="Buscar piezas…" aria-label="Buscar productos" className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm outline-none transition focus:border-[color:var(--color-action)] focus:bg-white focus:ring-4 focus:ring-[color:var(--color-action)]/15" />
           </div>
         </form>
       </div>
@@ -92,16 +92,24 @@ export default function SiteHeader() {
       {/* Menú principal en escritorio */}
       <nav className="hidden border-b border-slate-200 bg-white lg:block">
         <div className="container-x flex items-center gap-1">
-          {NAV_PRINCIPAL.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="border-b-2 border-transparent px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-[color:var(--color-accent)] hover:text-navy"
-            >
-              {l.label}
-            </Link>
-          ))}
-          <Link href="/renta" className="ml-auto flex items-center gap-1.5 py-2.5 text-sm font-bold text-[color:var(--color-accent-ink)] transition hover:text-navy">
+          {NAV_PRINCIPAL.map((l) => {
+            const activo = path === l.href || (l.href !== "/" && path.startsWith(l.href));
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                aria-current={activo ? "page" : undefined}
+                className={`border-b-2 px-3 py-2.5 text-sm font-semibold transition ${
+                  activo
+                    ? "border-[color:var(--color-action)] text-[color:var(--color-action)]"
+                    : "border-transparent text-slate-700 hover:border-[color:var(--color-action)]/40 hover:text-navy"
+                }`}
+              >
+                {l.label}
+              </Link>
+            );
+          })}
+          <Link href="/renta" className="ml-auto flex items-center gap-1.5 py-2.5 text-sm font-bold text-[color:var(--color-action)] transition hover:text-navy">
             <Icon name="truck" size={16} /> Renta y leasing
           </Link>
         </div>

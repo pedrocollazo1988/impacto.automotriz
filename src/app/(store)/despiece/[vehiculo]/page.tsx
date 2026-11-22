@@ -34,7 +34,7 @@ export default async function VehiculoDespiece({ params }: Props) {
 
       <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-2xl">
-          <p className="eyebrow text-[color:var(--color-accent-deep)]">{v.brand}</p>
+          <p className="eyebrow text-[color:var(--color-action-deep)]">{v.brand}</p>
           <h1 className="mt-1 font-display text-3xl font-extrabold text-navy sm:text-4xl">Despiece {v.model}</h1>
           <p className="mt-1 font-mono text-xs uppercase tracking-widest text-slate-500">
             {v.version}{v.voltage ? ` · ${v.voltage}` : ""}{v.power ? ` · ${v.power}` : ""}{v.payload ? ` · ${v.payload}` : ""}
@@ -62,13 +62,13 @@ export default async function VehiculoDespiece({ params }: Props) {
               </div>
               <div className="flex flex-1 flex-col p-3">
                 <h2 className="flex items-center gap-1.5 font-display text-lg font-extrabold leading-tight text-navy">
-                  <Icon name={d.system.icon} size={15} className="text-[color:var(--color-accent)]" />
+                  <Icon name={d.system.icon} size={15} className="text-[color:var(--color-action)]" />
                   {d.system.name}
                 </h2>
                 <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500">{d.system.blurb || d.notes}</p>
                 <div className="mt-auto flex items-center justify-between pt-2 text-[11px]">
                   <span className="font-mono text-slate-500">desde {desde.toFixed(2)} USD</span>
-                  <span className="flex items-center gap-1 font-semibold text-[color:var(--color-accent-deep)] group-hover:underline">
+                  <span className="flex items-center gap-1 font-semibold text-[color:var(--color-action-deep)] group-hover:underline">
                     Abrir <Icon name="arrowRight" size={12} />
                   </span>
                 </div>

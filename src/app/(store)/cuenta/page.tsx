@@ -51,7 +51,7 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
         <div aria-hidden className="absolute inset-0 blueprint-dark" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[color:var(--color-navy)] to-[color:var(--color-accent)] font-display text-xl font-extrabold text-white">{me.name.slice(0, 1)}</span>
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[color:var(--color-navy)] to-[color:var(--color-action)] font-display text-xl font-extrabold text-white">{me.name.slice(0, 1)}</span>
             <div><h1 className="font-display text-2xl font-extrabold text-navy">Hola, {me.name.split(" ")[0]}</h1><p className="text-sm text-slate-500">{me.email}</p></div>
           </div>
           <LogoutButton />
@@ -71,7 +71,7 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
               const [label, cls] = L[o.status] ?? [o.status, "bg-slate-100 text-slate-600"];
               return (
                 <Link key={o.id} href={`/pedido/${o.id}`} className="card card-hover flex flex-wrap items-center gap-4 p-4">
-                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-accent-deep)]"><Icon name="box" size={20} /></span>
+                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name="box" size={20} /></span>
                   <div className="min-w-0 flex-1"><p className="font-semibold text-slate-800">Pedido #{o.number}</p><p className="text-xs text-slate-400">{o.createdAt.toLocaleDateString("es-CU")}</p></div>
                   <span className={`badge ${cls}`}>{label}</span>
                   <span className="font-display font-extrabold text-navy">{Number(o.totalUsd).toFixed(2)} USD</span>

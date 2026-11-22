@@ -45,13 +45,13 @@ export default async function Home() {
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-[color:var(--color-navy-deep)] text-white">
         <div className="absolute inset-0 blueprint opacity-70" aria-hidden />
-        <div aria-hidden className="absolute -right-24 -top-24 h-[420px] w-[420px] rounded-full bg-[color:var(--color-accent)]/25 blur-3xl" />
-        <div aria-hidden className="absolute -bottom-32 left-1/3 h-[360px] w-[360px] rounded-full bg-[color:var(--color-volt)]/10 blur-3xl" />
+        <div aria-hidden className="absolute -right-24 -top-24 h-[420px] w-[420px] rounded-full bg-[color:var(--color-action)]/25 blur-3xl" />
+        <div aria-hidden className="absolute -bottom-32 left-1/3 h-[360px] w-[360px] rounded-full bg-[color:var(--color-action-hi)]/10 blur-3xl" />
         <div className="container-x relative grid items-center gap-12 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
           <div className="animate-fade-up">
             <span className="eyebrow eyebrow-light inline-flex items-center gap-2"><Icon name="spark" size={14} /> Tienda oficial · {total}+ productos</span>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] sm:text-5xl lg:text-6xl">
-              La pieza correcta<br />para tu vehículo,<br /><span className="bg-gradient-to-r from-[color:var(--color-volt-hi)] to-[color:var(--color-volt)] bg-clip-text text-transparent">a la primera.</span>
+              La pieza correcta<br />para tu vehículo,<br /><span className="bg-gradient-to-r from-[color:var(--color-action-hi)] to-[color:var(--color-action-hi)] bg-clip-text text-transparent">a la primera.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/75">
               Catálogo de partes, piezas y accesorios con compatibilidad por vehículo y pago en línea.
@@ -73,6 +73,28 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ── Franja de confianza: lo que el cliente necesita saber antes de comprar ── */}
+      <section aria-label="Ventajas de comprar aquí" className="border-b border-slate-200 bg-white">
+        <div className="container-x grid grid-cols-2 gap-x-6 gap-y-4 py-5 sm:grid-cols-4">
+          {([
+            ["shield", "Pago seguro", "Tropipay, QvaPay o al recibir"],
+            ["truck", "Entrega en Cuba", "Las 15 provincias"],
+            ["refresh", "Garantía", "30 días para reclamar"],
+            ["phone", "Asesoría", "Te decimos qué pieza es"],
+          ] as [string, string, string][]).map(([ic, t, d]) => (
+            <div key={t} className="flex items-center gap-2.5">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[color:var(--color-action)]/10 text-[color:var(--color-action)]">
+                <Icon name={ic} size={17} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[13px] font-bold leading-tight text-navy">{t}</p>
+                <p className="truncate text-[11px] text-slate-500">{d}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ── Accesos rápidos, como los botones de MCV ── */}
       <section className="container-x mt-10">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -83,7 +105,7 @@ export default async function Home() {
             ["/marcas-y-modelos", "car", "Marcas y modelos", "Consulta qué tenemos para tu vehículo"],
           ].map(([href, ic, t, d]) => (
             <Link key={href} href={href} className="card card-hover group flex items-start gap-3 p-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)] text-white transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-[color:var(--color-accent)] group-hover:text-white">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)] text-white transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-[color:var(--color-action)] group-hover:text-white">
                 <Icon name={ic} size={21} />
               </span>
               <span className="min-w-0">
@@ -101,7 +123,7 @@ export default async function Home() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {VALUE_PROPS.map(([ic, t, d], i) => (
             <div key={t} className={`card p-5 animate-fade-up delay-${i + 1}`}>
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-accent-deep)]"><Icon name={ic} size={22} /></span>
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name={ic} size={22} /></span>
               <h3 className="mt-3.5 font-display text-sm font-bold text-navy">{t}</h3>
               <p className="mt-1 text-xs leading-relaxed text-slate-500">{d}</p>
             </div>
@@ -116,14 +138,14 @@ export default async function Home() {
           <Reveal className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {categories.map((c) => (
               <Link key={c.id} href={`/catalogo?categoria=${c.slug}`} className="card card-hover group flex items-center gap-3 p-4">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[color:var(--color-navy)] to-[color:var(--color-accent)] text-white transition group-hover:scale-105">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[color:var(--color-navy)] to-[color:var(--color-action)] text-white transition group-hover:scale-105">
                   <Icon name={CAT_ICON[c.slug] ?? "box"} size={22} />
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate font-display text-sm font-bold text-navy">{c.name}</span>
                   <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500">{c._count.products} productos</span>
                 </span>
-                <Icon name="chevronRight" size={16} className="ml-auto shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[color:var(--color-accent)]" />
+                <Icon name="chevronRight" size={16} className="ml-auto shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[color:var(--color-action)]" />
               </Link>
             ))}
           </Reveal>
@@ -138,7 +160,7 @@ export default async function Home() {
               <h2 className="font-display text-xl font-extrabold text-navy sm:text-2xl">{d.name}</h2>
               <p className="mt-0.5 font-mono text-[11px] uppercase tracking-wider text-slate-500">{d._count.products} productos</p>
             </div>
-            <Link href={`/catalogo?categoria=${d.slug}`} className="flex shrink-0 items-center gap-1 text-sm font-bold text-[color:var(--color-accent-ink)] transition hover:text-navy">
+            <Link href={`/catalogo?categoria=${d.slug}`} className="flex shrink-0 items-center gap-1 text-sm font-bold text-[color:var(--color-action)] transition hover:text-navy">
               Ver todo <Icon name="arrowRight" size={15} />
             </Link>
           </div>

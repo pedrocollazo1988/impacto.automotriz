@@ -52,7 +52,7 @@ export default function DeliverySelector({ subtotalUsd, onChange }: { subtotalUs
       </div>
 
       {quotes.map((x) => (
-        <label key={x.methodId} className={`flex cursor-pointer gap-3 rounded-xl border p-3 ${x.available ? "border-slate-200 hover:border-slate-300" : "opacity-50"} ${methodId === x.methodId ? "border-[color:var(--color-accent)] ring-2 ring-[color:var(--color-accent)]/25 bg-[color:var(--color-accent)]/5" : ""}`}>
+        <label key={x.methodId} className={`flex cursor-pointer gap-3 rounded-xl border p-3 ${x.available ? "border-slate-200 hover:border-slate-300" : "opacity-50"} ${methodId === x.methodId ? "border-[color:var(--color-action)] ring-2 ring-[color:var(--color-action)]/25 bg-[color:var(--color-action)]/5" : ""}`}>
           <input type="radio" name="m" disabled={!x.available} checked={methodId === x.methodId} onChange={() => setMethodId(x.methodId)} />
           <span className="flex-1"><b>{x.name}</b><br /><small className="text-slate-500">{x.available ? `${x.etaMinDays}–${x.etaMaxDays} días` : x.reason}</small></span>
           {x.available && <b>{x.feeUsd === 0 ? "Gratis" : `${x.feeUsd.toFixed(2)} USD`}</b>}

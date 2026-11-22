@@ -9,7 +9,7 @@ function Estrellas({ n }: { n: number }) {
   return (
     <span className="flex gap-0.5" aria-label={`${n} de 5 estrellas`}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <Icon key={i} name="star" size={14} className={i <= n ? "text-[color:var(--color-accent)]" : "text-slate-200"} />
+        <Icon key={i} name="star" size={14} className={i <= n ? "text-[color:var(--color-action)]" : "text-slate-200"} />
       ))}
     </span>
   );
@@ -66,7 +66,7 @@ export default async function Testimonios() {
               <article key={r.id} className="card flex flex-col p-5">
                 <Estrellas n={r.rating} />
                 <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-600">“{r.comment}”</p>
-                <Link href={`/producto/${r.product.slug}`} className="mt-4 border-t border-slate-100 pt-3 text-xs font-semibold text-navy transition hover:text-[color:var(--color-accent-ink)]">
+                <Link href={`/producto/${r.product.slug}`} className="mt-4 border-t border-slate-100 pt-3 text-xs font-semibold text-navy transition hover:text-[color:var(--color-action)]">
                   {r.product.name}
                 </Link>
               </article>

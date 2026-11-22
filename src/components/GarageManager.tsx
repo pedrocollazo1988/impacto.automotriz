@@ -17,7 +17,7 @@ export default function GarageManager({ vehicles }: { vehicles: V[] }) {
         <ul className="grid gap-3 sm:grid-cols-2">
           {vehicles.map((v) => (
             <li key={v.id} className="card flex items-center gap-3 p-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-accent-deep)]"><Icon name="car" size={20} /></span>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name="car" size={20} /></span>
               <div className="min-w-0 flex-1"><p className="font-semibold text-slate-800">{v.make} {v.model}</p><p className="text-xs text-slate-400">{v.year}</p></div>
               <Link href={`/catalogo?make=${encodeURIComponent(v.make)}&model=${encodeURIComponent(v.model)}&year=${v.year}`} className="btn btn-ghost h-9 px-3 text-xs">Ver piezas</Link>
               <button aria-label="Quitar vehículo" className="grid h-9 w-9 place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600" onClick={async () => { await fetch(`/api/account/garage?id=${v.id}`, { method: "DELETE" }); router.refresh(); }}><Icon name="trash" size={16} /></button>

@@ -77,7 +77,7 @@ export default function ProductGallery({ images, name }: { images: string[]; nam
               onClick={() => setI(k)}
               aria-label={`Imagen ${k + 1}`}
               aria-current={k === i}
-              className={`relative aspect-square overflow-hidden rounded-xl border-2 transition ${k === i ? "border-[color:var(--color-accent)]" : "border-transparent opacity-70 hover:opacity-100"}`}
+              className={`relative aspect-square overflow-hidden rounded-xl border-2 transition ${k === i ? "border-[color:var(--color-action)]" : "border-transparent opacity-70 hover:opacity-100"}`}
             >
               <Image src={u} alt="" fill sizes="80px" className="object-cover" unoptimized={u.endsWith(".svg")} />
             </button>

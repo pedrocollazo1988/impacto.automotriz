@@ -34,7 +34,7 @@ export default function Renta() {
         <div className="mt-6 grid gap-4 lg:grid-cols-3">
           {PLANES.map(([ic, t, plazo, puntos]) => (
             <div key={t} className="card flex flex-col p-6">
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-accent-deep)]"><Icon name={ic} size={22} /></span>
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name={ic} size={22} /></span>
               <h3 className="mt-4 font-display text-lg font-bold text-navy">{t}</h3>
               <p className="font-mono text-[11px] uppercase tracking-wider text-slate-500">{plazo}</p>
               <ul className="mt-4 space-y-2 text-sm text-slate-600">

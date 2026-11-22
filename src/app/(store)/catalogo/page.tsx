@@ -99,7 +99,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <details open className="card p-4">
             <summary className="mb-3 flex cursor-pointer items-center gap-2 font-display text-sm font-bold text-navy">
-              <Icon name="filter" size={16} /> Filtros {activeCount > 0 && <span className="badge bg-[color:var(--color-accent)] text-white">{activeCount}</span>}
+              <Icon name="filter" size={16} /> Filtros {activeCount > 0 && <span className="badge bg-[color:var(--color-action)] text-white">{activeCount}</span>}
             </summary>
             <Filter title="Categoría">
               <div className="space-y-1 text-sm">
@@ -133,7 +133,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
                 {(OPCIONES_OTROS.filter(([k]) => k !== "vista3d" || hayGiro)).map(([key, label]) => (
                   <Link key={key} href={link({ [key]: s[key] === "1" ? undefined : "1" })}
                     className={`flex min-h-12 items-center gap-2 rounded-lg px-2 py-1.5 transition lg:min-h-0 ${s[key] === "1" ? "bg-[color:var(--color-navy)]/6 font-semibold text-navy" : "hover:bg-slate-50"}`}>
-                    <span className={`grid h-4 w-4 place-items-center rounded border ${s[key] === "1" ? "border-[color:var(--color-accent)] bg-[color:var(--color-accent)] text-white" : "border-slate-300"}`}>
+                    <span className={`grid h-4 w-4 place-items-center rounded border ${s[key] === "1" ? "border-[color:var(--color-action)] bg-[color:var(--color-action)] text-white" : "border-slate-300"}`}>
                       {s[key] === "1" && <Icon name="check" size={11} strokeWidth={3} />}
                     </span>
                     {label}

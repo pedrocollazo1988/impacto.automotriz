@@ -33,11 +33,11 @@ export default async function Pedido({ params, searchParams }: { params: Promise
               {STEPS.map((s, i) => (
                 <div key={s} className="flex flex-1 flex-col items-center text-center">
                   <div className="flex w-full items-center">
-                    <span className={`h-0.5 flex-1 ${i === 0 ? "bg-transparent" : i <= idx ? "bg-[color:var(--color-accent)]" : "bg-slate-200"}`} />
-                    <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 ${i <= idx ? "border-[color:var(--color-accent)] bg-[color:var(--color-accent)] text-white" : "border-slate-200 bg-white text-slate-300"}`}>
+                    <span className={`h-0.5 flex-1 ${i === 0 ? "bg-transparent" : i <= idx ? "bg-[color:var(--color-action)]" : "bg-slate-200"}`} />
+                    <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 ${i <= idx ? "border-[color:var(--color-action)] bg-[color:var(--color-action)] text-white" : "border-slate-200 bg-white text-slate-300"}`}>
                       <Icon name={ICONS[s]} size={18} />
                     </span>
-                    <span className={`h-0.5 flex-1 ${i === STEPS.length - 1 ? "bg-transparent" : i < idx ? "bg-[color:var(--color-accent)]" : "bg-slate-200"}`} />
+                    <span className={`h-0.5 flex-1 ${i === STEPS.length - 1 ? "bg-transparent" : i < idx ? "bg-[color:var(--color-action)]" : "bg-slate-200"}`} />
                   </div>
                   <span className={`mt-2 text-[11px] font-semibold ${i <= idx ? "text-navy" : "text-slate-400"}`}>{L[s]}</span>
                 </div>
