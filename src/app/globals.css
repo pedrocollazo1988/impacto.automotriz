@@ -2,11 +2,12 @@
 
 /* ────────────────────────────────────────────────────────────────
    Impacto Automotriz · sistema de diseño
-   Paleta de 3 colores tomada del logo real (azul marino profundo,
-   acero y blanco) con un ámbar de acento para las llamadas a la acción.
-   El ámbar no llega a AA sobre blanco (2,18): como texto se usa
-   --color-accent-ink (#8a5a00, 5,93) y sobre blanco solo va como
-   fondo con texto navy (7,68).
+   Paleta tomada del logo real: azul marino profundo, azul medio y blanco.
+   El acento es el azul medio del logo (#153462). Como los botones de acento
+   van sobre fondos oscuros (hero, renta), ahí se usa el tinte claro
+   --color-volt (#8fb4ea, 7,89 sobre navy-deep) con texto navy; el azul
+   oscuro se reserva para texto y fondos sobre blanco (12,36).
+   Los avisos (badge-warn, amber-*) siguen en ámbar: son semánticos.
    ──────────────────────────────────────────────────────────────── */
 @theme {
   --color-navy: #0a2c5e;
@@ -14,10 +15,11 @@
   --color-navy-soft: #164a8a;
   --color-steel: #5a6b80;
   --color-ink: #0c1526;
-  --color-accent: #e9a13b;
-  --color-accent-ink: #8a5a00;
-  --color-accent-deep: #a06609;
-  --color-volt: #f5c264;
+  --color-accent: #153462;
+  --color-accent-ink: #153462;
+  --color-accent-deep: #0b2244;
+  --color-volt: #8fb4ea;
+  --color-volt-hi: #a8c6f0;
   --color-ok: #12b76a;
 
   --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
@@ -30,18 +32,18 @@
 }
 
 @layer base {
-  :root { --ring: 233 161 59; }
+  :root { --ring: 21 52 98; }
   html { scroll-behavior: smooth; }
   body {
     font-family: var(--font-sans);
     color: var(--color-ink);
     background:
-      radial-gradient(1200px 600px at 100% -10%, rgb(233 161 59 / 0.07), transparent 60%),
+      radial-gradient(1200px 600px at 100% -10%, rgb(21 52 98 / 0.07), transparent 60%),
       radial-gradient(900px 500px at -10% 0%, rgb(10 44 94 / 0.06), transparent 55%),
       #f7f9fc;
   }
   h1, h2, h3, h4, .font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
-  ::selection { background: rgb(233 161 59 / 0.28); }
+  ::selection { background: rgb(143 180 234 / 0.45); }
   :focus-visible { outline: 2px solid rgb(var(--ring) / 0.9); outline-offset: 2px; border-radius: 6px; }
 }
 
@@ -57,7 +59,7 @@
     color: var(--color-navy-soft);
     font-weight: 600;
   }
-  .eyebrow-light { color: #f0c98a; }
+  .eyebrow-light { color: var(--color-volt-hi); }
 
   /* Botones */
   .btn {
@@ -73,8 +75,8 @@
     color: #fff; box-shadow: 0 10px 24px -12px rgb(2 27 72 / 0.9);
   }
   .btn-primary:hover { box-shadow: 0 16px 30px -12px rgb(2 27 72 / 0.9); transform: translateY(-1px); }
-  .btn-accent { background: linear-gradient(180deg, var(--color-volt), var(--color-accent)); color: var(--color-navy-deep); box-shadow: 0 12px 26px -12px rgb(233 161 59 / 0.9); }
-  .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 18px 34px -12px rgb(233 161 59 / 0.95); }
+  .btn-accent { background: linear-gradient(180deg, var(--color-volt-hi), var(--color-volt)); color: var(--color-navy-deep); box-shadow: 0 12px 26px -12px rgb(2 27 72 / 0.75); }
+  .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 18px 34px -12px rgb(2 27 72 / 0.85); }
   .btn-ghost { background: #fff; border-color: rgb(15 23 42 / 0.12); color: var(--color-navy); }
   .btn-ghost:hover { border-color: rgb(10 44 94 / 0.35); background: #f4f7fc; }
   .btn-outline-light { background: rgb(255 255 255 / 0.06); border-color: rgb(255 255 255 / 0.3); color: #fff; }
@@ -83,12 +85,12 @@
   /* Superficies */
   .card { background: #fff; border: 1px solid rgb(15 23 42 / 0.08); border-radius: var(--radius-xl2); box-shadow: var(--shadow-card); }
   .card-hover { transition: transform .2s ease, box-shadow .25s ease, border-color .25s ease; }
-  .card-hover:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); border-color: rgb(233 161 59 / 0.55); }
+  .card-hover:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); border-color: rgb(21 52 98 / 0.45); }
   .panel { background: #fff; border: 1px solid rgb(15 23 42 / 0.08); border-radius: 1rem; }
 
   /* Chips / etiquetas */
   .chip { display: inline-flex; align-items: center; gap: .4rem; border-radius: 999px; padding: .35rem .75rem; font-size: .78rem; font-weight: 600; border: 1px solid rgb(15 23 42 / 0.1); background: #fff; transition: all .18s ease; }
-  .chip:hover { border-color: rgb(233 161 59 / 0.6); color: var(--color-accent-ink); background: #fff8ec; transform: translateY(-1px); }
+  .chip:hover { border-color: rgb(21 52 98 / 0.55); color: var(--color-accent-ink); background: #f2f6fd; transform: translateY(-1px); }
   .chip-active { background: var(--color-navy); border-color: var(--color-navy); color: #fff; }
   .badge { font-family: var(--font-mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; padding: .25rem .5rem; border-radius: .4rem; }
 
@@ -99,7 +101,7 @@
     transition: border-color .18s ease, box-shadow .18s ease;
   }
   .input::placeholder { color: rgb(100 116 139 / 0.9); }
-  .input:focus, .input-select:focus { outline: none; border-color: var(--color-accent-deep); box-shadow: 0 0 0 4px rgb(233 161 59 / 0.22); }
+  .input:focus, .input-select:focus { outline: none; border-color: var(--color-accent-deep); box-shadow: 0 0 0 4px rgb(21 52 98 / 0.18); }
 
   .link-underline { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
 
@@ -142,7 +144,7 @@
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes float-slow { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 @keyframes sheen { from { transform: translateX(-120%) skewX(-18deg); } to { transform: translateX(220%) skewX(-18deg); } }
-@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgb(233 161 59 / .5); } 70% { box-shadow: 0 0 0 14px rgb(233 161 59 / 0); } 100% { box-shadow: 0 0 0 0 rgb(233 161 59 / 0); } }
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgb(21 52 98 / .5); } 70% { box-shadow: 0 0 0 14px rgb(21 52 98 / 0); } 100% { box-shadow: 0 0 0 0 rgb(21 52 98 / 0); } }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes trazo { to { stroke-dashoffset: 0; } }
 
@@ -225,7 +227,7 @@
   }
   .adm-table tbody td { padding: 0.7rem 0.75rem; border-bottom: 1px solid rgb(15 23 42 / 0.06); vertical-align: middle; }
   .adm-table tbody tr:last-child td { border-bottom: 0; }
-  .adm-table tbody tr:hover { background: rgb(233 161 59 / 0.06); }
+  .adm-table tbody tr:hover { background: rgb(21 52 98 / 0.05); }
 
   .iconbtn {
     display: inline-grid; place-items: center; flex: 0 0 auto;
@@ -250,6 +252,7 @@
   .btn-quiet:hover { background: rgb(10 44 94 / 0.06); }
 
   .badge-ok { background: rgb(18 183 106 / 0.14); color: #0a7a47; }
+  /* Aviso: semantico, se queda en ambar aunque el acento sea azul. */
   .badge-warn { background: rgb(233 161 59 / 0.22); color: #8a5a00; }
   .badge-info { background: rgb(10 44 94 / 0.1); color: #0a2c5e; }
   .badge-danger { background: rgb(220 38 38 / 0.12); color: #b91c1c; }

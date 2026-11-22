@@ -54,7 +54,7 @@ export default function PasosCompra() {
                 ref={linea}
                 className="paso-linea"
                 d="M0 1 H100"
-                stroke="rgb(233 161 59 / 0.45)"
+                stroke="color-mix(in oklab, var(--color-accent) 45%, transparent)"
                 strokeWidth="2"
                 fill="none"
                 vectorEffect="non-scaling-stroke"

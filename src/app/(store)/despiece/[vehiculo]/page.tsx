@@ -26,7 +26,7 @@ export default async function VehiculoDespiece({ params }: Props) {
 
   return (
     <div className="container-x py-8">
-      <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
+      <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
         <Link href="/" className="inline-flex min-h-12 items-center hover:text-navy lg:min-h-0">Inicio</Link><Icon name="chevronRight" size={12} />
         <Link href="/despiece" className="hover:text-navy">Despiece</Link><Icon name="chevronRight" size={12} />
         <span className="text-slate-500">{v.brand} {v.model}</span>
@@ -36,14 +36,14 @@ export default async function VehiculoDespiece({ params }: Props) {
         <div className="max-w-2xl">
           <p className="eyebrow text-[color:var(--color-accent-deep)]">{v.brand}</p>
           <h1 className="mt-1 font-display text-3xl font-extrabold text-navy sm:text-4xl">Despiece {v.model}</h1>
-          <p className="mt-1 font-mono text-xs uppercase tracking-widest text-slate-400">
+          <p className="mt-1 font-mono text-xs uppercase tracking-widest text-slate-500">
             {v.version}{v.voltage ? ` · ${v.voltage}` : ""}{v.power ? ` · ${v.power}` : ""}{v.payload ? ` · ${v.payload}` : ""}
           </p>
           {v.summary && <p className="mt-3 text-sm leading-relaxed text-slate-600">{v.summary}</p>}
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">
           <VehiclePicker vehicle={{ slug: v.slug, brand: v.brand, model: v.model, version: v.version }} />
-          <p className="font-mono text-[11px] uppercase tracking-widest text-slate-400">{total} piezas · {v.diagrams.length} sistemas</p>
+          <p className="font-mono text-[11px] uppercase tracking-widest text-slate-500">{total} piezas · {v.diagrams.length} sistemas</p>
         </div>
       </header>
 
@@ -67,7 +67,7 @@ export default async function VehiculoDespiece({ params }: Props) {
                 </h2>
                 <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500">{d.system.blurb || d.notes}</p>
                 <div className="mt-auto flex items-center justify-between pt-2 text-[11px]">
-                  <span className="font-mono text-slate-400">desde {desde.toFixed(2)} USD</span>
+                  <span className="font-mono text-slate-500">desde {desde.toFixed(2)} USD</span>
                   <span className="flex items-center gap-1 font-semibold text-[color:var(--color-accent-deep)] group-hover:underline">
                     Abrir <Icon name="arrowRight" size={12} />
                   </span>

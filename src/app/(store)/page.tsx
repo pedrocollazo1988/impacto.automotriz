@@ -51,7 +51,7 @@ export default async function Home() {
           <div className="animate-fade-up">
             <span className="eyebrow eyebrow-light inline-flex items-center gap-2"><Icon name="spark" size={14} /> Tienda oficial · {total}+ productos</span>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] sm:text-5xl lg:text-6xl">
-              La pieza correcta<br />para tu vehículo,<br /><span className="bg-gradient-to-r from-[#f0c98a] to-[#e9a13b] bg-clip-text text-transparent">a la primera.</span>
+              La pieza correcta<br />para tu vehículo,<br /><span className="bg-gradient-to-r from-[color:var(--color-volt-hi)] to-[color:var(--color-volt)] bg-clip-text text-transparent">a la primera.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/75">
               Catálogo de partes, piezas y accesorios con compatibilidad por vehículo y pago en línea.
@@ -83,7 +83,7 @@ export default async function Home() {
             ["/marcas-y-modelos", "car", "Marcas y modelos", "Consulta qué tenemos para tu vehículo"],
           ].map(([href, ic, t, d]) => (
             <Link key={href} href={href} className="card card-hover group flex items-start gap-3 p-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)] text-white transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-[color:var(--color-accent)] group-hover:text-[color:var(--color-navy-deep)]">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)] text-white transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-[color:var(--color-accent)] group-hover:text-white">
                 <Icon name={ic} size={21} />
               </span>
               <span className="min-w-0">

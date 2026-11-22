@@ -41,7 +41,7 @@ export default function MiVehiculoBar({ vehicles }: { vehicles: MiVehiculo[] }) 
             </button>
           </>
         ) : (
-          <span className="text-slate-400">Elígelo una vez y te lo recordamos.</span>
+          <span className="text-slate-500">Elígelo una vez y te lo recordamos.</span>
         )}
       </div>
     </div>

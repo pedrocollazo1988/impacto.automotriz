@@ -76,7 +76,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
     <div className="container-x py-8">
       {/* Cabecera */}
       <div className="mb-6">
-        <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-400">
+        <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
           <Link href="/" className="inline-flex min-h-12 items-center hover:text-navy lg:min-h-0">Inicio</Link><Icon name="chevronRight" size={12} /><span className="text-slate-500">Catálogo</span>
         </nav>
         <div className="flex flex-wrap items-end justify-between gap-3">
@@ -116,14 +116,14 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
                 {brands.map((b) => (
                   <Link key={b.id} href={link({ marca: s.marca === b.slug ? undefined : b.slug })} className={`chip min-h-12 lg:min-h-0 ${s.marca === b.slug ? "chip-active" : ""}`}>{b.name}</Link>
                 ))}
-                {brands.length === 0 && <p className="text-xs text-slate-400">Aún no hay marcas.</p>}
+                {brands.length === 0 && <p className="text-xs text-slate-500">Aún no hay marcas.</p>}
               </div>
             </Filter>
             <Filter title="Precio (USD)">
               <form action="/catalogo" className="flex items-center gap-2">
                 <input type="hidden" name="categoria" value={s.categoria ?? ""} /><input type="hidden" name="marca" value={s.marca ?? ""} />
                 <input name="min" type="number" min="0" placeholder="Mín" defaultValue={s.min ?? ""} className="input px-2 py-1.5 text-sm" />
-                <span className="text-slate-400">—</span>
+                <span className="text-slate-500">—</span>
                 <input name="max" type="number" min="0" placeholder="Máx" defaultValue={s.max ?? ""} className="input px-2 py-1.5 text-sm" />
                 <button className="btn btn-primary min-h-12 px-3 text-xs lg:min-h-0 lg:py-1.5">Ir</button>
               </form>

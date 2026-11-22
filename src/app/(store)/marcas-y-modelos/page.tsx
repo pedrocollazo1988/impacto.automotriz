@@ -41,7 +41,7 @@ export default async function MarcasYModelos() {
         <div className="flex flex-wrap gap-2">
           {porMarca.map((m) => (
             <a key={m.id} href={`#marca-${m.slug}`} className="chip">
-              {m.name}<span className="font-mono text-[10px] text-slate-400">{m.items.length}</span>
+              {m.name}<span className="font-mono text-[10px] text-slate-500">{m.items.length}</span>
             </a>
           ))}
         </div>

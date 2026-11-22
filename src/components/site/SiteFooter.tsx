@@ -67,21 +67,21 @@ export default function SiteFooter() {
         </div>
 
         <div>
-          <h3 className="font-display text-sm font-bold uppercase tracking-wider text-white">Tienda</h3>
+          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-white">Tienda</h2>
           <ul className="mt-4 space-y-2.5 text-sm">
             {TIENDA.map(([h, l]) => <li key={h}><Link href={h} className="text-white/70 transition hover:text-white">{l}</Link></li>)}
           </ul>
         </div>
 
         <div>
-          <h3 className="font-display text-sm font-bold uppercase tracking-wider text-white">Servicios</h3>
+          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-white">Servicios</h2>
           <ul className="mt-4 space-y-2.5 text-sm">
             {SERVICIOS.map((s) => <li key={s.href}><Link href={s.href} className="text-white/70 transition hover:text-white">{s.label}</Link></li>)}
           </ul>
         </div>
 
         <div>
-          <h3 className="font-display text-sm font-bold uppercase tracking-wider text-white">Ayuda</h3>
+          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-white">Ayuda</h2>
           <ul className="mt-4 space-y-2.5 text-sm">
             {AYUDA.map(([h, l]) => <li key={h}><Link href={h} className="text-white/70 transition hover:text-white">{l}</Link></li>)}
           </ul>
