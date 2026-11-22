@@ -42,7 +42,14 @@ const config: NextConfig = {
       // produccion no se sirve, asi que el dominio real mantiene la CSP cerrada.
       ...(process.env.VERCEL_ENV === "production" ? [] : ["script-src-elem 'self' 'unsafe-inline' https://vercel.live", "frame-src 'self' https://vercel.live"]),
     ].join("; ");
-    return [{ source: "/:path*", headers: [
+    return [{
+      // Vercel normaliza el Cache-Control del optimizador a max-age=0, asi que
+      // el navegador revalida cada foto en cada visita (304, pero una ida y
+      // vuelta por imagen). Una semana basta: si se reemplaza una foto, se
+      // sube con nombre nuevo (storage.ts usa un UUID).
+      source: "/_next/image",
+      headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=86400" }],
+    }, { source: "/:path*", headers: [
       { key: "X-Content-Type-Options", value: "nosniff" },
       { key: "X-Frame-Options", value: "SAMEORIGIN" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
