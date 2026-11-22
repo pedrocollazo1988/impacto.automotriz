@@ -2,23 +2,55 @@
 
 /* ────────────────────────────────────────────────────────────────
    Impacto Automotriz · sistema de diseño
-   Paleta tomada del logo real: azul marino profundo, azul medio y blanco.
-   El acento es el azul medio del logo (#153462). Como los botones de acento
-   van sobre fondos oscuros (hero, renta), ahí se usa el tinte claro
-   --color-volt (#8fb4ea, 7,89 sobre navy-deep) con texto navy; el azul
-   oscuro se reserva para texto y fondos sobre blanco (12,36).
+
+   PALETA DE CUATRO COLORES, anclada en el azul del logo (tono 220°).
+
+   1. MARCA      navy #0a2c5e y navy-deep #021b48. Son los del logo.
+   2. ACENTO     cian #0e7490. Es el color de acción: botones, enlaces,
+                 selección, foco. Se eligió por dos motivos medidos:
+                 - contraste 5,36:1 sobre blanco y 4,95:1 sobre el fondo,
+                   así que vale como texto y como fondo con texto blanco;
+                 - está a 168° del ámbar de los avisos y a 41° del verde de
+                   "disponible", de modo que nunca se confunde con un estado.
+   3. NEUTRO     acero #5a6b80 para texto secundario (5,46:1 sobre blanco).
+   4. FONDO      #f4f6f9, el gris azulado de las tiendas de referencia; deja
+                 que las tarjetas blancas se despeguen sin sombras duras.
+
+   --color-brand y --color-brand-hi son el azul del logo y NO se usan para
+   nada más: el punto de "IMPACTO·AUTOMOTRIZ" los consume desde Logo.tsx, así
+   que tocarlos sería repintar la marca. Todo lo demás usa --color-action*.
    Los avisos (badge-warn, amber-*) siguen en ámbar: son semánticos.
    ──────────────────────────────────────────────────────────────── */
 @theme {
+  /* 1 · marca (del logo, no reutilizar para decoración) */
   --color-navy: #0a2c5e;
   --color-navy-deep: #021b48;
   --color-navy-soft: #164a8a;
+  --color-brand: #153462;
+  --color-brand-hi: #a8c6f0;
+
+  /* 2 · acento de acción */
+  --color-action: #0e7490;
+  --color-action-deep: #155e75;
+  --color-action-hi: #67e8f9;
+
+  /* 3 · neutro */
   --color-steel: #5a6b80;
   --color-ink: #0c1526;
+
+  /* slate-500 por defecto (#64748b) da 4,4:1 sobre el fondo: no llega a AA.
+     Se sube al neutro de la paleta (5,46:1 sobre blanco, 5,04 sobre el fondo),
+     así los 126 textos que ya lo usan quedan legibles sin tocarlos uno a uno. */
+  --color-slate-500: #5a6b80;
+
+  /* 4 · superficie */
+  --color-canvas: #f4f6f9;
+
+  /* Nombres heredados: apuntan al acento nuevo, salvo los dos que usa el logo. */
   --color-accent: #153462;
-  --color-accent-ink: #153462;
-  --color-accent-deep: #0b2244;
-  --color-volt: #8fb4ea;
+  --color-accent-ink: #0e7490;
+  --color-accent-deep: #155e75;
+  --color-volt: #67e8f9;
   --color-volt-hi: #a8c6f0;
   --color-ok: #12b76a;
 
@@ -37,10 +69,7 @@
   body {
     font-family: var(--font-sans);
     color: var(--color-ink);
-    background:
-      radial-gradient(1200px 600px at 100% -10%, rgb(21 52 98 / 0.07), transparent 60%),
-      radial-gradient(900px 500px at -10% 0%, rgb(10 44 94 / 0.06), transparent 55%),
-      #f7f9fc;
+    background: var(--color-canvas);
   }
   h1, h2, h3, h4, .font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
   ::selection { background: rgb(143 180 234 / 0.45); }
@@ -59,7 +88,7 @@
     color: var(--color-navy-soft);
     font-weight: 600;
   }
-  .eyebrow-light { color: var(--color-volt-hi); }
+  .eyebrow-light { color: var(--color-action-hi); }
 
   /* Botones */
   .btn {
@@ -75,8 +104,9 @@
     color: #fff; box-shadow: 0 10px 24px -12px rgb(2 27 72 / 0.9);
   }
   .btn-primary:hover { box-shadow: 0 16px 30px -12px rgb(2 27 72 / 0.9); transform: translateY(-1px); }
-  .btn-accent { background: linear-gradient(180deg, var(--color-volt-hi), var(--color-volt)); color: var(--color-navy-deep); box-shadow: 0 12px 26px -12px rgb(2 27 72 / 0.75); }
-  .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 18px 34px -12px rgb(2 27 72 / 0.85); }
+  /* Boton de accion: el cian del acento, con texto blanco (5,36:1). */
+  .btn-accent { background: var(--color-action); color: #fff; box-shadow: 0 12px 26px -12px rgb(14 116 144 / 0.55); }
+  .btn-accent:hover { background: var(--color-action-deep); transform: translateY(-1px); box-shadow: 0 18px 34px -12px rgb(14 116 144 / 0.65); }
   .btn-ghost { background: #fff; border-color: rgb(15 23 42 / 0.12); color: var(--color-navy); }
   .btn-ghost:hover { border-color: rgb(10 44 94 / 0.35); background: #f4f7fc; }
   .btn-outline-light { background: rgb(255 255 255 / 0.06); border-color: rgb(255 255 255 / 0.3); color: #fff; }
@@ -85,13 +115,13 @@
   /* Superficies */
   .card { background: #fff; border: 1px solid rgb(15 23 42 / 0.08); border-radius: var(--radius-xl2); box-shadow: var(--shadow-card); }
   .card-hover { transition: transform .2s ease, box-shadow .25s ease, border-color .25s ease; }
-  .card-hover:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); border-color: rgb(21 52 98 / 0.45); }
+  .card-hover:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); border-color: rgb(14 116 144 / 0.35); }
   .panel { background: #fff; border: 1px solid rgb(15 23 42 / 0.08); border-radius: 1rem; }
 
   /* Chips / etiquetas */
   .chip { display: inline-flex; align-items: center; gap: .4rem; border-radius: 999px; padding: .35rem .75rem; font-size: .78rem; font-weight: 600; border: 1px solid rgb(15 23 42 / 0.1); background: #fff; transition: all .18s ease; }
-  .chip:hover { border-color: rgb(21 52 98 / 0.55); color: var(--color-accent-ink); background: #f2f6fd; transform: translateY(-1px); }
-  .chip-active { background: var(--color-navy); border-color: var(--color-navy); color: #fff; }
+  .chip:hover { border-color: rgb(14 116 144 / 0.5); color: var(--color-action); background: #effafc; transform: translateY(-1px); }
+  .chip-active { background: var(--color-action); border-color: var(--color-action); color: #fff; }
   .badge { font-family: var(--font-mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; padding: .25rem .5rem; border-radius: .4rem; }
 
   /* Inputs */
@@ -101,7 +131,7 @@
     transition: border-color .18s ease, box-shadow .18s ease;
   }
   .input::placeholder { color: rgb(100 116 139 / 0.9); }
-  .input:focus, .input-select:focus { outline: none; border-color: var(--color-accent-deep); box-shadow: 0 0 0 4px rgb(21 52 98 / 0.18); }
+  .input:focus, .input-select:focus { outline: none; border-color: var(--color-action); box-shadow: 0 0 0 4px rgb(14 116 144 / 0.16); }
 
   .link-underline { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
 
@@ -111,7 +141,7 @@
   .sec-title::before {
     content: ""; position: absolute; left: 0; top: 0.18em; bottom: 0.18em;
     width: 4px; border-radius: 4px;
-    background: linear-gradient(180deg, var(--color-accent), var(--color-accent-deep));
+    background: linear-gradient(180deg, var(--color-action), var(--color-action-deep));
   }
 
   /* Pasos del proceso: línea que se dibuja al entrar en pantalla. */
@@ -144,7 +174,7 @@
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes float-slow { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 @keyframes sheen { from { transform: translateX(-120%) skewX(-18deg); } to { transform: translateX(220%) skewX(-18deg); } }
-@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgb(21 52 98 / .5); } 70% { box-shadow: 0 0 0 14px rgb(21 52 98 / 0); } 100% { box-shadow: 0 0 0 0 rgb(21 52 98 / 0); } }
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgb(14 116 144 / .5); } 70% { box-shadow: 0 0 0 14px rgb(14 116 144 / 0); } 100% { box-shadow: 0 0 0 0 rgb(14 116 144 / 0); } }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes trazo { to { stroke-dashoffset: 0; } }
 
@@ -183,7 +213,7 @@
    Panel de administración
    ──────────────────────────────────────────────────────────────── */
 @layer components {
-  .adm-shell { display: flex; min-height: 100vh; background: #f7f9fc; }
+  .adm-shell { display: flex; min-height: 100vh; background: var(--color-canvas); }
 
   .adm-sidebar {
     position: sticky; top: 0; align-self: flex-start; z-index: 40;
@@ -227,7 +257,7 @@
   }
   .adm-table tbody td { padding: 0.7rem 0.75rem; border-bottom: 1px solid rgb(15 23 42 / 0.06); vertical-align: middle; }
   .adm-table tbody tr:last-child td { border-bottom: 0; }
-  .adm-table tbody tr:hover { background: rgb(21 52 98 / 0.05); }
+  .adm-table tbody tr:hover { background: rgb(14 116 144 / 0.05); }
 
   .iconbtn {
     display: inline-grid; place-items: center; flex: 0 0 auto;
@@ -238,7 +268,7 @@
   .iconbtn svg { width: 1em; height: 1em; flex: 0 0 auto; }
   .iconbtn:hover:not(:disabled) { background: #f1f5f9; color: var(--color-navy); border-color: rgb(15 23 42 / 0.2); }
   .iconbtn:disabled { opacity: 0.35; cursor: not-allowed; }
-  .iconbtn:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .iconbtn:focus-visible { outline: 2px solid var(--color-action); outline-offset: 2px; }
 
   .adm-empty { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; padding: 3rem 1rem; text-align: center; color: #64748b; }
   .adm-empty svg { color: rgb(10 44 94 / 0.25); }

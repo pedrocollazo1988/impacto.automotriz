@@ -3,7 +3,7 @@ import { PageHeader, PanelPad } from "@/components/admin/ui";
 export const dynamic = "force-dynamic";
 
 const Bar = ({ label, value, max, text }: { label: string; value: number; max: number; text: string }) => (
-  <div className="flex items-center gap-2 text-sm"><span className="w-40 shrink-0 truncate sm:w-48">{label}</span><div className="h-4 flex-1 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-[color:var(--color-accent)] to-[color:var(--color-navy)]" style={{ width: `${max ? (value / max) * 100 : 0}%` }} /></div><span className="w-24 shrink-0 text-right font-medium">{text}</span></div>);
+  <div className="flex items-center gap-2 text-sm"><span className="w-40 shrink-0 truncate sm:w-48">{label}</span><div className="h-4 flex-1 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-[color:var(--color-action)] to-[color:var(--color-navy)]" style={{ width: `${max ? (value / max) * 100 : 0}%` }} /></div><span className="w-24 shrink-0 text-right font-medium">{text}</span></div>);
 
 export default async function Reportes() {
   const since = new Date(Date.now() - 30 * 864e5);

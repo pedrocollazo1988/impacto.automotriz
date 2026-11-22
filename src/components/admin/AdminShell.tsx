@@ -23,7 +23,7 @@ export default function AdminShell({ links, userName, role, children }: { links:
         <div className="adm-sidebar-brand">
           <span className="adm-avatar" style={{ background: "linear-gradient(180deg,#164a8a,#0a2c5e)" }}>IA</span>
           <span className="flex flex-col leading-tight">
-            <span className="font-display text-sm font-extrabold tracking-tight">IMPACTO<span className="text-[color:var(--color-volt-hi)]">·</span>AUTOMOTRIZ</span>
+            <span className="font-display text-sm font-extrabold tracking-tight">IMPACTO<span className="text-[color:var(--color-action-hi)]">·</span>AUTOMOTRIZ</span>
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">Panel de gestión</span>
           </span>
         </div>

@@ -51,7 +51,7 @@ export default function AuthForm({ google = false }: { google?: boolean }) {
       </div>
       <div className="mt-4 flex flex-wrap justify-between gap-2 text-sm">
         {mode !== "forgot" && <button onClick={() => { setMode("forgot"); setMsg(""); }} className="text-slate-500 hover:text-navy">Olvidé mi contraseña</button>}
-        {mode === "forgot" && <button onClick={() => { setMode("login"); setMsg(""); }} className="text-[color:var(--color-accent-deep)] hover:underline">Volver a iniciar sesión</button>}
+        {mode === "forgot" && <button onClick={() => { setMode("login"); setMsg(""); }} className="text-[color:var(--color-action-deep)] hover:underline">Volver a iniciar sesión</button>}
       </div>
     </div>
   );

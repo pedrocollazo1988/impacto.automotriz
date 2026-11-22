@@ -83,10 +83,10 @@ export default function DespieceViewer({ vehicleSlug, image, pins }: Props) {
                       style={{ left: `${p.x}%`, top: `${p.y}%` }}
                       aria-label={`Pieza ${p.number}: ${p.label ?? p.product.name}`}
                       aria-current={esActivo ? "true" : undefined}
-                      className={`absolute grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full transition focus:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--color-accent)]/40 ${
+                      className={`absolute grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full transition focus:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--color-action)]/40 ${
                         esActivo
-                          ? "z-20 bg-[color:var(--color-volt)]/25 ring-2 ring-[color:var(--color-volt)]"
-                          : "z-10 bg-transparent hover:bg-[color:var(--color-accent)]/15 hover:ring-2 hover:ring-[color:var(--color-accent)]/50"
+                          ? "z-20 bg-[color:var(--color-action-hi)]/25 ring-2 ring-[color:var(--color-action-hi)]"
+                          : "z-10 bg-transparent hover:bg-[color:var(--color-action)]/15 hover:ring-2 hover:ring-[color:var(--color-action)]/50"
                       }`}
                     >
                       {/* El número ya lo dibuja la lámina; el pin solo lo hace táctil. */}
@@ -124,10 +124,10 @@ export default function DespieceViewer({ vehicleSlug, image, pins }: Props) {
                   key={p.id}
                   ref={(el) => { itemRefs.current[p.id] = el; }}
                   onMouseEnter={() => setActivo(p.id)}
-                  className={`transition-colors ${esActivo ? "bg-[color:var(--color-volt)]/10" : "hover:bg-slate-50"}`}
+                  className={`transition-colors ${esActivo ? "bg-[color:var(--color-action-hi)]/10" : "hover:bg-slate-50"}`}
                 >
                   <div className="flex items-start gap-3 p-3">
-                    <span className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-bold ${esActivo ? "bg-[color:var(--color-volt)] text-[color:var(--color-navy-deep)]" : "bg-[color:var(--color-navy)] text-white"}`}>
+                    <span className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-bold ${esActivo ? "bg-[color:var(--color-action-hi)] text-[color:var(--color-navy-deep)]" : "bg-[color:var(--color-navy)] text-white"}`}>
                       {p.number}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -141,7 +141,7 @@ export default function DespieceViewer({ vehicleSlug, image, pins }: Props) {
                         ))}
                       </dl>
                       {prod.packQty != null && prod.packQty > 1 && (
-                        <p className="mt-1 inline-flex items-center gap-1 rounded-md bg-[color:var(--color-accent)]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[color:var(--color-accent-deep)]">
+                        <p className="mt-1 inline-flex items-center gap-1 rounded-md bg-[color:var(--color-action)]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[color:var(--color-action-deep)]">
                           <Icon name="box" size={10} /> Se vende en juego de {prod.packQty}
                         </p>
                       )}

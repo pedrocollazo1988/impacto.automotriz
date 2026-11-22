@@ -79,7 +79,7 @@ export default async function LaminaDespiece({ params }: Props) {
 
       {d.diagram.notes && (
         <p className="mt-6 flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-relaxed text-slate-600">
-          <Icon name="info" size={14} className="mt-0.5 shrink-0 text-[color:var(--color-accent)]" />
+          <Icon name="info" size={14} className="mt-0.5 shrink-0 text-[color:var(--color-action)]" />
           <span><b className="text-navy">Nota del técnico.</b> {d.diagram.notes}</span>
         </p>
       )}

@@ -226,8 +226,8 @@ export default function DespieceAdmin() {
                     style={{ left: `${p.x}%`, top: `${p.y}%` }}
                     title={`${p.number} · ${p.product.name}`}
                     className={`absolute grid h-7 w-7 -translate-x-1/2 -translate-y-1/2 cursor-move place-items-center rounded-full text-[11px] font-bold shadow transition ${
-                      sel === p.id ? "z-20 scale-125 bg-[color:var(--color-volt)] text-[color:var(--color-navy-deep)] ring-4 ring-[color:var(--color-volt)]/40"
-                        : "z-10 bg-[color:var(--color-navy)] text-white hover:bg-[color:var(--color-accent)]"
+                      sel === p.id ? "z-20 scale-125 bg-[color:var(--color-action-hi)] text-[color:var(--color-navy-deep)] ring-4 ring-[color:var(--color-action-hi)]/40"
+                        : "z-10 bg-[color:var(--color-navy)] text-white hover:bg-[color:var(--color-action)]"
                     }`}
                   >
                     {p.number}
@@ -236,7 +236,7 @@ export default function DespieceAdmin() {
                 {pending && (
                   <span
                     style={{ left: `${pending.x}%`, top: `${pending.y}%` }}
-                    className="pointer-events-none absolute z-30 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-[color:var(--color-volt)] text-[11px] font-bold text-[color:var(--color-navy-deep)] ring-4 ring-[color:var(--color-volt)]/40"
+                    className="pointer-events-none absolute z-30 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-[color:var(--color-action-hi)] text-[11px] font-bold text-[color:var(--color-navy-deep)] ring-4 ring-[color:var(--color-action-hi)]/40"
                   >
                     +
                   </span>
@@ -260,7 +260,7 @@ export default function DespieceAdmin() {
               ) : (
                 <ul className="max-h-[62vh] divide-y divide-slate-100 overflow-y-auto">
                   {diagram.pins.map((p) => (
-                    <li key={p.id} className={`p-2.5 ${sel === p.id ? "bg-[color:var(--color-volt)]/10" : ""}`}>
+                    <li key={p.id} className={`p-2.5 ${sel === p.id ? "bg-[color:var(--color-action-hi)]/10" : ""}`}>
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[color:var(--color-navy)] font-mono text-[11px] font-bold text-white">{p.number}</span>
                         <div className="min-w-0 flex-1">

@@ -17,10 +17,10 @@ export default function VehicleFinder() {
   };
   return (
     <div className="card relative overflow-hidden p-5 sm:p-6">
-      <div aria-hidden className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[color:var(--color-accent)]/10 blur-2xl" />
+      <div aria-hidden className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[color:var(--color-action)]/10 blur-2xl" />
       <div className="relative">
         <div className="flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-[color:var(--color-navy)]/8 text-[color:var(--color-accent-deep)]"><Icon name="car" size={18} /></span>
+          <span className="grid h-9 w-9 place-items-center rounded-lg bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name="car" size={18} /></span>
           <div>
             <p className="font-display text-sm font-bold text-navy">Encuentra piezas para tu vehículo</p>
             <p className="text-xs text-slate-500">Filtramos por compatibilidad real</p>

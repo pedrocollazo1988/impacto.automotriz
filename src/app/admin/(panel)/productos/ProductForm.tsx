@@ -147,7 +147,7 @@ export default function ProductForm({ initial = EMPTY, categories, brands }: { i
 
         {f.model3dUrl ? (
           <div className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <Icon name="cube" size={18} className="shrink-0 text-[color:var(--color-accent-deep)]" />
+            <Icon name="cube" size={18} className="shrink-0 text-[color:var(--color-action-deep)]" />
             <code className="min-w-0 flex-1 truncate text-xs text-slate-600">{f.model3dUrl}</code>
             <a href={f.model3dUrl} target="_blank" rel="noopener" className="btn btn-ghost btn-sm">Ver</a>
             <button type="button" onClick={() => set("model3dUrl", null)} className="btn btn-ghost btn-sm !text-red-600">

@@ -25,7 +25,7 @@ export default function ProductCard({ p }: { p: CardProduct }) {
       <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
         <Image src={img} alt={p.name} fill sizes="(max-width:768px) calc(50vw - 1.5rem), (max-width:1024px) calc(33vw - 1.5rem), calc(25vw - 1.5rem)" className="object-cover transition-transform duration-500 group-hover:scale-[1.06]" unoptimized={img.endsWith(".svg")} />
         <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
-          {off > 0 && <span className="badge bg-[color:var(--color-volt)] text-[color:var(--color-navy-deep)] shadow">-{off}%</span>}
+          {off > 0 && <span className="badge bg-[color:var(--color-action-hi)] text-[color:var(--color-navy-deep)] shadow">-{off}%</span>}
           {p.stock <= 0 && <span className="badge bg-slate-900/85 text-white">Agotado</span>}
           {low && <span className="badge bg-white/90 text-amber-700">Últimas {p.stock}</span>}
         </div>

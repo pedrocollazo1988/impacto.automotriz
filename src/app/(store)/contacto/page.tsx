@@ -25,7 +25,7 @@ export default function Contacto() {
           <div className="grid gap-3 sm:grid-cols-2">
             {CONTACT.map(([ic, t, v, href]) => (
               <div key={t} className="card p-5">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-accent-deep)]"><Icon name={ic} size={22} /></span>
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name={ic} size={22} /></span>
                 <h2 className="mt-3 font-display text-sm font-bold text-navy">{t}</h2>
                 {href ? <a href={href} target="_blank" rel="noopener" className="mt-1 block text-sm text-slate-600 link-underline">{v}</a> : <p className="mt-1 text-sm text-slate-600">{v}</p>}
               </div>

@@ -85,9 +85,9 @@ export default async function Producto({ params }: Props) {
 
         <div className="space-y-5">
           <div className="flex flex-wrap items-center gap-2">
-            <Link href={`/catalogo?categoria=${p.category.slug}`} className="badge bg-[color:var(--color-navy)]/8 text-[color:var(--color-accent-deep)]">{p.category.name}</Link>
+            <Link href={`/catalogo?categoria=${p.category.slug}`} className="badge bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]">{p.category.name}</Link>
             {p.brand && <span className="badge bg-slate-100 text-slate-600">{p.brand.name}</span>}
-            {off > 0 && <span className="badge bg-[color:var(--color-volt)] text-[color:var(--color-navy-deep)]">-{off}%</span>}
+            {off > 0 && <span className="badge bg-[color:var(--color-action-hi)] text-[color:var(--color-navy-deep)]">-{off}%</span>}
             {p.featured && <span className="badge bg-[color:var(--color-navy)] text-white">Destacado</span>}
           </div>
 
@@ -117,7 +117,7 @@ export default async function Producto({ params }: Props) {
 
           <div className="grid gap-3 sm:grid-cols-3">
             {[["truck", "Entrega en toda Cuba"], ["shield", "Garantía del vendedor"], ["card", "Pago en línea seguro"]].map(([ic, t]) => (
-              <div key={t} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-3 text-xs font-medium text-slate-600"><Icon name={ic} size={18} className="shrink-0 text-[color:var(--color-accent-deep)]" />{t}</div>
+              <div key={t} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-3 text-xs font-medium text-slate-600"><Icon name={ic} size={18} className="shrink-0 text-[color:var(--color-action-deep)]" />{t}</div>
             ))}
           </div>
 
@@ -139,7 +139,7 @@ export default async function Producto({ params }: Props) {
                   <li key={pin.id}>
                     <Link
                       href={`/despiece/${pin.diagram.vehicle.slug}/${pin.diagram.system.slug}?pieza=${p.sku}`}
-                      className="flex items-center gap-2 text-[color:var(--color-accent-deep)] hover:underline"
+                      className="flex items-center gap-2 text-[color:var(--color-action-deep)] hover:underline"
                     >
                       <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[color:var(--color-navy)] font-mono text-[10px] font-bold text-white">{pin.number}</span>
                       {pin.diagram.vehicle.brand} {pin.diagram.vehicle.model} · {pin.diagram.system.name}
@@ -158,7 +158,7 @@ export default async function Producto({ params }: Props) {
               <ul className="mt-2 space-y-1.5 text-sm">
                 {p.compatWith.map((c) => (
                   <li key={c.id}>
-                    <Link href={`/producto/${c.target.slug}`} className="font-semibold text-[color:var(--color-accent-deep)] hover:underline">{c.target.name}</Link>
+                    <Link href={`/producto/${c.target.slug}`} className="font-semibold text-[color:var(--color-action-deep)] hover:underline">{c.target.name}</Link>
                     <span className="font-mono text-[11px] text-slate-400"> · {c.target.sku}</span>
                     {c.note && <p className="text-xs text-slate-500">{c.note}</p>}
                   </li>

@@ -86,13 +86,13 @@ export default function Checkout() {
             <div className="mt-4 space-y-2">
               {!metodos.length && <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">No hay métodos de pago disponibles ahora mismo. Escríbenos para coordinar el cobro.</p>}
               {metodos.map((m) => (
-                <label key={m.key} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${pay === m.key ? "border-[color:var(--color-accent)] bg-[color:var(--color-accent)]/5 ring-2 ring-[color:var(--color-accent)]/20" : "border-slate-200 hover:border-slate-300"}`}>
-                  <input type="radio" checked={pay === m.key} onChange={() => setPay(m.key)} className="mt-1 accent-[color:var(--color-accent)]" />
+                <label key={m.key} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${pay === m.key ? "border-[color:var(--color-action)] bg-[color:var(--color-action)]/5 ring-2 ring-[color:var(--color-action)]/20" : "border-slate-200 hover:border-slate-300"}`}>
+                  <input type="radio" checked={pay === m.key} onChange={() => setPay(m.key)} className="mt-1 accent-[color:var(--color-action)]" />
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-navy"><Icon name={ICONO[m.key] ?? "card"} size={18} /></span>
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold text-slate-800">{m.name}</span>
                     <span className="block text-xs text-slate-500">{m.description}</span>
-                    {m.feePercent > 0 && <span className="mt-0.5 block text-xs font-semibold text-[color:var(--color-accent-ink)]">+{m.feePercent} % de comisión</span>}
+                    {m.feePercent > 0 && <span className="mt-0.5 block text-xs font-semibold text-[color:var(--color-action)]">+{m.feePercent} % de comisión</span>}
                     {pay === m.key && m.instructions && <span className="mt-1.5 block whitespace-pre-line rounded-lg bg-slate-50 px-2.5 py-2 text-xs text-slate-600">{m.instructions}</span>}
                   </span>
                 </label>

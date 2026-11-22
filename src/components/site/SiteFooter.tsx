@@ -12,6 +12,8 @@ const TIENDA: [string, string][] = [
 ];
 
 const AYUDA: [string, string][] = [
+  ["/rastrear-pedido", "Rastrear mi pedido"],
+  ["/garantia", "Reclamar garantía"],
   ["/preguntas-frecuentes", "Preguntas frecuentes"],
   ["/politicas/envios", "Envíos y entrega"],
   ["/politicas/devoluciones", "Devoluciones y garantía"],
@@ -21,19 +23,19 @@ const AYUDA: [string, string][] = [
 export default function SiteFooter() {
   const wa = process.env.NEXT_PUBLIC_WHATSAPP;
   return (
-    <footer className="mt-20 bg-[color:var(--color-navy-deep)] text-white/80">
+    <footer className="mt-20 bg-[#0b1220] text-white/75">
       {/* Contacto destacado, como la franja de atención de MCV */}
       <div className="border-b border-white/10">
         <div className="container-x grid gap-6 py-8 sm:grid-cols-3">
           <div className="flex gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-[color:var(--color-volt)]"><Icon name="clock" size={19} /></span>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[color:var(--color-action)]/20 text-[color:var(--color-action-hi)]"><Icon name="clock" size={19} /></span>
             <div>
               <p className="font-display text-sm font-bold text-white">Horario de atención</p>
               <p className="mt-1 text-sm text-white/65">{SITE.horario}</p>
             </div>
           </div>
           <div className="flex gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-[color:var(--color-volt)]"><Icon name="phone" size={19} /></span>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[color:var(--color-action)]/20 text-[color:var(--color-action-hi)]"><Icon name="phone" size={19} /></span>
             <div>
               <p className="font-display text-sm font-bold text-white">Consultas</p>
               {telefono ? (
@@ -43,7 +45,7 @@ export default function SiteFooter() {
             </div>
           </div>
           <div className="flex gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-[color:var(--color-volt)]"><Icon name="pin" size={19} /></span>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[color:var(--color-action)]/20 text-[color:var(--color-action-hi)]"><Icon name="pin" size={19} /></span>
             <div>
               <p className="font-display text-sm font-bold text-white">Dónde estamos</p>
               <p className="mt-1 text-sm text-white/65">{SITE.direccion}</p>
@@ -67,23 +69,23 @@ export default function SiteFooter() {
         </div>
 
         <div>
-          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-white">Tienda</h2>
+          <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-white/50">Tienda</h2>
           <ul className="mt-4 space-y-2.5 text-sm">
-            {TIENDA.map(([h, l]) => <li key={h}><Link href={h} className="text-white/70 transition hover:text-white">{l}</Link></li>)}
+            {TIENDA.map(([h, l]) => <li key={h}><Link href={h} className="text-white/70 transition hover:text-[color:var(--color-action-hi)]">{l}</Link></li>)}
           </ul>
         </div>
 
         <div>
-          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-white">Servicios</h2>
+          <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-white/50">Servicios</h2>
           <ul className="mt-4 space-y-2.5 text-sm">
-            {SERVICIOS.map((s) => <li key={s.href}><Link href={s.href} className="text-white/70 transition hover:text-white">{s.label}</Link></li>)}
+            {SERVICIOS.map((s) => <li key={s.href}><Link href={s.href} className="text-white/70 transition hover:text-[color:var(--color-action-hi)]">{s.label}</Link></li>)}
           </ul>
         </div>
 
         <div>
-          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-white">Ayuda</h2>
+          <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-white/50">Ayuda</h2>
           <ul className="mt-4 space-y-2.5 text-sm">
-            {AYUDA.map(([h, l]) => <li key={h}><Link href={h} className="text-white/70 transition hover:text-white">{l}</Link></li>)}
+            {AYUDA.map(([h, l]) => <li key={h}><Link href={h} className="text-white/70 transition hover:text-[color:var(--color-action-hi)]">{l}</Link></li>)}
           </ul>
         </div>
       </div>

@@ -96,7 +96,7 @@ export default function Pagos() {
             const faltan = falta(g);
             const aviso = g.enabled && faltan.length > 0;
             return (
-              <Panel key={g.key} className={editando === g.key ? "ring-2 ring-[color:var(--color-accent)]" : ""}>
+              <Panel key={g.key} className={editando === g.key ? "ring-2 ring-[color:var(--color-action)]" : ""}>
                 <PanelPad>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">

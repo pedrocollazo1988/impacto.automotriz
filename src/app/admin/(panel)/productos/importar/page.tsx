@@ -15,7 +15,7 @@ export default function Importar() {
       <PanelPad className="space-y-4">
         <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-700"><li>Descarga la <a className="link-underline font-semibold text-navy" href="/plantilla-productos.csv" download>plantilla</a> y ábrela en Excel.</li><li>Rellena una fila por producto (si el código ya existe, se actualiza).</li><li>Súbelo aquí como <b>.xlsx</b> (primera hoja) o <b>CSV UTF-8</b> (máximo 1000 filas).</li></ol>
         <p className="text-xs text-slate-500">Fotos: varias URL separadas por «|». Compatibilidad: Marca:Modelo:desde:hasta, separadas por «|». Especificaciones: Clave: valor, separadas por «|».</p>
-        <label className="flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-navy hover:border-[color:var(--color-accent)] hover:bg-slate-50">
+        <label className="flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-navy hover:border-[color:var(--color-action)] hover:bg-slate-50">
           <input type="file" className="hidden" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={busy} onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
           {busy ? "Importando…" : "Seleccionar archivo (.xlsx o .csv)"}
         </label>

@@ -50,8 +50,8 @@ export default function ProductViewer({ images, name, model3dUrl, frames, initia
               onClick={() => setVista(v)}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                 vista === v
-                  ? "border-[color:var(--color-accent)] bg-[color:var(--color-accent)] text-white"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-[color:var(--color-accent)]/50"
+                  ? "border-[color:var(--color-action)] bg-[color:var(--color-action)] text-white"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-[color:var(--color-action)]/50"
               }`}
             >
               <Icon name={v === "model3d" ? "cube" : v === "spin360" ? "refresh" : "image"} size={13} />

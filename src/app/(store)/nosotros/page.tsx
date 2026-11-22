@@ -31,7 +31,7 @@ export default function Nosotros() {
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {VALUES.map(([ic, t, d]) => (
             <div key={t} className="card flex gap-4 p-5">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-accent-deep)]"><Icon name={ic} size={22} /></span>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name={ic} size={22} /></span>
               <div><h3 className="font-display font-bold text-navy">{t}</h3><p className="mt-1 text-sm leading-relaxed text-slate-500">{d}</p></div>
             </div>
           ))}
