@@ -2,6 +2,11 @@ import { redirect } from "next/navigation";
 import { can, getSessionUser, type Perm } from "@/lib/auth";
 import AdminShell, { type NavLink } from "@/components/admin/AdminShell";
 
+// El panel depende de la sesión en todas sus rutas. Sin esto, las páginas que
+// solo son cliente (Pagos, Cupones…) se prerenderizan sin cookie y Next guarda
+// el redirect a /admin/login en el HTML estático, dejando el panel inaccesible.
+export const dynamic = "force-dynamic";
+
 const LINKS: [string, string, Perm, string][] = [
   ["/admin", "Pedidos", "orders", "box"],
   ["/admin/productos", "Productos", "products", "cube"],

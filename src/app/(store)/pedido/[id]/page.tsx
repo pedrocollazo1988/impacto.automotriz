@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { canViewOrder } from "@/lib/order-access";
+import { porClave } from "@/lib/payment-gateways";
+import { datosPublicos, esCobroAutomatico, redirigeAlPagar } from "@/lib/pasarelas";
 import Icon from "@/components/brand/Icon";
 import PayRetry from "./PayRetry";
 export const dynamic = "force-dynamic";
@@ -17,6 +19,9 @@ export default async function Pedido({ params, searchParams }: { params: Promise
   const tok = (await searchParams).t;
   const idx = STEPS.indexOf(o.status as (typeof STEPS)[number]);
   const canceled = o.status === "CANCELED";
+  const gw = await porClave(o.paymentMethod);
+  const metodo = o.paymentMethodName ?? gw?.name ?? o.paymentMethod;
+  const detalles = gw ? datosPublicos(gw) : [];
   return (
     <div className="container-x py-8">
       <div className="mx-auto max-w-3xl space-y-6">
@@ -44,6 +49,7 @@ export default async function Pedido({ params, searchParams }: { params: Promise
               ))}
             </div>
             <p className="mt-4 text-center text-sm text-slate-500">Estado actual: <b className="text-navy">{L[o.status]}</b>{o.paid ? " · pago confirmado" : ""}</p>
+            <p className="mt-1 text-center text-xs text-slate-400">Método de pago: {metodo}</p>
           </div>
         )}
 
@@ -72,12 +78,27 @@ export default async function Pedido({ params, searchParams }: { params: Promise
           </div>
         )}
 
-        {!o.paid && !canceled && (o.paymentMethod === "TROPIPAY" || o.paymentMethod === "QVAPAY") && <PayRetry orderId={o.id} />}
-        {!o.paid && o.paymentMethod === "TRANSFER" && (
-          <div className="card border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
-            <p className="flex items-center gap-2 font-semibold"><Icon name="card" size={16} /> Datos para la transferencia</p>
-            <p className="mt-2">{process.env.BANK_INSTRUCTIONS}</p>
-            <p className="mt-1">Referencia: Pedido #{o.number}. Confirmaremos el pago manualmente.</p>
+        {!o.paid && !canceled && gw && esCobroAutomatico(gw) && <PayRetry orderId={o.id} />}
+        {!o.paid && !canceled && gw && gw.kind === "manual" && (
+          <div className="card border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+            <p className="flex items-center gap-2 font-semibold"><Icon name={gw.icon} size={16} /> Cómo pagar con {metodo}</p>
+            {gw.instructions && <p className="mt-2 whitespace-pre-line leading-relaxed">{gw.instructions}</p>}
+            {detalles.length > 0 && (
+              <dl className="mt-3 grid gap-x-4 gap-y-1 sm:grid-cols-[auto_1fr]">
+                {detalles.map((d) => (
+                  <div key={d.etiqueta} className="contents">
+                    <dt className="font-semibold">{d.etiqueta}</dt>
+                    <dd className="break-words">{d.valor}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            <p className="mt-3">Referencia: Pedido #{o.number}. Confirmaremos el pago manualmente.</p>
+            {redirigeAlPagar(gw) && gw.config?.url && (
+              <a href={gw.config.url} target="_blank" rel="noreferrer" className="btn btn-primary mt-3">
+                <Icon name="arrowRight" size={16} /> {gw.config.referencia || "Ir a pagar"}
+              </a>
+            )}
           </div>
         )}
       </div>

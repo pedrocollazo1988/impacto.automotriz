@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Icon from "@/components/brand/Icon";
+import Logo from "@/components/brand/Logo";
 import LogoutAdmin from "@/app/admin/(panel)/LogoutAdmin";
 
 export type NavLink = { href: string; label: string; icon: string; exact?: boolean };
@@ -20,12 +21,9 @@ export default function AdminShell({ links, userName, role, children }: { links:
     <div className="adm-shell">
       {open && <div className="adm-scrim lg:hidden" onClick={() => setOpen(false)} aria-hidden />}
       <aside className="adm-sidebar" data-open={open} aria-label="Navegación del panel">
-        <div className="adm-sidebar-brand">
-          <span className="adm-avatar" style={{ background: "linear-gradient(180deg,#164a8a,#0a2c5e)" }}>IA</span>
-          <span className="flex flex-col leading-tight">
-            <span className="font-display text-sm font-extrabold tracking-tight">IMPACTO<span className="text-[color:var(--color-action-hi)]">·</span>AUTOMOTRIZ</span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">Panel de gestión</span>
-          </span>
+        <div className="adm-sidebar-brand flex-col items-start gap-1">
+          <Logo variant="light" size="sm" href="/admin" tagline={false} className="[&_.font-display]:text-[12px] [&_.font-display]:tracking-tight" />
+          <span className="pl-1 font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">Panel de gestión</span>
         </div>
         <nav className="adm-nav">
           {links.map((l) => (
@@ -48,7 +46,8 @@ export default function AdminShell({ links, userName, role, children }: { links:
           <button className="btn btn-ghost btn-sm lg:hidden" onClick={() => setOpen((v) => !v)} aria-label="Abrir menú" aria-expanded={open}>
             <Icon name={open ? "close" : "menu"} size={18} />
           </button>
-          <span className="font-display text-sm font-bold text-navy">{current?.label ?? "Panel"}</span>
+          <span className="lg:hidden"><Logo variant="dark" size="sm" href="/admin" tagline={false} className="[&_.font-display]:hidden sm:[&_.font-display]:block sm:[&_.font-display]:text-[12px]" /></span>
+          <span className="hidden font-display text-sm font-bold text-navy lg:inline">{current?.label ?? "Panel"}</span>
           <div className="ml-auto flex items-center gap-2">
             <Link href="/" className="btn btn-ghost btn-sm"><Icon name="cart" size={15} /> Ver tienda</Link>
             <LogoutAdmin />

@@ -1,7 +1,7 @@
-// Columnas añadidas después del esquema inicial. El build de Vercel no aplica
-// migraciones, así que no existen en una base ya desplegada y cualquier consulta
-// a Product revienta con P2022. Se crean aquí, una vez por proceso.
-// Son aditivas y con default: no tocan las filas existentes.
+// Cambios de esquema añadidos después de la migración inicial. El build de
+// Vercel no aplica migraciones, así que no existen en una base ya desplegada y
+// cualquier consulta revienta con P2022. Se aplican aquí, una vez por proceso.
+// Son aditivos y con default: no tocan las filas existentes.
 const COLUMNAS = [
   `ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "viewerMode" TEXT NOT NULL DEFAULT 'photos'`,
   `ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "videos" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[]`,
@@ -12,6 +12,22 @@ const COLUMNAS = [
   `ALTER TABLE "Category" ADD COLUMN IF NOT EXISTS "icon" TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE "Category" ADD COLUMN IF NOT EXISTS "position" INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE "Category" ADD COLUMN IF NOT EXISTS "visible" BOOLEAN NOT NULL DEFAULT true`,
+  // Métodos de pago genéricos: driver, icono, datos públicos y archivo.
+  `ALTER TABLE "PaymentGateway" ADD COLUMN IF NOT EXISTS "provider" TEXT NOT NULL DEFAULT 'manual'`,
+  `ALTER TABLE "PaymentGateway" ADD COLUMN IF NOT EXISTS "icon" TEXT NOT NULL DEFAULT 'card'`,
+  `ALTER TABLE "PaymentGateway" ADD COLUMN IF NOT EXISTS "config" JSONB`,
+  `ALTER TABLE "PaymentGateway" ADD COLUMN IF NOT EXISTS "archived" BOOLEAN NOT NULL DEFAULT false`,
+  // El pedido guarda la clave del método y su nombre visible. Deja de ser un
+  // enum para que el panel pueda crear métodos sin migración.
+  `ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "paymentMethodName" TEXT`,
+  `ALTER TABLE "Order" ALTER COLUMN "paymentMethod" TYPE TEXT USING "paymentMethod"::text`,
+  // Relleno de las filas que ya existían antes de este cambio.
+  `UPDATE "PaymentGateway" SET "provider" = 'tropipay', "icon" = 'card' WHERE "key" = 'TROPIPAY' AND "provider" = 'manual'`,
+  `UPDATE "PaymentGateway" SET "provider" = 'qvapay', "icon" = 'bolt' WHERE "key" = 'QVAPAY' AND "provider" = 'manual'`,
+  `UPDATE "PaymentGateway" SET "icon" = 'bank' WHERE "key" = 'TRANSFER' AND "icon" = 'card'`,
+  `UPDATE "PaymentGateway" SET "icon" = 'cash' WHERE "key" = 'CASH' AND "icon" = 'card'`,
+  `UPDATE "PaymentGateway" SET "config" = '{"requiereContraEntrega":"true"}'::jsonb WHERE "key" = 'CASH' AND "config" IS NULL`,
+  `UPDATE "Order" SET "paymentMethodName" = CASE "paymentMethod" WHEN 'TROPIPAY' THEN 'Tropipay' WHEN 'QVAPAY' THEN 'QvaPay' WHEN 'TRANSFER' THEN 'Transferencia bancaria' WHEN 'CASH' THEN 'Efectivo contra entrega' ELSE "paymentMethod" END WHERE "paymentMethodName" IS NULL`,
 ];
 
 // Tablas nuevas. Se crean aquí por el mismo motivo: el despliegue no migra.
@@ -46,7 +62,7 @@ export function aplicarColumnas(cliente: Cliente): Promise<void> {
     for (const sql of [...COLUMNAS, ...TABLAS]) await cliente.$executeRawUnsafe(sql);
   })().catch((e) => {
     hechos.delete(cliente);
-    console.warn("[columnas] no se pudieron asegurar las columnas de Product:", e instanceof Error ? e.message : e);
+    console.warn("[columnas] no se pudo asegurar el esquema:", e instanceof Error ? e.message : e);
   });
   hechos.set(cliente, hecho);
   return hecho;

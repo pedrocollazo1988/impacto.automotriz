@@ -11,9 +11,19 @@ describe("aplicarColumnas", () => {
     const { sql, cliente } = espia();
     await aplicarColumnas(cliente);
     expect(sql.length).toBeGreaterThan(0);
-    const columnas = sql.filter((s) => s.includes("ALTER TABLE"));
+    const columnas = sql.filter((s) => s.includes("ADD COLUMN"));
     expect(columnas.length).toBeGreaterThan(0);
     for (const s of columnas) expect(s).toContain("ADD COLUMN IF NOT EXISTS");
+  });
+
+  it("convierte el método de pago del pedido de enum a texto", async () => {
+    const { sql, cliente } = espia();
+    await aplicarColumnas(cliente);
+    const todo = sql.join("\n");
+    expect(todo).toContain('ALTER TABLE "Order" ALTER COLUMN "paymentMethod" TYPE TEXT');
+    expect(todo).toContain('"paymentMethodName"');
+    expect(todo).toContain('"provider"');
+    expect(todo).toContain('"config"');
   });
 
   it("crea la tabla de contenido editable de forma idempotente", async () => {

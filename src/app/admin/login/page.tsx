@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import Icon from "@/components/brand/Icon";
+import Logo from "@/components/brand/Logo";
+import PasswordField from "@/components/PasswordField";
 
 export default function Login() {
   const [e, setE] = useState(""); const [p, setP] = useState(""); const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
@@ -15,16 +17,15 @@ export default function Login() {
   return (
     <main className="blueprint grid min-h-screen place-items-center bg-navy p-4">
       <div className="w-full max-w-sm">
-        <div className="mb-5 flex flex-col items-center gap-2 text-center text-white">
-          <span className="adm-avatar" style={{ width: "3rem", height: "3rem", background: "linear-gradient(180deg,#164a8a,#0a2c5e)", fontSize: "1.1rem" }}>IA</span>
-          <h1 className="font-display text-lg font-extrabold tracking-tight">IMPACTO<span className="text-[color:var(--color-action-hi)]">·</span>AUTOMOTRIZ</h1>
+        <div className="mb-5 flex flex-col items-center gap-3 text-center text-white">
+          <Logo variant="light" size="md" tagline={false} href="/admin" />
           <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/50">Panel de administración</p>
         </div>
         <div className="space-y-3 rounded-2xl bg-white p-6 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.5)]">
           <label className="block space-y-1"><span className="text-xs font-semibold text-slate-600">Correo</span>
             <input type="email" autoComplete="username" className="input" placeholder="tu@correo.com" value={e} onChange={(x) => setE(x.target.value)} onKeyDown={(x) => x.key === "Enter" && go()} /></label>
           <label className="block space-y-1"><span className="text-xs font-semibold text-slate-600">Contraseña</span>
-            <input type="password" autoComplete="current-password" className="input" placeholder="••••••••" value={p} onChange={(x) => setP(x.target.value)} onKeyDown={(x) => x.key === "Enter" && go()} /></label>
+            <PasswordField autoComplete="current-password" placeholder="••••••••" value={p} onChange={(x) => setP(x.target.value)} onKeyDown={(x) => x.key === "Enter" && go()} /></label>
           {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
           <button className="btn btn-primary w-full" disabled={busy} onClick={go}>{busy ? "Entrando…" : <>Entrar <Icon name="arrowRight" size={16} /></>}</button>
         </div>

@@ -138,18 +138,16 @@ enum OrderStatus {
   CANCELED
 }
 
-enum PaymentMethod {
-  TROPIPAY
-  QVAPAY
-  TRANSFER
-  CASH
-}
-
 model Order {
   id            String         @id @default(cuid())
   number        Int            @unique @default(autoincrement())
   status        OrderStatus    @default(PENDING_PAYMENT)
-  paymentMethod PaymentMethod
+  // Clave del método de pago (PaymentGateway.key). String, no enum: el panel
+  // puede crear métodos nuevos sin una migración de base de datos.
+  paymentMethod String
+  // Nombre visible en el momento de la compra, por si el método se renombra o
+  // se archiva después.
+  paymentMethodName String?
   paid          Boolean        @default(false)
   paymentRef    String?
   providerRef   String?
@@ -561,17 +559,23 @@ model ProductCompatibility {
 // se podía activar o desactivar un método sin tocar el código.
 model PaymentGateway {
   id           Int      @id @default(autoincrement())
-  key          String   @unique // TROPIPAY | QVAPAY | TRANSFER | CASH
+  key          String   @unique // slug estable; no cambia al renombrar
+  // Driver que define el comportamiento y los campos: tropipay | qvapay | manual | link
+  provider     String   @default("manual")
   name         String
   description  String   @default("")
   kind         String   @default("online") // online | manual
+  icon         String   @default("card")
   enabled      Boolean  @default(false)
+  archived     Boolean  @default(false)
   sandbox      Boolean  @default(true)
   sortOrder    Int      @default(0)
   // Instrucciones para el cliente (transferencia, efectivo, o notas de la pasarela).
   instructions String   @default("")
   // Credenciales cifradas con AES-256-GCM (APP_SECRET). Nunca se devuelven al cliente.
   credsEnc     String?
+  // Datos públicos del método (banco, cuenta, titular, URL de pago…).
+  config       Json?
   // Comisión que se muestra al comprador, en % sobre el total.
   feePercent   Decimal  @default(0) @db.Decimal(5, 2)
   minTotalUsd  Decimal? @db.Decimal(10, 2)
