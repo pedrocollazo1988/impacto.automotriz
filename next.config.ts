@@ -31,6 +31,9 @@ const config: NextConfig = {
       "base-uri 'self'",
       "object-src 'none'",
       "upgrade-insecure-requests",
+      // Vercel inyecta su barra de feedback solo en las previsualizaciones; en
+      // produccion no se sirve, asi que el dominio real mantiene la CSP cerrada.
+      ...(process.env.VERCEL_ENV === "production" ? [] : ["script-src-elem 'self' 'unsafe-inline' https://vercel.live", "frame-src 'self' https://vercel.live"]),
     ].join("; ");
     return [{ source: "/:path*", headers: [
       { key: "X-Content-Type-Options", value: "nosniff" },
