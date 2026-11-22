@@ -209,10 +209,10 @@ model Product {
   stock          Int                    @default(0)
   lowStockAt     Int                    @default(3)
   images         String[]
-  // El visor 3D se retiró y ningún código lo usa. La columna se queda con
-  // @ignore porque el build de Vercel sincroniza con `prisma db push`, que se
-  // niega a borrar columnas que todavía tienen datos.
-  model3dUrl     String? @ignore
+  // Modelo 3D de la ficha: URL de un .glb/.gltf subido al panel o servido desde /models.
+  model3dUrl     String?
+  // Qué enseña la ficha por defecto: la galería de fotos, el visor 3D o el giro 360.
+  viewerMode     String                 @default("photos")
   specs          Json? // { "Medida": "...", "Voltaje": "..." }
   featured       Boolean                @default(false)
   active         Boolean                @default(true)

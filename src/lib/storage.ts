@@ -10,9 +10,13 @@ const KINDS = [
   { ext: "jpg", mime: "image/jpeg", max: 5, test: (b: Buffer) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
   { ext: "png", mime: "image/png", max: 5, test: (b: Buffer) => b.subarray(0, 8).toString("hex") === "89504e470d0a1a0a" },
   { ext: "webp", mime: "image/webp", max: 5, test: (b: Buffer) => b.subarray(0, 4).toString() === "RIFF" && b.subarray(8, 12).toString() === "WEBP" },
+  // glTF binario: cabecera "glTF" + versión 2 en little-endian.
+  { ext: "glb", mime: "model/gltf-binary", max: 25, test: (b: Buffer) => b.subarray(0, 4).toString() === "glTF" && b.readUInt32LE(4) === 2 },
+  // glTF en texto: un JSON cuyo campo asset.version empieza por 2.
+  { ext: "gltf", mime: "model/gltf+json", max: 25, test: (b: Buffer) => /^\s*\{/.test(b.subarray(0, 64).toString()) && /"version"\s*:\s*"2\./.test(b.subarray(0, 2048).toString()) },
 ] as const;
 
-export const MIME: Record<string, string> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp" };
+export const MIME: Record<string, string> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp", glb: "model/gltf-binary", gltf: "model/gltf+json" };
 export const uploadDir = () => path.resolve(process.env.UPLOAD_DIR ?? "./uploads");
 
 // La tabla se crea en el primer uso. El build de Vercel no aplica migraciones, así
@@ -63,7 +67,7 @@ async function store(name: string, buf: Buffer, mime: string) {
 export async function saveUpload(file: File) {
   const buf = Buffer.from(await file.arrayBuffer());
   const kind = KINDS.find((k) => k.test(buf));
-  if (!kind) throw new HttpError(415, "Formato no admitido (usa JPG, PNG o WebP)");
+  if (!kind) throw new HttpError(415, "Formato no admitido (usa JPG, PNG, WebP, GLB o glTF)");
   if (buf.length > kind.max * 1024 * 1024) throw new HttpError(413, `El archivo supera ${kind.max} MB`);
   return store(`${crypto.randomUUID()}.${kind.ext}`, buf, kind.mime);
 }
