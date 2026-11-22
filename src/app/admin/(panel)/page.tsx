@@ -34,7 +34,7 @@ export default async function Pedidos() {
                 </span>
               </div>
               <p className="mt-1 text-slate-500">{o.items.map((i) => `${i.qty}× ${i.name}`).join(", ")}</p>
-              <p className="text-slate-500">{o.delivery ? `${o.delivery.methodName} · ${o.delivery.address ?? "recogida"} · ${o.customerPhone}` : `Pago: ${o.paymentMethod}`}</p>
+              <p className="text-slate-500">{o.delivery ? `${o.delivery.methodName} · ${o.delivery.address ?? "recogida"} · ${o.customerPhone}` : `Pago: ${o.paymentMethodName ?? o.paymentMethod}`}</p>
               <OrderActions id={o.id} paid={o.paid} status={o.status} />
             </div>
           );

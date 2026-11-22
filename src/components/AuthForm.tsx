@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Icon from "@/components/brand/Icon";
+import PasswordField from "@/components/PasswordField";
 
 export default function AuthForm({ google = false }: { google?: boolean }) {
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
@@ -35,7 +36,7 @@ export default function AuthForm({ google = false }: { google?: boolean }) {
           </>
         )}
         <input className="input" type="email" placeholder="Correo electrónico" value={f.email} onChange={(e) => set("email", e.target.value)} />
-        {mode !== "forgot" && <input className="input" type="password" placeholder="Contraseña (mínimo 8 caracteres)" value={f.password} onChange={(e) => set("password", e.target.value)} />}
+        {mode !== "forgot" && <PasswordField placeholder="Contraseña (mínimo 8 caracteres)" autoComplete={mode === "login" ? "current-password" : "new-password"} value={f.password} onChange={(e) => set("password", e.target.value)} />}
         {mode === "register" && (
           <label className="flex gap-2 text-xs text-slate-600"><input type="checkbox" checked={f.marketing} onChange={(e) => set("marketing", e.target.checked)} className="mt-0.5" />Quiero recibir novedades y ofertas por correo (puedes darte de baja cuando quieras).</label>
         )}

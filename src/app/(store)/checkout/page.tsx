@@ -6,17 +6,28 @@ import { useCart } from "@/components/CartProvider";
 import DeliverySelector, { type DeliveryChoice } from "@/components/DeliverySelector";
 import Icon from "@/components/brand/Icon";
 
-// Los métodos los define el panel (nombre, descripción, instrucciones y
-// comisión). Aquí solo se elige el icono por clave.
-const ICONO: Record<string, string> = { TROPIPAY: "card", QVAPAY: "bolt", TRANSFER: "bank", CASH: "box" };
-type Metodo = { key: "TROPIPAY" | "QVAPAY" | "TRANSFER" | "CASH"; name: string; description: string; kind: "online" | "manual"; instructions: string; feePercent: number };
+// Los métodos los define el panel (nombre, icono, descripción, datos y
+// comisión). Aquí no hay una lista fija de pasarelas.
+type Metodo = {
+  key: string;
+  provider: string;
+  name: string;
+  description: string;
+  kind: "online" | "manual";
+  icon: string;
+  instructions: string;
+  feePercent: number;
+  automatic: boolean;
+  details: { etiqueta: string; valor: string }[];
+  url: string | null;
+};
 
 export default function Checkout() {
   const { items, clear } = useCart();
   const router = useRouter();
   const [subtotal, setSubtotal] = useState(0); const [fee, setFee] = useState(0); const [delivery, setDelivery] = useState<DeliveryChoice | null>(null);
   const [c, setC] = useState({ name: "", email: "", phone: "" });
-  const [pay, setPay] = useState<"TROPIPAY" | "QVAPAY" | "TRANSFER" | "CASH">("TRANSFER");
+  const [pay, setPay] = useState("");
   const [metodos, setMetodos] = useState<Metodo[]>([]);
   const [code, setCode] = useState(""); const [coupon, setCoupon] = useState<{ code: string; discountUsd: number } | null>(null); const [couponMsg, setCouponMsg] = useState("");
   const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
@@ -28,7 +39,7 @@ export default function Checkout() {
         const lista = m.methods ?? [];
         setMetodos(lista);
         // Si el método elegido deja de estar disponible, se pasa al primero.
-        setPay((actual) => (lista.some((x) => x.key === actual) ? actual : (lista[0]?.key ?? "TRANSFER")));
+        setPay((actual) => (lista.some((x) => x.key === actual) ? actual : (lista[0]?.key ?? "")));
       });
   }, [subtotal, coupon, fee]);
   useEffect(() => { fetch("/api/account/session").then((r) => r.json()).then((m) => m && setC({ name: m.name ?? "", email: m.email ?? "", phone: m.phone ?? "" })); }, []);
@@ -45,6 +56,7 @@ export default function Checkout() {
   const comisionMonto = metodo?.feePercent ? Math.round((base + fee) * (metodo.feePercent / 100) * 100) / 100 : 0;
 
   const submit = async () => {
+    if (!metodo) return setErr("Elige un método de pago para continuar");
     setBusy(true); setErr("");
     const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items, customer: c, delivery, paymentMethod: pay, coupon: coupon?.code }) });
     const j = await r.json(); setBusy(false);
@@ -58,7 +70,7 @@ export default function Checkout() {
       <Link href="/catalogo" className="btn btn-primary mt-5">Ver catálogo</Link>
     </div></div>
   );
-  const ready = delivery && c.name.length > 1 && /\S+@\S+\.\S+/.test(c.email) && c.phone.length > 5;
+  const ready = !!delivery && c.name.trim().length > 1 && /\S+@\S+\.\S+/.test(c.email) && c.phone.trim().length > 5 && !!metodo;
 
   return (
     <div className="container-x py-8">
@@ -67,12 +79,19 @@ export default function Checkout() {
         <div className="space-y-5">
           <section className="card p-5">
             <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><span className="grid h-6 w-6 place-items-center rounded-full bg-[color:var(--color-navy)] text-xs text-white">1</span> Tus datos</h2>
-            <div className="mt-4 space-y-3">
-              <input className="input" placeholder="Nombre completo" value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <input className="input" placeholder="Correo electrónico" value={c.email} onChange={(e) => setC({ ...c, email: e.target.value })} />
-                <input className="input" placeholder="Teléfono" value={c.phone} onChange={(e) => setC({ ...c, phone: e.target.value })} />
-              </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <label className="block sm:col-span-2">
+                <span className="mb-1 block text-xs font-semibold text-slate-600">Nombre completo</span>
+                <input className="input" autoComplete="name" placeholder="Nombre y apellidos" value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold text-slate-600">Correo electrónico</span>
+                <input className="input" type="email" autoComplete="email" placeholder="tu@correo.com" value={c.email} onChange={(e) => setC({ ...c, email: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold text-slate-600">Teléfono</span>
+                <input className="input" type="tel" autoComplete="tel" placeholder="+53 5 000 0000" value={c.phone} onChange={(e) => setC({ ...c, phone: e.target.value })} />
+              </label>
             </div>
           </section>
 
@@ -87,13 +106,26 @@ export default function Checkout() {
               {!metodos.length && <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">No hay métodos de pago disponibles ahora mismo. Escríbenos para coordinar el cobro.</p>}
               {metodos.map((m) => (
                 <label key={m.key} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${pay === m.key ? "border-[color:var(--color-action)] bg-[color:var(--color-action)]/5 ring-2 ring-[color:var(--color-action)]/20" : "border-slate-200 hover:border-slate-300"}`}>
-                  <input type="radio" checked={pay === m.key} onChange={() => setPay(m.key)} className="mt-1 accent-[color:var(--color-action)]" />
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-navy"><Icon name={ICONO[m.key] ?? "card"} size={18} /></span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-slate-800">{m.name}</span>
-                    <span className="block text-xs text-slate-500">{m.description}</span>
-                    {m.feePercent > 0 && <span className="mt-0.5 block text-xs font-semibold text-[color:var(--color-action)]">+{m.feePercent} % de comisión</span>}
-                    {pay === m.key && m.instructions && <span className="mt-1.5 block whitespace-pre-line rounded-lg bg-slate-50 px-2.5 py-2 text-xs text-slate-600">{m.instructions}</span>}
+                  <input type="radio" name="payment" checked={pay === m.key} onChange={() => setPay(m.key)} className="mt-1 accent-[color:var(--color-action)]" />
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-slate-100 text-navy"><Icon name={m.icon} size={20} /></span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-semibold text-slate-800">{m.name}</span>
+                      <span className={`badge ${m.automatic ? "badge-info" : "badge-mute"}`}>{m.automatic ? "Automático" : "Manual"}</span>
+                    </span>
+                    <span className="mt-0.5 block text-xs text-slate-500">{m.description}</span>
+                    {m.feePercent > 0 && <span className="mt-0.5 block text-xs font-semibold text-[color:var(--color-action-deep)]">+{m.feePercent} % de comisión</span>}
+                    {pay === m.key && (m.instructions || m.details.length > 0 || m.url) && (
+                      <span className="mt-2 block rounded-lg bg-slate-50 px-2.5 py-2 text-xs leading-relaxed text-slate-600">
+                        {m.instructions && <span className="block whitespace-pre-line">{m.instructions}</span>}
+                        {m.details.length > 0 && (
+                          <span className="mt-1 block space-y-0.5">
+                            {m.details.map((d) => <span key={d.etiqueta} className="block"><b className="font-semibold text-slate-700">{d.etiqueta}:</b> {d.valor}</span>)}
+                          </span>
+                        )}
+                        {m.url && <span className="mt-1 block break-all text-[color:var(--color-action-deep)]">{m.url}</span>}
+                      </span>
+                    )}
                   </span>
                 </label>
               ))}
@@ -120,11 +152,12 @@ export default function Checkout() {
               {comisionMonto > 0 && <div className="flex justify-between"><dt className="text-slate-500">Comisión de pago</dt><dd className="font-semibold">{comisionMonto.toFixed(2)} USD</dd></div>}
               <div className="flex justify-between border-t border-slate-100 pt-3 text-lg"><dt className="font-semibold">Total</dt><dd className="font-display font-extrabold text-navy">{(base + fee + comisionMonto).toFixed(2)} USD</dd></div>
             </dl>
-            {err && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{err}</p>}
+            {metodo && <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">Pagas con <b className="text-slate-700">{metodo.name}</b></p>}
+            {err && <p aria-live="polite" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{err}</p>}
             <button disabled={!ready || busy} onClick={submit} className="btn btn-primary mt-5 w-full text-base disabled:opacity-40">
               {busy ? "Procesando…" : <><Icon name="check" size={18} /> Confirmar pedido</>}
             </button>
-            {!ready && <p className="mt-3 text-center text-xs text-slate-400">Completa tus datos y la entrega para continuar.</p>}
+            {!ready && <p className="mt-3 text-center text-xs text-slate-400">Completa tus datos, la entrega y el método de pago para continuar.</p>}
             <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-400"><Icon name="shield" size={13} /> El importe final lo confirma el servidor.</p>
           </div>
         </aside>

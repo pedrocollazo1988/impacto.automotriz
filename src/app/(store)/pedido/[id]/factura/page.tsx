@@ -20,6 +20,6 @@ export default async function Factura({ params, searchParams }: { params: Promis
       <div className="ml-auto w-56 space-y-1"><p className="flex justify-between"><span>Subtotal</span>{m(o.subtotalUsd)}</p>
         {Number(o.discountUsd) > 0 && <p className="flex justify-between"><span>Descuento {o.couponCode}</span>−{m(o.discountUsd)}</p>}
         <p className="flex justify-between"><span>Envío</span>{m(o.shippingUsd)}</p><p className="flex justify-between border-t pt-1 text-base font-bold"><span>Total</span>{m(o.totalUsd)}</p></div>
-      <p className="text-xs text-slate-500">Estado del pago: {o.paid ? "pagado" : "pendiente"} · Método: {o.paymentMethod}</p>
+      <p className="text-xs text-slate-500">Estado del pago: {o.paid ? "pagado" : "pendiente"} · Método: {o.paymentMethodName ?? o.paymentMethod}</p>
     </div>);
 }

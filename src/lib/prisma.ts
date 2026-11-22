@@ -4,10 +4,13 @@ import { aplicarColumnas } from "./columnas";
 const g = globalThis as unknown as { prisma?: PrismaClient };
 const base = g.prisma ?? new PrismaClient();
 
-// Las columnas nuevas se crean antes de la primera consulta a Product o
-// Category: si se dejara a cada página, cualquier consulta nueva (portada,
-// catálogo, buscador) reventaría con P2022 en una base sin migrar.
-export const asegurarColumnasProducto = () => aplicarColumnas(base);
+// Las columnas nuevas se crean antes de la primera consulta a los modelos que
+// las usan: si se dejara a cada página, cualquier consulta nueva reventaría con
+// P2022 en una base sin migrar.
+export const asegurarEsquema = () => aplicarColumnas(base);
+
+// Alias histórico: algunas páginas y pruebas lo importan con este nombre.
+export const asegurarColumnasProducto = asegurarEsquema;
 
 // El cliente extendido conserva todos los modelos y operaciones; solo pierde
 // $on/$use, que aquí no se usan. Se anota como PrismaClient para que los helpers
@@ -16,13 +19,25 @@ export const prisma = base.$extends({
   query: {
     product: {
       async $allOperations({ args, query }) {
-        await asegurarColumnasProducto();
+        await asegurarEsquema();
         return query(args);
       },
     },
     category: {
       async $allOperations({ args, query }) {
-        await asegurarColumnasProducto();
+        await asegurarEsquema();
+        return query(args);
+      },
+    },
+    paymentGateway: {
+      async $allOperations({ args, query }) {
+        await asegurarEsquema();
+        return query(args);
+      },
+    },
+    order: {
+      async $allOperations({ args, query }) {
+        await asegurarEsquema();
         return query(args);
       },
     },

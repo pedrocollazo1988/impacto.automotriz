@@ -7,11 +7,12 @@ export async function POST(req: Request) {
   const p = await req.json().catch(() => null);
   const orderId = String(p?.remote_id ?? "");
   const order = orderId ? await prisma.order.findUnique({ where: { id: orderId } }) : null;
-  if (!order || order.paymentMethod !== "QVAPAY" || !order.providerRef) return new Response("Not found", { status: 404 });
+  if (!order || !order.providerRef) return new Response("Not found", { status: 404 });
+  const gw = await porClave(order.paymentMethod);
+  if (!gw || gw.provider !== "qvapay") return new Response("Not found", { status: 404 });
   if (order.paid) return Response.json({ ok: true });
-  const gw = await porClave("QVAPAY");
-  const c = gw?.creds ?? {};
-  if (!gw?.enabled || !c.appId || !c.appSecret) return new Response("Gateway disabled", { status: 503 });
+  const c = { ...(gw.creds ?? {}), ...(gw.config ?? {}) };
+  if (!gw.enabled || gw.archived || !c.appId || !c.appSecret) return new Response("Gateway disabled", { status: 503 });
   try {
     const s = await invoiceStatus(order.providerRef, { appId: c.appId, appSecret: c.appSecret });
     if (!s.paid) return Response.json({ ok: true, paid: false });

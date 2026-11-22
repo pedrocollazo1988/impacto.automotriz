@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader, Panel, PanelPad, EmptyState, Badge, inputCls, Modal } from "@/components/admin/ui";
 import Icon from "@/components/brand/Icon";
+import PasswordField from "@/components/PasswordField";
 
 type U = { id: string; email: string; name: string; role: string; active: boolean; lastLoginAt: string | null };
 const ROLES: [string, string][] = [["ADMIN", "Administrador (todo)"], ["MANAGER", "Gerente (todo salvo equipo)"], ["SALES", "Ventas (pedidos, cupones, reportes, reseñas, correo)"], ["WAREHOUSE", "Almacén (productos, pedidos, logística, archivos)"]];
@@ -19,7 +20,7 @@ export default function Equipo() {
           <label className="space-y-1"><span className="block text-xs font-semibold text-slate-600">Nombre</span><input className={inputCls} placeholder="Nombre completo" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
           <label className="space-y-1"><span className="block text-xs font-semibold text-slate-600">Correo</span><input className={inputCls} placeholder="persona@correo.com" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></label>
           <label className="space-y-1"><span className="block text-xs font-semibold text-slate-600">Rol</span><select className={inputCls} value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })}>{ROLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-          <label className="space-y-1"><span className="block text-xs font-semibold text-slate-600">Contraseña inicial</span><input className={inputCls} type="password" placeholder="10+ caracteres" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></label>
+          <label className="space-y-1"><span className="block text-xs font-semibold text-slate-600">Contraseña inicial</span><PasswordField className="w-52" placeholder="10+ caracteres" autoComplete="new-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></label>
           <button className="btn btn-primary" onClick={async () => { if (await send({ ...f, active: true })) setF({ email: "", name: "", role: "SALES", password: "" }); }}><Icon name="plus" size={14} /> Añadir</button>
         </div>
         {msg && <p className="mt-3 text-sm text-slate-600">{msg}</p>}
@@ -36,7 +37,7 @@ export default function Equipo() {
       </Panel>
       <Modal open={!!pwFor} title={`Cambiar clave · ${pwFor?.name ?? ""}`} onClose={() => setPwFor(null)}>
         <label className="block space-y-1"><span className="text-xs font-semibold text-slate-600">Nueva contraseña (10+ caracteres)</span>
-          <input className={inputCls} type="password" autoFocus value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => e.key === "Enter" && pw && pwFor && send({ ...pwFor, password: pw }).then((ok) => ok && setPwFor(null))} /></label>
+          <PasswordField autoFocus autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => e.key === "Enter" && pw && pwFor && send({ ...pwFor, password: pw }).then((ok) => ok && setPwFor(null))} /></label>
         <div className="mt-4 flex justify-end gap-2">
           <button className="btn btn-ghost btn-sm" onClick={() => setPwFor(null)}>Cancelar</button>
           <button className="btn btn-primary btn-sm" disabled={pw.length < 10} onClick={() => pwFor && send({ ...pwFor, password: pw }).then((ok) => ok && setPwFor(null))}>Guardar</button>
