@@ -1,7 +1,7 @@
 import { revalidateTag, unstable_cache } from "next/cache";
 import { prisma } from "./prisma";
 import { esVista } from "./viewer";
-import { asegurarVista } from "./viewer-server";
+import { MAX_FOTOGRAMAS_360, MAX_FOTOS, MAX_VIDEOS, recortarMedios } from "./medios";
 
 export const slugify = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 
@@ -50,22 +50,27 @@ export const invalidarCacheCatalogo = () => {
 
 export type ProductInput = {
   sku: string; name: string; slug?: string; description?: string; priceUsd: number; compareAtUsd?: number | null; stock: number; lowStockAt?: number;
-  images?: string[]; model3dUrl?: string | null; viewerMode?: string; specs?: Record<string, string> | null; featured?: boolean; active?: boolean;
+  images?: string[]; videos?: string[]; model3dUrl?: string | null; model3dVideo?: string | null;
+  spin360Frames?: string[]; spin360Video?: string | null;
+  viewerMode?: string; specs?: Record<string, string> | null; featured?: boolean; active?: boolean;
   variants?: { sku: string; name: string; priceUsd?: number | null; stock: number; active?: boolean }[];
   categoryName: string; brandName?: string | null; fits?: { make: string; model: string; yearFrom: number; yearTo: number }[];
 };
 
 // Alta o actualización (por id o, si no hay, por SKU). Crea categoría y marca si no existen.
 export async function saveProduct(i: ProductInput, id?: number) {
-  await asegurarVista();
   const category = await prisma.category.upsert({ where: { slug: slugify(i.categoryName) }, update: {}, create: { slug: slugify(i.categoryName), name: i.categoryName.trim() } });
   const brand = i.brandName?.trim() ? await prisma.brand.upsert({ where: { slug: slugify(i.brandName) }, update: {}, create: { slug: slugify(i.brandName), name: i.brandName.trim() } }) : null;
   const data = {
     sku: i.sku.trim(), name: i.name.trim(), description: i.description ?? "", priceUsd: i.priceUsd, compareAtUsd: i.compareAtUsd ?? null, stock: i.stock,
-    lowStockAt: i.lowStockAt ?? 3, images: i.images ?? [],
+    lowStockAt: i.lowStockAt ?? 3, images: recortarMedios(i.images ?? [], MAX_FOTOS),
+    videos: recortarMedios(i.videos ?? [], MAX_VIDEOS),
     // Omitir la clave (no enviarla como null) evita que una reimportación del
     // catálogo borre el modelo 3D o la vista que el admin ya había elegido.
     ...(i.model3dUrl !== undefined ? { model3dUrl: i.model3dUrl } : {}),
+    ...(i.model3dVideo !== undefined ? { model3dVideo: i.model3dVideo } : {}),
+    ...(i.spin360Frames !== undefined ? { spin360Frames: recortarMedios(i.spin360Frames, MAX_FOTOGRAMAS_360) } : {}),
+    ...(i.spin360Video !== undefined ? { spin360Video: i.spin360Video } : {}),
     ...(esVista(i.viewerMode) ? { viewerMode: i.viewerMode } : {}),
     specs: i.specs ?? undefined, featured: i.featured ?? false,
     active: i.active ?? true, categoryId: category.id, brandId: brand?.id ?? null,

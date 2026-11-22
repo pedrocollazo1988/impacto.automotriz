@@ -7,7 +7,7 @@ export default async function Nuevo() {
   return (
     <>
       <PageHeader title="Nuevo producto" subtitle="Rellena la ficha; se publicará en la tienda al guardar" />
-      <PanelPad><ProductForm categories={c.map((x) => x.name)} brands={b.map((x) => x.name)} /></PanelPad>
+      <PanelPad><ProductForm categories={c.map((x) => x.name)} brands={b.map((x) => x.name)} blob={!!process.env.BLOB_READ_WRITE_TOKEN} /></PanelPad>
     </>
   );
 }

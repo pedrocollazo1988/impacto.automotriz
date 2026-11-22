@@ -5,21 +5,32 @@ import Modelo3D from "@/components/Modelo3D";
 import Photo360 from "@/components/Photo360";
 import ProductGallery from "@/components/ProductGallery";
 import { ETIQUETA_VISTA, type Vista } from "@/lib/viewer";
+import { hayGiro360 } from "@/lib/medios";
 
 type Props = {
   images: string[];
+  videos?: string[];
   name: string;
   model3dUrl?: string | null;
+  model3dVideo?: string | null;
   frames: string[];
+  spin360Video?: string | null;
   initial: Vista;
 };
 
 // Elige qué se enseña en la ficha. Las pestañas solo aparecen para los medios que
 // existen de verdad: ofrecer "3D" sin modelo sería un botón que no hace nada.
-export default function ProductViewer({ images, name, model3dUrl, frames, initial }: Props) {
+export default function ProductViewer({
+  images, videos = [], name, model3dUrl, model3dVideo, frames, spin360Video, initial,
+}: Props) {
+  // Un vídeo en el panel 3D cumple la misma función que el GLB: el visitante ve la
+  // pieza girando. Por eso cualquiera de los dos habilita la pestaña.
+  const fuente3d = model3dUrl || model3dVideo || null;
+  const hay360 = hayGiro360(frames, spin360Video);
+
   const disponibles: Vista[] = ["photos"];
-  if (model3dUrl) disponibles.push("model3d");
-  if (frames.length >= 2) disponibles.push("spin360");
+  if (fuente3d) disponibles.push("model3d");
+  if (hay360) disponibles.push("spin360");
 
   const [vista, setVista] = useState<Vista>(disponibles.includes(initial) ? initial : "photos");
 
@@ -62,13 +73,13 @@ export default function ProductViewer({ images, name, model3dUrl, frames, initia
       )}
 
       <div id="vista-panel" role="tabpanel" aria-labelledby={`vista-tab-${vista}`}>
-      {vista === "model3d" && model3dUrl ? (
-        <Modelo3D src={model3dUrl} poster={images[0]} alt={name} />
-      ) : vista === "spin360" && frames.length >= 2 ? (
-        <Photo360 src={images[0]} frames={frames} alt={name} />
-      ) : (
-        <ProductGallery images={images} name={name} />
-      )}
+        {vista === "model3d" && fuente3d ? (
+          <Modelo3D src={fuente3d} poster={images[0]} alt={name} />
+        ) : vista === "spin360" && hay360 ? (
+          <Photo360 src={images[0]} frames={frames} video={spin360Video} alt={name} />
+        ) : (
+          <ProductGallery images={images} videos={videos} name={name} />
+        )}
       </div>
     </div>
   );

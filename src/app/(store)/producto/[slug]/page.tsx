@@ -14,12 +14,10 @@ import { getCustomer } from "@/lib/customer-auth";
 import { fotos360 } from "@/lib/photo360";
 import { tieneVista360 } from "@/lib/vista360";
 import { esVista, type Vista } from "@/lib/viewer";
-import { asegurarVista } from "@/lib/viewer-server";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
 const get = async (slug: string) => {
-  await asegurarVista();
   return prisma.product.findFirst({
     where: { slug, active: true },
     include: {
@@ -52,7 +50,13 @@ export default async function Producto({ params }: Props) {
   ]);
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
   const related = await prisma.product.findMany({ where: { active: true, categoryId: p.categoryId, id: { not: p.id } }, take: 4, include: { brand: true, category: { select: { slug: true } } } });
-  const frames = tieneVista360(p.category.slug) ? fotos360(p.sku) : [];
+  // Los fotogramas pueden venir del panel (subidos) o de la secuencia estática de
+  // /public/products/360. Se prefiere la del panel: es la que el admin ve y edita.
+  const frames = p.spin360Frames.length
+    ? p.spin360Frames
+    : tieneVista360(p.category.slug)
+      ? fotos360(p.sku)
+      : [];
   const vista: Vista = esVista(p.viewerMode) ? p.viewerMode : "photos";
   const wa = process.env.NEXT_PUBLIC_WHATSAPP;
   const specs = Object.entries((p.specs ?? {}) as Record<string, string>);
@@ -75,7 +79,16 @@ export default async function Producto({ params }: Props) {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="space-y-4">
-          <ProductViewer images={p.images} name={p.name} model3dUrl={p.model3dUrl} frames={frames} initial={vista} />
+          <ProductViewer
+            images={p.images}
+            videos={p.videos}
+            name={p.name}
+            model3dUrl={p.model3dUrl}
+            model3dVideo={p.model3dVideo}
+            frames={frames}
+            spin360Video={p.spin360Video}
+            initial={vista}
+          />
           {p.sku === "TE-4001" && (
             <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
               Imagen ilustrativa de un triciclo de carga equivalente. Las medidas y el equipamiento de la ficha son los del DDS-OD.

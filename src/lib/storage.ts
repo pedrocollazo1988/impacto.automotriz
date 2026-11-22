@@ -12,11 +12,16 @@ const KINDS = [
   { ext: "webp", mime: "image/webp", max: 5, test: (b: Buffer) => b.subarray(0, 4).toString() === "RIFF" && b.subarray(8, 12).toString() === "WEBP" },
   // glTF binario: cabecera "glTF" + versión 2 en little-endian.
   { ext: "glb", mime: "model/gltf-binary", max: 25, test: (b: Buffer) => b.subarray(0, 4).toString() === "glTF" && b.readUInt32LE(4) === 2 },
-  // glTF en texto: un JSON cuyo campo asset.version empieza por 2.
+  // glTF en texto: un JSON cuyo campo asset.version empiece por 2.
   { ext: "gltf", mime: "model/gltf+json", max: 25, test: (b: Buffer) => /^\s*\{/.test(b.subarray(0, 64).toString()) && /"version"\s*:\s*"2\./.test(b.subarray(0, 2048).toString()) },
+  // MP4 (ISO BMFF): la caja "ftyp" va en los bytes 4-8. Se acepta cualquier
+  // marca de vídeo; el navegador decide si puede reproducirlo.
+  { ext: "mp4", mime: "video/mp4", max: 40, test: (b: Buffer) => b.subarray(4, 8).toString() === "ftyp" },
+  // WebM/Matroska: firma EBML en los primeros 4 bytes.
+  { ext: "webm", mime: "video/webm", max: 40, test: (b: Buffer) => b.subarray(0, 4).toString("hex") === "1a45dfa3" },
 ] as const;
 
-export const MIME: Record<string, string> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp", glb: "model/gltf-binary", gltf: "model/gltf+json" };
+export const MIME: Record<string, string> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp", glb: "model/gltf-binary", gltf: "model/gltf+json", mp4: "video/mp4", webm: "video/webm" };
 export const uploadDir = () => path.resolve(process.env.UPLOAD_DIR ?? "./uploads");
 
 // La tabla se crea en el primer uso. El build de Vercel no aplica migraciones, así
@@ -67,7 +72,7 @@ async function store(name: string, buf: Buffer, mime: string) {
 export async function saveUpload(file: File) {
   const buf = Buffer.from(await file.arrayBuffer());
   const kind = KINDS.find((k) => k.test(buf));
-  if (!kind) throw new HttpError(415, "Formato no admitido (usa JPG, PNG, WebP, GLB o glTF)");
+  if (!kind) throw new HttpError(415, "Formato no admitido (usa JPG, PNG, WebP, GLB, glTF, MP4 o WebM)");
   if (buf.length > kind.max * 1024 * 1024) throw new HttpError(413, `El archivo supera ${kind.max} MB`);
   return store(`${crypto.randomUUID()}.${kind.ext}`, buf, kind.mime);
 }
