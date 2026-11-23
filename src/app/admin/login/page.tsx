@@ -7,7 +7,10 @@ import PasswordField from "@/components/PasswordField";
 export default function Login() {
   const [e, setE] = useState(""); const [p, setP] = useState(""); const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
   const go = async () => {
-    setBusy(true); setErr("");
+    setErr("");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e.trim())) return setErr("Escribe el correo de administración.");
+    if (!p) return setErr("Escribe tu contraseña.");
+    setBusy(true);
     try {
       const r = await fetch("/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: e, password: p }) });
       if (r.ok) location.href = "/admin";

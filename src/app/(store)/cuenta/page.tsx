@@ -88,7 +88,7 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
         <div className="mt-4"><GarageManager vehicles={garage} /></div>
       </section>
 
-      <section className="mt-8">
+      <section id="deseos" className="mt-8 scroll-mt-28">
         <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="heart" size={18} /> Lista de deseos</h2>
         {wish.length ? <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">{wish.map((w) => <ProductCard key={w.id} p={w.product} />)}</div>
           : <p className="mt-3 text-sm text-slate-500">Guarda productos con el botón ♡ de cada ficha.</p>}

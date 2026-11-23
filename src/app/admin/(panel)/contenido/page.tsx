@@ -3,6 +3,7 @@ import { requirePage } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/ui";
 import ContenidoEditor from "@/components/admin/ContenidoEditor";
 import { componer, SECCIONES } from "@/lib/contenido";
+import { ordenarSecciones } from "@/lib/contenido-orden";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Contenido de la web" };
@@ -14,7 +15,8 @@ export default async function ContenidoPage() {
 
   // Se compone con el texto de fábrica para que el editor muestre siempre lo que
   // se ve hoy en la web, aunque la sección no se haya tocado nunca.
-  const valores = Object.fromEntries(SECCIONES.map((s) => [s.key, componer(s, porClave.get(s.key) ?? null)]));
+  const secciones = ordenarSecciones(SECCIONES);
+  const valores = Object.fromEntries(secciones.map((s) => [s.key, componer(s, porClave.get(s.key) ?? null)]));
 
   return (
     <>
@@ -22,7 +24,7 @@ export default async function ContenidoPage() {
         title="Contenido de la web"
         subtitle="Textos, servicios, datos de contacto y preguntas frecuentes. Los cambios se publican al guardar."
       />
-      <ContenidoEditor secciones={SECCIONES} valores={valores} guardadas={[...porClave.keys()]} />
+      <ContenidoEditor secciones={secciones} valores={valores} guardadas={[...porClave.keys()]} />
     </>
   );
 }

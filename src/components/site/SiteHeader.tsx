@@ -73,9 +73,15 @@ export default function SiteHeader() {
             <Link href="/comparar" aria-label="Comparar" className="hidden h-12 w-12 place-items-center rounded-xl text-slate-700 lg:h-11 lg:w-11 transition hover:bg-slate-100 hover:text-navy sm:grid">
               <Icon name="compare" size={20} />
             </Link>
-            <Link href="/carrito" aria-label="Carrito" className="relative grid h-12 w-12 place-items-center rounded-xl lg:h-11 lg:w-11 text-slate-700 transition hover:bg-slate-100 hover:text-navy">
+            <Link href="/carrito" aria-label="Carrito" title="Carrito" className="relative grid h-12 w-12 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 hover:text-navy lg:h-11 lg:w-11">
               <Icon name="cart" size={20} />
               {count > 0 && <span className="absolute right-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[color:var(--color-action)] px-1 text-[11px] font-bold text-white ring-2 ring-white">{count}</span>}
+            </Link>
+            <Link href="/cuenta#deseos" aria-label="Lista de deseos" title="Lista de deseos" className="grid h-12 w-12 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 hover:text-[color:var(--color-action)] lg:h-11 lg:w-11">
+              <Icon name="heart" size={20} />
+            </Link>
+            <Link href="/cuenta" aria-label="Mi cuenta" title="Mi cuenta" className="grid h-12 w-12 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 hover:text-navy lg:h-11 lg:w-11">
+              <Icon name="user" size={20} />
             </Link>
             <button onClick={() => setOpen((v) => !v)} aria-label="Abrir menú" aria-expanded={open} className="grid h-12 w-12 place-items-center rounded-xl text-navy transition hover:bg-slate-100 lg:hidden">
               <Icon name={open ? "close" : "menu"} size={22} />

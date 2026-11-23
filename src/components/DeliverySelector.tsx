@@ -16,7 +16,7 @@ export type DeliveryChoice = {
 // Selector de entrega para el checkout: provincia → municipio → métodos disponibles → datos.
 // onChange recibe la elección (null si está incompleta) y el costo de envío a mostrar.
 // El costo final lo recalcula el servidor con buildOrderDelivery().
-export default function DeliverySelector({ subtotalUsd, onChange }: { subtotalUsd: number; onChange: (c: DeliveryChoice | null, feeUsd: number) => void }) {
+export default function DeliverySelector({ subtotalUsd, onChange }: { subtotalUsd: number; onChange: (c: DeliveryChoice | null, feeUsd: number, methodName?: string) => void }) {
   const [provs, setProvs] = useState<Opt[]>([]); const [muns, setMuns] = useState<Opt[]>([]); const [quotes, setQuotes] = useState<Quote[]>([]);
   const [prov, setProv] = useState(""); const [mun, setMun] = useState(""); const [methodId, setMethodId] = useState<number>();
   const [f, setF] = useState({ address: "", reference: "", recipientName: "", recipientPhone: "", recipientCi: "", isGift: false, slotId: "", scheduledDate: "", pickupPointId: "" });
@@ -32,6 +32,12 @@ export default function DeliverySelector({ subtotalUsd, onChange }: { subtotalUs
   }, [mun, subtotalUsd]);
 
   const q = quotes.find((x) => x.methodId === methodId);
+  const faltas = q ? [
+    !f.recipientName.trim() ? "nombre de quien recibe" : "",
+    !f.recipientPhone.trim() ? "teléfono de quien recibe" : "",
+    q.requiresAddress && !f.address.trim() ? "dirección completa" : "",
+    q.kind === "STORE_PICKUP" && !f.pickupPointId ? "punto de recogida" : "",
+  ].filter(Boolean) : [];
   useEffect(() => {
     const ok = q && f.recipientName.trim().length > 1 && f.recipientPhone.trim().length > 5 &&
       (!q.requiresAddress || f.address.trim()) && (q.kind !== "STORE_PICKUP" || f.pickupPointId);
@@ -39,7 +45,7 @@ export default function DeliverySelector({ subtotalUsd, onChange }: { subtotalUs
       municipalityId: Number(mun), methodId: q!.methodId, address: f.address || undefined, reference: f.reference || undefined,
       recipientName: f.recipientName, recipientPhone: f.recipientPhone, recipientCi: f.recipientCi || undefined, isGift: f.isGift,
       slotId: f.slotId ? Number(f.slotId) : undefined, scheduledDate: f.scheduledDate || undefined, pickupPointId: f.pickupPointId ? Number(f.pickupPointId) : undefined,
-    } : null, q?.feeUsd ?? 0);
+    } : null, q?.feeUsd ?? 0, q?.name);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, f, mun]);
 
@@ -78,7 +84,12 @@ export default function DeliverySelector({ subtotalUsd, onChange }: { subtotalUs
             <input className={input} placeholder="Teléfono" value={f.recipientPhone} onChange={(e) => set("recipientPhone", e.target.value)} />
             <input className={input} placeholder="Carnet de identidad (opcional)" value={f.recipientCi} onChange={(e) => set("recipientCi", e.target.value)} />
           </div>
-        </div>)}
+                  </div>)}
+          {q && faltas.length > 0 && (
+            <p role="status" className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Para confirmar la entrega falta: {faltas.join(", ")}.
+            </p>
+          )}
     </section>
   );
 }
