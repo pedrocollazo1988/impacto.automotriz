@@ -15,7 +15,7 @@ export default function DespieceViewer({ vehicleSlug, image, pins }: Props) {
   const [zoom, setZoom] = useState(false);
   const [origen, setOrigen] = useState({ x: 50, y: 50 });
   const itemRefs = useRef<Record<number, HTMLLIElement | null>>({});
-  const { add } = useCart();
+  const { items, add } = useCart();
   const { vehicle } = useVehicle();
   const compatible = vehicle?.slug === vehicleSlug;
 
@@ -118,7 +118,12 @@ export default function DespieceViewer({ vehicleSlug, image, pins }: Props) {
             {pins.map((p) => {
               const esActivo = activo === p.id;
               const prod = p.product;
-              const agotado = prod.stock <= 0;
+              const enCarritoDe = (vId: number | null) => items.filter((i) => i.productId === prod.id && (i.variantId ?? null) === vId).reduce((s, i) => s + i.qty, 0);
+              const stockDe = (v: { stock: number }) => Math.min(prod.stock, v.stock);
+              const variante = prod.variants.find((v) => stockDe(v) > enCarritoDe(v.id));
+              const stock = prod.variants.length ? (variante ? stockDe(variante) : 0) : prod.stock;
+              const enCarrito = enCarritoDe(variante?.id ?? null);
+              const agotado = stock <= 0 || enCarrito >= stock;
               return (
                 <li
                   key={p.id}
@@ -149,11 +154,11 @@ export default function DespieceViewer({ vehicleSlug, image, pins }: Props) {
                     <div className="shrink-0 text-right">
                       <p className="font-display text-base font-extrabold text-navy">{money(prod.priceUsd)} <span className="text-[10px] font-bold text-slate-400">USD</span></p>
                       <p className={`mt-0.5 text-[10px] font-semibold ${agotado ? "text-red-700" : "text-emerald-700"}`}>
-                        {agotado ? "Agotado" : `${prod.stock} disp.`}
+                        {agotado ? "Agotado" : `${Math.max(0, stock - enCarrito)} disp.`}
                       </p>
                       <button
                         disabled={agotado}
-                        onClick={() => add(prod.id, 1, prod.variants.find((v) => v.stock > 0)?.id ?? null)}
+                        onClick={() => add(prod.id, 1, variante?.id ?? null, stock)}
                         className="btn btn-primary btn-xs mt-1.5 disabled:opacity-40"
                       >
                         <Icon name="cart" size={12} /> Añadir

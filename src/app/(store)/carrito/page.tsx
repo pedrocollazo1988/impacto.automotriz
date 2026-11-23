@@ -43,9 +43,9 @@ export default function Carrito() {
                 {!l.ok && <p className="mt-1 flex items-center gap-1 text-xs font-medium text-red-600"><Icon name="info" size={13} /> Solo quedan {l.stock} disponibles</p>}
               </div>
               <div className="flex items-center rounded-xl border border-slate-200">
-                <button aria-label="Menos" onClick={() => setQty(l.productId, Math.max(1, l.qty - 1), l.variantId)} className="grid h-10 w-10 place-items-center text-slate-500 hover:text-navy"><Icon name="minus" size={15} /></button>
+                <button aria-label="Menos" onClick={() => setQty(l.productId, Math.max(1, l.qty - 1), l.variantId, l.stock)} className="grid h-10 w-10 place-items-center text-slate-500 hover:text-navy"><Icon name="minus" size={15} /></button>
                 <span className="grid h-10 w-10 place-items-center border-x border-slate-200 text-sm font-semibold">{l.qty}</span>
-                <button aria-label="Más" onClick={() => setQty(l.productId, l.qty + 1, l.variantId)} className="grid h-10 w-10 place-items-center text-slate-500 hover:text-navy"><Icon name="plus" size={15} /></button>
+                <button aria-label="Más" disabled={l.qty >= l.stock} onClick={() => setQty(l.productId, l.qty + 1, l.variantId, l.stock)} className="grid h-10 w-10 place-items-center text-slate-500 hover:text-navy disabled:cursor-not-allowed disabled:opacity-30"><Icon name="plus" size={15} /></button>
               </div>
               <p className="w-24 text-right font-display font-extrabold text-navy">{l.totalUsd.toFixed(2)} <span className="text-xs font-bold text-slate-400">USD</span></p>
               <button aria-label="Quitar" onClick={() => remove(l.productId, l.variantId)} className="grid h-10 w-10 place-items-center rounded-xl text-slate-400 transition hover:bg-red-50 hover:text-red-600"><Icon name="trash" size={18} /></button>

@@ -2,11 +2,22 @@ import crypto from "node:crypto";
 import { z } from "zod";
 import { prisma } from "./prisma";
 import { HttpError } from "./auth";
+import { SITE } from "./site";
 
 const num = (v: unknown) => (v == null ? null : Number(v));
 
+// Punto de recogida por defecto cuando todavía no se han creado puntos en el panel.
+const PUNTO_TIENDA = {
+  id: 0,
+  name: "Recogida en tienda",
+  address: SITE.direccion,
+  hours: SITE.horario,
+  readyHours: 24,
+};
+
 // Calcula qué métodos de entrega están disponibles para un municipio y a qué precio.
-// Prioridad: regla del municipio > regla de la provincia > sin regla (no disponible).
+// Prioridad: regla del municipio > regla de la provincia > tarifa base del método.
+// Una regla con available=false bloquea expresamente esa zona.
 export async function quoteDelivery(municipalityId: number, subtotalUsd: number) {
   const mun = await prisma.municipality.findUnique({ where: { id: municipalityId } });
   if (!mun) return [];
@@ -30,16 +41,18 @@ export async function quoteDelivery(municipalityId: number, subtotalUsd: number)
       etaMinDays: m.etaMinDays, etaMaxDays: m.etaMaxDays,
     };
     if (m.kind === "STORE_PICKUP") {
-      const pp = points.map((p) => ({ id: p.id, name: p.name, address: p.address, hours: p.hours, readyHours: p.readyHours }));
-      return { ...base, pickupPoints: pp, available: pp.length > 0, feeUsd: Number(m.baseFee), reason: pp.length ? undefined : "Sin puntos de recogida activos" };
+      const pp = points.length
+        ? points.map((p) => ({ id: p.id, name: p.name, address: p.address, hours: p.hours, readyHours: p.readyHours }))
+        : [PUNTO_TIENDA];
+      return { ...base, pickupPoints: pp, available: true, feeUsd: Number(m.baseFee), reason: undefined };
     }
     const rule = m.rules.find((r) => r.municipalityId === mun.id) ?? m.rules.find((r) => r.municipalityId === null);
-    if (!rule || !rule.available) return { ...base, available: false, feeUsd: 0, reason: "No disponible en este municipio" };
-    const min = num(rule.minOrderUsd);
+    if (rule && !rule.available) return { ...base, available: false, feeUsd: 0, reason: "No disponible en este municipio" };
+    const min = num(rule?.minOrderUsd);
     if (min != null && subtotalUsd < min) return { ...base, available: false, feeUsd: 0, reason: `Pedido mínimo: ${min} USD` };
-    const freeFrom = num(rule.freeFromUsd) ?? num(m.freeFromUsd);
-    const fee = freeFrom != null && subtotalUsd >= freeFrom ? 0 : num(rule.feeUsd) ?? Number(m.baseFee);
-    return { ...base, available: true, feeUsd: fee, etaMinDays: rule.etaMinDays ?? m.etaMinDays, etaMaxDays: rule.etaMaxDays ?? m.etaMaxDays, reason: undefined };
+    const freeFrom = num(rule?.freeFromUsd) ?? num(m.freeFromUsd);
+    const fee = freeFrom != null && subtotalUsd >= freeFrom ? 0 : num(rule?.feeUsd) ?? Number(m.baseFee);
+    return { ...base, available: true, feeUsd: fee, etaMinDays: rule?.etaMinDays ?? m.etaMinDays, etaMaxDays: rule?.etaMaxDays ?? m.etaMaxDays, reason: undefined };
   });
 }
 
@@ -58,7 +71,7 @@ export async function buildOrderDelivery(input: z.infer<typeof deliveryInput>, s
   const q = (await quoteDelivery(input.municipalityId, subtotalUsd)).find((x) => x.methodId === input.methodId);
   if (!q || !q.available) throw new HttpError(422, q?.reason ?? "Método de entrega no disponible");
   if (q.requiresAddress && !input.address) throw new HttpError(422, "Falta la dirección de entrega");
-  if (q.kind === "STORE_PICKUP" && !q.pickupPoints.some((p) => p.id === input.pickupPointId)) throw new HttpError(422, "Elige un punto de recogida");
+  if (q.kind === "STORE_PICKUP" && q.pickupPoints.length > 0 && !q.pickupPoints.some((p) => p.id === input.pickupPointId)) throw new HttpError(422, "Elige un punto de recogida");
   let scheduledDate: Date | undefined;
   if (input.slotId) {
     const slot = q.slots.find((s) => s.id === input.slotId);
@@ -72,7 +85,7 @@ export async function buildOrderDelivery(input: z.infer<typeof deliveryInput>, s
     methodId: q.methodId, methodName: q.name, kind: q.kind, provinceId: mun.provinceId, municipalityId: mun.id,
     address: input.address, reference: input.reference, recipientName: input.recipientName,
     recipientPhone: input.recipientPhone, recipientCi: input.recipientCi, isGift: input.isGift,
-    slotId: input.slotId, scheduledDate, pickupPointId: input.pickupPointId, feeUsd: q.feeUsd,
+    slotId: input.slotId, scheduledDate, pickupPointId: input.pickupPointId && input.pickupPointId > 0 ? input.pickupPointId : undefined, feeUsd: q.feeUsd,
     cashOnDelivery: q.cashOnDelivery,
     confirmationCode: String(crypto.randomInt(100000, 1000000)), // PIN de entrega
   };

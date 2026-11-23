@@ -6,14 +6,17 @@ import Icon from "@/components/brand/Icon";
 export type VariantOpt = { id: number; name: string; priceUsd: number | null; stock: number };
 
 export default function AddToCart({ productId, stock, basePriceUsd, variants = [] }: { productId: number; stock: number; basePriceUsd: number; variants?: VariantOpt[] }) {
-  const { add } = useCart();
+  const { items, add } = useCart();
   const [qty, setQty] = useState(1);
   const [done, setDone] = useState(false);
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState("");
   const [vid, setVid] = useState<number | "">(variants.find((v) => v.stock > 0)?.id ?? "");
   const v = variants.find((x) => x.id === vid);
-  const avail = variants.length ? (v?.stock ?? 0) : stock;
+  const avail = variants.length ? (v ? Math.min(v.stock, stock) : 0) : stock;
+  const enCarrito = items.find((i) => i.productId === productId && (i.variantId ?? null) === (v?.id ?? null))?.qty ?? 0;
+  const restante = Math.max(0, avail - enCarrito);
+  const maxQty = Math.max(1, Math.min(99, restante));
   const price = v?.priceUsd ?? basePriceUsd;
 
   if (stock <= 0) return (
@@ -45,17 +48,18 @@ export default function AddToCart({ productId, stock, basePriceUsd, variants = [
       )}
       <p className="flex items-baseline gap-2">
         <span className="font-display text-3xl font-extrabold text-navy">{price.toFixed(2)} <span className="text-base font-bold text-slate-500">USD</span></span>
-        {avail > 0 && <span className="text-xs font-medium text-emerald-700">{avail} disponibles</span>}
+        {avail > 0 && <span className="text-xs font-medium text-emerald-700">{restante > 0 ? `${restante} disponibles` : "Ya tienes el máximo en el carrito"}</span>}
+        {avail <= 0 && <span className="text-xs font-medium text-red-600">Agotado en esta opción</span>}
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center rounded-xl border border-slate-200 bg-white">
           <button aria-label="Menos" onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid h-11 w-11 place-items-center text-slate-500 hover:text-navy"><Icon name="minus" size={16} /></button>
-          <input type="number" min={1} max={Math.min(99, avail)} value={qty} aria-label="Cantidad"
-            onChange={(e) => setQty(Math.max(1, Math.min(avail, Number(e.target.value) || 1)))}
+          <input type="number" min={1} max={maxQty} value={Math.min(qty, maxQty)} aria-label="Cantidad"
+            onChange={(e) => setQty(Math.max(1, Math.min(maxQty, Number(e.target.value) || 1)))}
             className="h-11 w-14 border-x border-slate-200 text-center text-sm outline-none" />
-          <button aria-label="Más" onClick={() => setQty((q) => Math.min(Math.min(99, avail), q + 1))} className="grid h-11 w-11 place-items-center text-slate-500 hover:text-navy"><Icon name="plus" size={16} /></button>
+          <button aria-label="Más" onClick={() => setQty((q) => Math.min(maxQty, q + 1))} className="grid h-11 w-11 place-items-center text-slate-500 hover:text-navy"><Icon name="plus" size={16} /></button>
         </div>
-        <button disabled={!avail} className="btn btn-primary flex-1 disabled:opacity-40" onClick={() => { add(productId, qty, v?.id ?? null); setDone(true); setTimeout(() => setDone(false), 1800); }}>
+        <button disabled={restante <= 0} className="btn btn-primary flex-1 disabled:opacity-40" onClick={() => { add(productId, Math.min(qty, restante), v?.id ?? null, avail); setDone(true); setTimeout(() => setDone(false), 1800); }}>
           {done ? <><Icon name="check" size={18} /> Añadido</> : <><Icon name="cart" size={18} /> Añadir al carrito</>}
         </button>
       </div>

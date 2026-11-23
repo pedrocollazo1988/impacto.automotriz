@@ -54,7 +54,7 @@ export default function ZoneRulesEditor() {
       ) : (
         <div className="adm-panel adm-empty"><p className="font-semibold text-navy">Elige un método y una provincia</p><p className="text-sm">Configura la tarifa y el plazo de entrega por zona.</p></div>
       )}
-      <p className="text-xs text-slate-500">Un municipio con regla propia tiene prioridad sobre la regla de su provincia. Sin regla, el método no está disponible.</p>
+        <p className="text-xs text-slate-500">Un municipio con regla propia tiene prioridad sobre la regla de su provincia. Sin regla se usa la tarifa base del método; para bloquear una zona, crea una regla y desmarca Disponible.</p>
     </section>
   );
 }
