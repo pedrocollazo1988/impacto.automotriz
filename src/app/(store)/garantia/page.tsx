@@ -8,18 +8,16 @@ export const metadata = {
 };
 
 export default async function Garantia() {
-  const plazos = await leerSeccion("garantia-plazos");
+  const [plazos, hero] = await Promise.all([leerSeccion("garantia-plazos"), leerSeccion("garantia-hero")]);
   return (
     <div>
       <section className="relative overflow-hidden bg-[color:var(--color-navy-deep)] text-white">
         <div aria-hidden className="absolute inset-0 blueprint opacity-60" />
         <div aria-hidden className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[color:var(--color-action)]/20 blur-3xl" />
         <div className="container-x relative py-14">
-          <span className="eyebrow eyebrow-light">Postventa</span>
-          <h1 className="mt-2 font-display text-4xl font-extrabold">Reclamar garantía</h1>
-          <p className="mt-3 max-w-2xl text-white/75">
-            Si una pieza te ha dado problemas, dinos cuál es tu pedido y qué ocurre. Lo revisamos y te damos una solución.
-          </p>
+          <span className="eyebrow eyebrow-light">{hero.eyebrow}</span>
+          <h1 className="mt-2 font-display text-4xl font-extrabold">{hero.title}</h1>
+          <p className="mt-3 max-w-2xl text-white/75">{hero.subtitle}</p>
         </div>
       </section>
 

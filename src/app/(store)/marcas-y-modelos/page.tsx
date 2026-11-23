@@ -4,18 +4,20 @@ import { getBrandsCached } from "@/lib/catalog";
 import ProductCard from "@/components/ProductCard";
 import Icon from "@/components/brand/Icon";
 import VehicleFinder from "@/components/site/VehicleFinder";
+import { leerSeccion } from "@/lib/contenido-server";
 
 export const metadata = { title: "Marcas y modelos" };
 export const dynamic = "force-dynamic";
 
 export default async function MarcasYModelos() {
-  const [marcas, productos] = await Promise.all([
+  const [marcas, productos, hero] = await Promise.all([
     getBrandsCached(),
     prisma.product.findMany({
       where: { active: true },
       orderBy: { id: "desc" },
       include: { brand: true, category: { select: { slug: true, name: true } } },
     }),
+    leerSeccion("marcas-hero"),
   ]);
 
   const porMarca = marcas
@@ -27,12 +29,9 @@ export default async function MarcasYModelos() {
       <section className="relative overflow-hidden bg-[color:var(--color-navy-deep)] text-white">
         <div aria-hidden className="absolute inset-0 blueprint opacity-60" />
         <div className="container-x relative py-14">
-          <span className="eyebrow eyebrow-light">Catálogo por marca</span>
-          <h1 className="mt-2 font-display text-4xl font-extrabold leading-tight">Marcas y modelos</h1>
-          <p className="mt-4 max-w-2xl text-lg text-white/75">
-            Consulta qué piezas tenemos para cada marca y encuentra la que encaja con tu vehículo.
-            La disponibilidad cambia a diario, así que confirma con nosotros si no la ves.
-          </p>
+          <span className="eyebrow eyebrow-light">{hero.eyebrow}</span>
+          <h1 className="mt-2 font-display text-4xl font-extrabold leading-tight">{hero.title}</h1>
+          <p className="mt-4 max-w-2xl text-lg text-white/75">{hero.subtitle}</p>
           <div className="mt-8 max-w-xl"><VehicleFinder /></div>
         </div>
       </section>

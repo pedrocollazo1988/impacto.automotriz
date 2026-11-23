@@ -5,7 +5,7 @@ import { leerSeccion } from "@/lib/contenido-server";
 export const metadata = { title: "Sobre nosotros" };
 
 export default async function Nosotros() {
-  const [valores, cifras] = await Promise.all([leerSeccion("nosotros-valores"), leerSeccion("nosotros-cifras")]);
+  const [valores, cifras, cierre] = await Promise.all([leerSeccion("nosotros-valores"), leerSeccion("nosotros-cifras"), leerSeccion("nosotros-cta")]);
 
   return (
     <div>
@@ -45,18 +45,22 @@ export default async function Nosotros() {
         </section>
       )}
 
-      <section className="container-x pb-4">
-        <div className="card relative overflow-hidden p-8 text-center sm:p-12">
-          <div aria-hidden className="absolute inset-0 blueprint-dark" />
-          <div className="relative">
-            <h2 className="font-display text-2xl font-extrabold text-navy">¿Listo para encontrar tu pieza?</h2>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link href="/catalogo" className="btn btn-primary">Explorar catálogo</Link>
-              <Link href="/contacto" className="btn btn-ghost">Hablar con nosotros</Link>
+      {cierre.visible && (
+        <section className="container-x pb-4">
+          <div className="card relative overflow-hidden p-8 text-center sm:p-12">
+            <div aria-hidden className="absolute inset-0 blueprint-dark" />
+            <div className="relative">
+              <h2 className="font-display text-2xl font-extrabold text-navy">{cierre.title}</h2>
+              {cierre.subtitle && <p className="mx-auto mt-3 max-w-xl text-slate-500">{cierre.subtitle}</p>}
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                {cierre.items.map((it, i) => (
+                  <Link key={it.titulo} href={it.href || "/catalogo"} className={`btn ${i === 0 ? "btn-primary" : "btn-ghost"}`}>{it.titulo}</Link>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }

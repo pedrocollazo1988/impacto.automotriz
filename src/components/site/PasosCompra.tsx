@@ -10,7 +10,7 @@ const PASOS: [string, string, string][] = [
   ["truck", "Recíbela en tu provincia", "Domicilio, mensajería o recogida en tienda, con la tarifa de tu municipio."],
 ];
 
-export default function PasosCompra() {
+export default function PasosCompra({ eyebrow = "Sin sorpresas", title = "Así compras tu pieza", pasos = PASOS }: { eyebrow?: string; title?: string; pasos?: [string, string, string][] }) {
   const linea = useRef<SVGPathElement>(null);
 
   useEffect(() => {
@@ -39,8 +39,8 @@ export default function PasosCompra() {
       <div className="card relative overflow-hidden p-6 sm:p-8">
         <div aria-hidden className="absolute inset-0 blueprint-dark" />
         <div className="relative">
-          <span className="eyebrow">Sin sorpresas</span>
-          <h2 className="sec-title mt-1 font-display text-2xl font-extrabold text-navy sm:text-3xl">Así compras tu pieza</h2>
+          <span className="eyebrow">{eyebrow}</span>
+          <h2 className="sec-title mt-1 font-display text-2xl font-extrabold text-navy sm:text-3xl">{title}</h2>
 
           <div className="relative mt-8">
             {/* Línea que se dibuja al entrar en pantalla (solo escritorio). */}
@@ -62,7 +62,7 @@ export default function PasosCompra() {
             </svg>
 
             <ol className="relative grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {PASOS.map(([ic, titulo, texto], i) => (
+              {pasos.map(([ic, titulo, texto], i) => (
                 <li key={titulo} className="flex gap-3">
                   <span className="paso-num" aria-hidden>{i + 1}</span>
                   <div className="min-w-0">

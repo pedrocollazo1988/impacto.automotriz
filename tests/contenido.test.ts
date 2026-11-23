@@ -15,6 +15,18 @@ describe("catálogo de secciones", () => {
     }
   });
 
+  it("los campos de encabezado usan las claves que guarda la API", () => {
+    for (const s of SECCIONES) {
+      for (const c of s.campos) expect(["eyebrow", "title", "subtitle"], `${s.key}: ${c.key}`).toContain(c.key);
+    }
+  });
+
+  it("los campos de elemento usan las claves que guarda la API", () => {
+    for (const s of SECCIONES) {
+      for (const c of s.camposItem ?? []) expect(["icono", "titulo", "texto", "href"], `${s.key}: ${c.key}`).toContain(c.key);
+    }
+  });
+
   it("los elementos de fábrica tienen título, para que sirvan de clave", () => {
     for (const s of SECCIONES) {
       for (const it of s.defecto.items ?? []) expect(it.titulo, `${s.key}`).toBeTruthy();

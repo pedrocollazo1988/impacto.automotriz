@@ -1,13 +1,11 @@
 import Icon from "@/components/brand/Icon";
+import { waHref } from "@/lib/site";
 
 // Botón flotante de WhatsApp. El mensaje cambia por página vía `context`.
 export default function WhatsAppFab({ context }: { context?: string }) {
-  const wa = process.env.NEXT_PUBLIC_WHATSAPP;
-  if (!wa) return null;
-  const text = encodeURIComponent(context ? `Hola, quiero consultar sobre ${context}` : "Hola, quiero hacer una consulta sobre sus productos");
   return (
     <a
-      href={`https://wa.me/${wa}?text=${text}`}
+      href={waHref(context ? `Hola, quiero consultar sobre ${context}` : "Hola, quiero hacer una consulta sobre sus productos")}
       target="_blank" rel="noopener" aria-label="Escribir por WhatsApp"
       className="group fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-[#25D366] py-3 pl-3 pr-4 font-semibold text-[#053b2a] shadow-[0_16px_40px_-12px_rgba(37,211,102,.8)] transition hover:scale-105"
     >

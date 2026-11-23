@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getVehiclesConLaminasCached } from "@/lib/despiece";
 import Icon from "@/components/brand/Icon";
 import VehiclePicker from "@/components/despiece/VehiclePicker";
+import { leerSeccion } from "@/lib/contenido-server";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DespieceIndex() {
-  const vehicles = await getVehiclesConLaminasCached();
+  const [vehicles, hero] = await Promise.all([getVehiclesConLaminasCached(), leerSeccion("despiece-hero")]);
 
   if (vehicles.length === 0) {
     return (
@@ -29,12 +30,9 @@ export default async function DespieceIndex() {
   return (
     <div className="container-x py-10">
       <header className="mb-8 max-w-2xl">
-        <p className="eyebrow text-[color:var(--color-action-deep)]">Despiece interactivo</p>
-        <h1 className="mt-1 font-display text-3xl font-extrabold text-navy sm:text-4xl">Encuentra la pieza exacta</h1>
-        <p className="mt-2 text-slate-600">
-          Elige tu vehículo y navega por sistemas. Cada número del dibujo abre la ficha de la pieza con su
-          código, sus medidas y el botón de compra, sin riesgo de confundir la versión.
-        </p>
+        <p className="eyebrow text-[color:var(--color-action-deep)]">{hero.eyebrow}</p>
+        <h1 className="mt-1 font-display text-3xl font-extrabold text-navy sm:text-4xl">{hero.title}</h1>
+        <p className="mt-2 text-slate-600">{hero.subtitle}</p>
       </header>
 
       <div className="grid gap-5 md:grid-cols-2">
