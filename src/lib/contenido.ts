@@ -8,6 +8,8 @@
 // Este módulo lo importan páginas de servidor y el editor del panel: no debe
 // tocar APIs de navegador.
 
+import { SITE } from "./site";
+
 export type Campo = {
   key: string;
   label: string;
@@ -45,7 +47,7 @@ export const SECCIONES: Seccion[] = [
     key: "portada-valor",
     label: "Portada · ventajas",
     descripcion: "Las tarjetas de «Por qué comprar aquí» de la portada.",
-    campos: [{ key: "titulo", label: "Título (solo lectores de pantalla)", ancho: true }],
+    campos: [{ key: "title", label: "Título (solo lectores de pantalla)", ancho: true }],
     camposItem: conIcono,
     maxItems: 8,
     defecto: {
@@ -84,7 +86,7 @@ export const SECCIONES: Seccion[] = [
       items: [
         { icono: "grid", titulo: "Tienda virtual", texto: "Todo el catálogo con filtros por vehículo", href: "/catalogo" },
         { icono: "layers", titulo: "Despiece", texto: "Localiza la pieza sobre el plano", href: "/despiece" },
-        { icono: "truck", titulo: "Renta y leasing", texto: "Flotas con mantenimiento incluido", href: "/renta" },
+        { icono: "truck", titulo: "Transportación de carga", texto: "Traslado de mercancía y piezas con seguimiento", href: "/transportacion-de-carga" },
         { icono: "car", titulo: "Marcas y modelos", texto: "Consulta qué tenemos para tu vehículo", href: "/marcas-y-modelos" },
       ],
     },
@@ -95,8 +97,8 @@ export const SECCIONES: Seccion[] = [
     descripcion: "Las tarjetas de servicios de posventa.",
     campos: [
       { key: "eyebrow", label: "Antetítulo", ancho: true },
-      { key: "titulo", label: "Título de la página", ancho: true },
-      { key: "subtitulo", label: "Entradilla", tipo: "parrafo", ancho: true },
+      { key: "title", label: "Título de la página", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
     ],
     camposItem: conIcono,
     maxItems: 8,
@@ -118,8 +120,8 @@ export const SECCIONES: Seccion[] = [
     descripcion: "Las tarjetas de «Lo que nos distingue».",
     campos: [
       { key: "eyebrow", label: "Antetítulo", ancho: true },
-      { key: "titulo", label: "Título de la página", ancho: true },
-      { key: "subtitulo", label: "Entradilla", tipo: "parrafo", ancho: true },
+      { key: "title", label: "Título de la página", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
     ],
     camposItem: conIcono,
     maxItems: 8,
@@ -157,8 +159,8 @@ export const SECCIONES: Seccion[] = [
     descripcion: "Los datos de contacto y la dirección de la tienda.",
     campos: [
       { key: "eyebrow", label: "Antetítulo", ancho: true },
-      { key: "titulo", label: "Título", ancho: true },
-      { key: "subtitulo", label: "Entradilla", tipo: "parrafo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
     ],
     camposItem: [...conIcono, { key: "href", label: "Enlace (opcional)", tipo: "url" }],
     maxItems: 8,
@@ -167,9 +169,9 @@ export const SECCIONES: Seccion[] = [
       title: "Estamos para ayudarte",
       subtitle: "Consúltanos por WhatsApp con la marca, modelo y año de tu vehículo, o escríbenos por correo. Te respondemos lo antes posible.",
       items: [
-        { icono: "mail", titulo: "Correo", texto: "ventas@impactoautomotriz.cu" },
-        { icono: "clock", titulo: "Horario", texto: "Lunes a sábado, 9:00 – 18:00" },
-        { icono: "pin", titulo: "Tienda", texto: "Calle 29 No. 5408 e/ 54 y 56, Artemisa, Cuba. Código postal 33800." },
+        { icono: "mail", titulo: "Correo", texto: SITE.email },
+        { icono: "clock", titulo: "Horario", texto: SITE.horario },
+        { icono: "pin", titulo: "Tienda", texto: `${SITE.direccion}. Código postal 33800.` },
       ],
     },
   },
@@ -179,8 +181,8 @@ export const SECCIONES: Seccion[] = [
     descripcion: "Las preguntas y respuestas. También alimentan los datos estructurados de Google.",
     campos: [
       { key: "eyebrow", label: "Antetítulo", ancho: true },
-      { key: "titulo", label: "Título", ancho: true },
-      { key: "subtitulo", label: "Entradilla", tipo: "parrafo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
     ],
     camposItem: [
       { key: "titulo", label: "Pregunta", ancho: true },
@@ -215,6 +217,521 @@ export const SECCIONES: Seccion[] = [
         { icono: "clock", titulo: "30 días", texto: "Desde la fecha de entrega para reclamar por defecto de fabricación." },
         { icono: "wrench", titulo: "Piezas y mano de obra", texto: "Si la pieza falla por defecto, la reponemos o devolvemos el importe." },
         { icono: "info", titulo: "No cubre el desgaste", texto: "El uso normal, una instalación incorrecta o daños por accidente no entran en garantía." },
+      ],
+    },
+  },
+  {
+    key: "portada-hero",
+    label: "Portada · encabezado",
+    descripcion: "El texto principal, los botones y las cifras de la portada.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título (una línea por renglón)", tipo: "parrafo", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [...conIcono, { key: "href", label: "Enlace (vacío = cifra)", tipo: "url" }],
+    maxItems: 8,
+    defecto: {
+      eyebrow: "Tienda oficial · {total}+ productos",
+      title: "La pieza correcta\npara tu vehículo,\na la primera.",
+      subtitle: "Catálogo de partes, piezas y accesorios con compatibilidad por vehículo y pago en línea.",
+      items: [
+        { icono: "grid", titulo: "Explorar catálogo", texto: "", href: "/catalogo" },
+        { icono: "car", titulo: "Buscar por mi vehículo", texto: "", href: "/catalogo?vehiculo=1" },
+        { titulo: "Entrega", texto: "En toda Cuba" },
+        { titulo: "Pago", texto: "En línea o al recibir" },
+        { titulo: "Soporte", texto: "WhatsApp directo" },
+      ],
+    },
+  },
+  {
+    key: "portada-categorias",
+    label: "Portada · categorías",
+    descripcion: "Encabezado de la sección de categorías.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    defecto: { eyebrow: "Explora por categoría", title: "Encuentra lo que buscas" },
+  },
+  {
+    key: "portada-destacados",
+    label: "Portada · destacados",
+    descripcion: "Encabezado de los productos destacados.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    defecto: { eyebrow: "Lo más buscado", title: "Productos destacados" },
+  },
+  {
+    key: "portada-ofertas",
+    label: "Portada · ofertas",
+    descripcion: "Encabezado y botón del bloque de ofertas.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [{ key: "titulo", label: "Texto del botón" }, { key: "href", label: "Enlace", tipo: "url" }],
+    maxItems: 1,
+    defecto: {
+      eyebrow: "Precios rebajados",
+      title: "Ofertas del momento",
+      subtitle: "Piezas y accesorios con descuento por tiempo limitado.",
+      items: [{ titulo: "Ver todas las ofertas", href: "/ofertas" }],
+    },
+  },
+  {
+    key: "portada-novedades",
+    label: "Portada · novedades",
+    descripcion: "Encabezado de los últimos productos.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    defecto: { eyebrow: "Recién llegado", title: "Novedades" },
+  },
+  {
+    key: "portada-marcas",
+    label: "Portada · marcas",
+    descripcion: "Texto que introduce la tira de marcas.",
+    campos: [{ key: "title", label: "Texto", ancho: true }],
+    defecto: { title: "Trabajamos con las mejores marcas" },
+  },
+  {
+    key: "portada-pasos",
+    label: "Portada · cómo comprar",
+    descripcion: "Los pasos de «Así compras tu pieza».",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+    ],
+    camposItem: conIcono,
+    maxItems: 6,
+    defecto: {
+      eyebrow: "Sin sorpresas",
+      title: "Así compras tu pieza",
+      items: [
+        { icono: "search", titulo: "Busca tu pieza", texto: "Por el catálogo completo o filtrando por marca, modelo y año de tu vehículo." },
+        { icono: "check", titulo: "Confirma la compatibilidad", texto: "Cada ficha indica para qué vehículos sirve. Si dudas, te lo revisamos por WhatsApp." },
+        { icono: "card", titulo: "Paga en línea", texto: "Tropipay, QvaPay, transferencia o efectivo al recibir. Recibes tu comprobante al instante." },
+        { icono: "truck", titulo: "Recíbela en tu provincia", texto: "Domicilio, mensajería o recogida en tienda, con la tarifa de tu municipio." },
+      ],
+    },
+  },
+  {
+    key: "portada-cta",
+    label: "Portada · cierre",
+    descripcion: "El bloque final de «¿No encuentras la pieza?».",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [{ key: "titulo", label: "Texto del botón" }, { key: "href", label: "Enlace", tipo: "url" }],
+    maxItems: 4,
+    defecto: {
+      title: "¿No encuentras la pieza?",
+      subtitle: "Escríbenos por WhatsApp con la marca, modelo y año de tu vehículo y te ayudamos a localizarla.",
+      items: [
+        { titulo: "Contactar ahora", href: "/contacto" },
+        { titulo: "Ver catálogo", href: "/catalogo" },
+      ],
+    },
+  },
+  {
+    key: "contacto-mapa",
+    label: "Contacto · mapa",
+    descripcion: "Título y dirección que acompañan al mapa de la tienda.",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Dirección", tipo: "parrafo", ancho: true },
+    ],
+    defecto: { title: "Nuestra tienda", subtitle: SITE.direccion },
+  },
+  {
+    key: "novedades-hero",
+    label: "Novedades · encabezado",
+    descripcion: "El encabezado de la página de novedades.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    defecto: {
+      eyebrow: "Recién llegado",
+      title: "Novedades",
+      subtitle: "Lo último que ha entrado en el almacén. Ordenado por fecha de alta, para que veas antes que nadie lo que ya está disponible.",
+    },
+  },
+  {
+    key: "novedades-vacio",
+    label: "Novedades · sin productos",
+    descripcion: "El mensaje que se muestra cuando aún no hay productos.",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Texto", tipo: "parrafo", ancho: true },
+    ],
+    defecto: { title: "Sin novedades por ahora", subtitle: "Cuando entre stock nuevo aparecerá aquí." },
+  },
+  {
+    key: "testimonios-hero",
+    label: "Testimonios · encabezado",
+    descripcion: "El encabezado de la página de testimonios.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    defecto: {
+      eyebrow: "Opiniones",
+      title: "Testimonios",
+      subtitle: "Lo que dicen quienes ya han comprado. Solo publicamos reseñas de compras verificadas, y el administrador puede ocultar las que incumplan las normas.",
+    },
+  },
+  {
+    key: "testimonios-vacio",
+    label: "Testimonios · sin reseñas",
+    descripcion: "El mensaje que se muestra cuando aún no hay reseñas publicadas.",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Texto", tipo: "parrafo", ancho: true },
+    ],
+    defecto: {
+      title: "Todavía no hay reseñas publicadas",
+      subtitle: "Las reseñas se publican cuando un cliente que ha comprado deja su opinión. Si ya compraste, entra en tu cuenta y valora el producto.",
+    },
+  },
+  {
+    key: "nosotros-cta",
+    label: "Nosotros · cierre",
+    descripcion: "El bloque final de la página «Nosotros».",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [{ key: "titulo", label: "Texto del botón" }, { key: "href", label: "Enlace", tipo: "url" }],
+    maxItems: 4,
+    defecto: {
+      title: "¿Listo para encontrar tu pieza?",
+      items: [
+        { titulo: "Explorar catálogo", href: "/catalogo" },
+        { titulo: "Hablar con nosotros", href: "/contacto" },
+      ],
+    },
+  },
+  {
+    key: "servicios-lineas",
+    label: "Servicios · líneas de trabajo",
+    descripcion: "Las tarjetas de servicios que aparecen al final de la página.",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [...conIcono, { key: "href", label: "Enlace", tipo: "url" }],
+    maxItems: 10,
+    defecto: {
+      title: "Nuestras líneas de trabajo",
+      items: [
+        { icono: "truck", titulo: "Renta y leasing", texto: "Flotas y vehículos eléctricos por temporada, con mantenimiento incluido.", href: "/renta" },
+        { icono: "box", titulo: "Transportación de carga", texto: "Traslado de mercancía, piezas y equipos con seguimiento.", href: "/transportacion-de-carga" },
+        { icono: "wrench", titulo: "Postventa", texto: "Mantenimiento, diagnóstico y reparación con repuestos originales.", href: "/servicios" },
+        { icono: "grid", titulo: "Recambio vehicular", texto: "Partes, piezas y accesorios con compatibilidad por vehículo.", href: "/catalogo" },
+        { icono: "info", titulo: "Asesoría técnica", texto: "Te decimos qué pieza necesitas antes de comprarla.", href: "/servicios" },
+      ],
+    },
+  },
+  {
+    key: "renta-hero",
+    label: "Renta · encabezado",
+    descripcion: "El texto y los botones de la cabecera de Renta y leasing.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [...conIcono, { key: "href", label: "Enlace", tipo: "url" }],
+    maxItems: 4,
+    defecto: {
+      eyebrow: "Servicios",
+      title: "Renta y leasing de vehículos",
+      subtitle: "Accede a un vehículo sin comprarlo. Te damos la unidad, el mantenimiento y el seguro, y tú te quedas con la operación.",
+      items: [
+        { icono: "truck", titulo: "Servicio de transportación de carga", texto: "", href: "/transportacion-de-carga" },
+      ],
+    },
+  },
+  {
+    key: "renta-modalidades",
+    label: "Renta · modalidades",
+    descripcion: "Los planes de renta. La primera línea del texto es el plazo y las siguientes, las ventajas.",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [
+      { key: "icono", label: "Icono", tipo: "icono" },
+      { key: "titulo", label: "Nombre del plan", ancho: true },
+      { key: "texto", label: "Plazo y ventajas (una por línea)", tipo: "parrafo", ancho: true },
+      { key: "href", label: "Enlace del botón", tipo: "url" },
+    ],
+    maxItems: 6,
+    defecto: {
+      title: "Modalidades",
+      items: [
+        { icono: "truck", titulo: "Renta por temporada", texto: "Desde 1 semana\nVehículo eléctrico o utilitario\nMantenimiento y seguro incluidos\nEntrega en Artemisa o La Habana\nSustitución si hay avería", href: "/contacto" },
+        { icono: "card", titulo: "Leasing operativo", texto: "Desde 12 meses\nCuota mensual fija\nSin desembolso inicial grande\nServicio técnico en nuestra red\nOpción de compra al finalizar", href: "/contacto" },
+        { icono: "battery", titulo: "Flota eléctrica", texto: "A medida\nEstudio de rutas y autonomía\nCargadores y formación\nMantenimiento preventivo\nInforme mensual de uso", href: "/contacto" },
+      ],
+    },
+  },
+  {
+    key: "renta-cta",
+    label: "Renta · cierre",
+    descripcion: "El bloque final para empresas.",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [{ key: "titulo", label: "Texto del botón" }, { key: "href", label: "Enlace", tipo: "url" }],
+    maxItems: 2,
+    defecto: {
+      title: "¿Necesitas una flota para tu empresa?",
+      subtitle: "Calculamos la cuota según los kilómetros previstos, el número de unidades y el plazo. Escríbenos y te preparamos la propuesta.",
+      items: [{ titulo: "Contactar", href: "/contacto" }],
+    },
+  },
+  {
+    key: "garantia-hero",
+    label: "Garantía · encabezado",
+    descripcion: "El encabezado de la página de garantía.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    defecto: {
+      eyebrow: "Postventa",
+      title: "Reclamar garantía",
+      subtitle: "Si una pieza te ha dado problemas, dinos cuál es tu pedido y qué ocurre. Lo revisamos y te damos una solución.",
+    },
+  },
+  {
+    key: "carga-hero",
+    label: "Carga · encabezado",
+    descripcion: "El encabezado de la página de transportación de carga.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    defecto: {
+      eyebrow: "Servicios",
+      title: "Transportación de carga",
+      subtitle: "Movemos mercancía, piezas y equipos con vehículos adecuados, seguimiento y entrega coordinada en toda Cuba.",
+    },
+  },
+  {
+    key: "carga-servicios",
+    label: "Carga · servicios",
+    descripcion: "Las tarjetas de lo que se puede transportar.",
+    campos: [{ key: "title", label: "Título", ancho: true }],
+    camposItem: conIcono,
+    maxItems: 8,
+    defecto: {
+      title: "Qué trasladamos",
+      items: [
+        { icono: "box", titulo: "Carga general", texto: "Mercancía, insumos y equipos de tamaño medio." },
+        { icono: "wrench", titulo: "Piezas y repuestos", texto: "Partes delicadas, motores y componentes con embalaje protegido." },
+        { icono: "truck", titulo: "Puerta a puerta", texto: "Recogida y entrega coordinada según la ruta y la provincia." },
+      ],
+    },
+  },
+  {
+    key: "carga-cta",
+    label: "Carga · cierre",
+    descripcion: "El bloque final para solicitar una cotización.",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [{ key: "titulo", label: "Texto del botón" }, { key: "href", label: "Enlace", tipo: "url" }],
+    maxItems: 2,
+    defecto: {
+      title: "¿Necesitas mover una carga?",
+      subtitle: "Cuéntanos qué llevas, desde dónde y hasta dónde. Te respondemos con la mejor opción y el costo.",
+      items: [{ titulo: "Solicitar una cotización", href: "/contacto" }],
+    },
+  },
+  {
+    key: "ofertas-hero",
+    label: "Ofertas · encabezado",
+    descripcion: "El encabezado de la página de ofertas.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    defecto: {
+      eyebrow: "Ahorra en tus piezas",
+      title: "Ofertas del momento",
+      subtitle: "Precios rebajados por tiempo limitado en partes, piezas y accesorios. Aprovecha antes de que se agoten.",
+    },
+  },
+  {
+    key: "ofertas-vacio",
+    label: "Ofertas · sin productos",
+    descripcion: "El mensaje que se muestra cuando no hay ofertas activas.",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Texto", tipo: "parrafo", ancho: true },
+    ],
+    defecto: {
+      title: "Aún no hay ofertas activas",
+      subtitle: "Vuelve pronto o explora el catálogo completo mientras tanto.",
+    },
+  },
+  {
+    key: "marcas-hero",
+    label: "Marcas · encabezado",
+    descripcion: "El encabezado de la página de marcas y modelos.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    defecto: {
+      eyebrow: "Catálogo por marca",
+      title: "Marcas y modelos",
+      subtitle: "Consulta qué piezas tenemos para cada marca y encuentra la que encaja con tu vehículo. La disponibilidad cambia a diario, así que confirma con nosotros si no la ves.",
+    },
+  },
+  {
+    key: "despiece-hero",
+    label: "Despiece · encabezado",
+    descripcion: "El encabezado de la página de despiece.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    defecto: {
+      eyebrow: "Despiece interactivo",
+      title: "Encuentra la pieza exacta",
+      subtitle: "Elige tu vehículo y navega por sistemas. Cada número del dibujo abre la ficha de la pieza con su código, sus medidas y el botón de compra, sin riesgo de confundir la versión.",
+    },
+  },
+  {
+    key: "catalogo-hero",
+    label: "Catálogo · encabezado",
+    descripcion: "El encabezado de la página del catálogo.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    defecto: {
+      eyebrow: "Tienda",
+      title: "Catálogo",
+      subtitle: "Piezas, accesorios y transporte eléctrico con compatibilidad por vehículo.",
+    },
+  },
+  {
+    key: "politicas-envios",
+    label: "Políticas · envíos",
+    descripcion: "El contenido de la política de envíos y entrega.",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [
+      { key: "titulo", label: "Apartado", ancho: true },
+      { key: "texto", label: "Texto", tipo: "parrafo", ancho: true },
+    ],
+    maxItems: 20,
+    defecto: {
+      title: "Envíos y entrega",
+      subtitle: "Trabajamos con varias modalidades de entrega para que recibas tus piezas donde las necesites, en toda Cuba.",
+      items: [
+        { titulo: "Modalidades", texto: "Entrega a domicilio, mensajería a otras provincias, entrega en punto acordado y recogida en tienda. La disponibilidad depende de tu provincia y municipio y se muestra durante el checkout." },
+        { titulo: "Tarifas", texto: "El costo del envío se calcula automáticamente según el método elegido, la provincia y el municipio. Algunos métodos son gratuitos a partir de un importe mínimo de compra." },
+        { titulo: "Plazos", texto: "El plazo estimado se muestra al seleccionar el método de entrega. Los pedidos se preparan tras la confirmación del pago." },
+        { titulo: "Seguimiento", texto: "Recibirás un código de confirmación y podrás consultar el estado de tu pedido en cualquier momento." },
+      ],
+    },
+  },
+  {
+    key: "politicas-devoluciones",
+    label: "Políticas · devoluciones",
+    descripcion: "El contenido de la política de devoluciones y garantía.",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [
+      { key: "titulo", label: "Apartado", ancho: true },
+      { key: "texto", label: "Texto", tipo: "parrafo", ancho: true },
+    ],
+    maxItems: 20,
+    defecto: {
+      title: "Devoluciones y garantía",
+      subtitle: "Queremos que compres con confianza. Si algo no sale como esperabas, estamos para ayudarte.",
+      items: [
+        { titulo: "Garantía", texto: "Las piezas y accesorios cuentan con la garantía del vendedor frente a defectos de fabricación. El plazo puede variar según el producto." },
+        { titulo: "Cambios y devoluciones", texto: "Si la pieza no corresponde a lo solicitado o llega con daños, contáctanos dentro de las primeras 48 horas con fotos y tu número de pedido para gestionar el cambio o la devolución." },
+        { titulo: "Condiciones", texto: "El producto debe conservar su estado y embalaje original. Los gastos de envío de la devolución pueden variar según el caso." },
+        { titulo: "Reembolsos", texto: "Cuando corresponda un reembolso, se realiza por el mismo medio de pago o mediante un vale de compra, según acordemos." },
+      ],
+    },
+  },
+  {
+    key: "politicas-privacidad",
+    label: "Políticas · privacidad",
+    descripcion: "El contenido de la política de privacidad.",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [
+      { key: "titulo", label: "Apartado", ancho: true },
+      { key: "texto", label: "Texto", tipo: "parrafo", ancho: true },
+    ],
+    maxItems: 20,
+    defecto: {
+      title: "Política de privacidad",
+      subtitle: "Protegemos tus datos personales y los usamos solo para gestionar tus pedidos y mejorar tu experiencia.",
+      items: [
+        { titulo: "Datos que recopilamos", texto: "Nombre, correo, teléfono y dirección de entrega, necesarios para procesar y entregar tu pedido. Si creas una cuenta, también guardamos tu garaje, lista de deseos y valoraciones." },
+        { titulo: "Uso de los datos", texto: "Utilizamos tus datos para gestionar pedidos, enviarte notificaciones relacionadas y, si lo autorizas, enviarte novedades. No vendemos tus datos a terceros." },
+        { titulo: "Seguridad", texto: "Aplicamos medidas técnicas para proteger tu información. Las contraseñas se almacenan cifradas." },
+        { titulo: "Tus derechos", texto: "Puedes solicitar el acceso, la corrección o la eliminación de tus datos escribiéndonos por los canales de contacto." },
+      ],
+    },
+  },
+  {
+    key: "politicas-terminos",
+    label: "Políticas · términos",
+    descripcion: "El contenido de los términos de uso.",
+    campos: [
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [
+      { key: "titulo", label: "Apartado", ancho: true },
+      { key: "texto", label: "Texto", tipo: "parrafo", ancho: true },
+    ],
+    maxItems: 20,
+    defecto: {
+      title: "Términos de uso",
+      subtitle: "Estas condiciones regulan el uso de la tienda y la compra de productos en Impacto Automotriz.",
+      items: [
+        { titulo: "Productos y precios", texto: "Los precios se muestran en USD y pueden actualizarse. El importe final se confirma al crear el pedido. Las imágenes son ilustrativas y pueden variar ligeramente del producto real." },
+        { titulo: "Pedidos", texto: "Un pedido queda confirmado tras la validación del pago y la verificación de existencias. Nos reservamos el derecho de cancelar pedidos con datos incorrectos o falta de stock, con reembolso total." },
+        { titulo: "Compatibilidad", texto: "La compatibilidad de las piezas se ofrece según los datos del fabricante y del vendedor. Recomendamos confirmar con los datos exactos de tu vehículo antes de comprar." },
+        { titulo: "Uso del sitio", texto: "Te comprometes a usar el sitio de forma lícita y a no interferir con su funcionamiento." },
       ],
     },
   },

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Icon from "@/components/brand/Icon";
+import { waHref } from "@/lib/site";
 
 // La reclamación no se guarda en la base de datos: el negocio atiende la
 // garantía por WhatsApp. Lo que sí se hace aquí es comprobar que el pedido
@@ -23,7 +24,6 @@ export default function GarantiaForm() {
   const [validado, setValidado] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
-  const wa = process.env.NEXT_PUBLIC_WHATSAPP;
 
   const validar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,20 +88,14 @@ export default function GarantiaForm() {
             />
           </div>
 
-          {wa ? (
-            <a
-              href={`https://wa.me/${wa}?text=${encodeURIComponent(texto())}`}
-              target="_blank"
-              rel="noopener"
-              className="btn btn-accent h-12 w-full text-base"
-            >
-              <Icon name="whatsapp" size={18} /> Enviar la reclamación por WhatsApp
-            </a>
-          ) : (
-            <a href="mailto:ventas@impactoautomotriz.cu?subject=Garant%C3%ADa" className="btn btn-accent h-12 w-full text-base">
-              <Icon name="mail" size={18} /> Escribir por correo
-            </a>
-          )}
+          <a
+            href={waHref(texto())}
+            target="_blank"
+            rel="noopener"
+            className="btn btn-accent h-12 w-full text-base"
+          >
+            <Icon name="whatsapp" size={18} /> Enviar la reclamación por WhatsApp
+          </a>
           <p className="text-center text-xs text-slate-500">
             Se abrirá WhatsApp con el mensaje ya escrito. Solo tienes que enviarlo.
           </p>

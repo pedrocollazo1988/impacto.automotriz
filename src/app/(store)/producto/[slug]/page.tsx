@@ -14,6 +14,7 @@ import { getCustomer } from "@/lib/customer-auth";
 import { fotos360 } from "@/lib/photo360";
 import { tieneVista360 } from "@/lib/vista360";
 import { esVista, type Vista } from "@/lib/viewer";
+import { waHref } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -58,7 +59,6 @@ export default async function Producto({ params }: Props) {
       ? fotos360(p.sku)
       : [];
   const vista: Vista = esVista(p.viewerMode) ? p.viewerMode : "photos";
-  const wa = process.env.NEXT_PUBLIC_WHATSAPP;
   const specs = Object.entries((p.specs ?? {}) as Record<string, string>);
   const off = p.compareAtUsd && Number(p.compareAtUsd) > Number(p.priceUsd) ? Math.round(((Number(p.compareAtUsd) - Number(p.priceUsd)) / Number(p.compareAtUsd)) * 100) : 0;
   const ld = { "@context": "https://schema.org", "@type": "Product", name: p.name, sku: p.sku, description: p.description, image: p.images, brand: p.brand ? { "@type": "Brand", name: p.brand.name } : undefined,
@@ -122,7 +122,7 @@ export default async function Producto({ params }: Props) {
             <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
               <WishlistButton productId={p.id} initial={inWish > 0} />
               <CompareToggle productId={p.id} />
-              {wa && <a className="btn btn-ghost !text-emerald-700" target="_blank" rel="noopener" href={`https://wa.me/${wa}?text=${encodeURIComponent(`Hola, consulta sobre: ${p.name} (${p.sku})`)}`}><Icon name="whatsapp" size={18} /> Consultar</a>}
+              <a className="btn btn-ghost !text-emerald-700" target="_blank" rel="noopener" href={waHref(`Hola, consulta sobre: ${p.name} (${p.sku})`)}><Icon name="whatsapp" size={18} /> Consultar</a>
             </div>
           </div>
 

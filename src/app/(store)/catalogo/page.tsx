@@ -7,6 +7,7 @@ import Icon from "@/components/brand/Icon";
 import { getCustomer } from "@/lib/customer-auth";
 import { searchProductIds } from "@/lib/catalog";
 import { skusConGiro } from "@/lib/photo360";
+import { leerSeccion } from "@/lib/contenido-server";
 
 const OPCIONES_OTROS = [
   ["disponible", "Solo disponibles"],
@@ -50,11 +51,12 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
   const orderBy: Prisma.ProductOrderByWithRelationInput =
     s.orden === "precio" ? { priceUsd: "asc" } : s.orden === "precio-desc" ? { priceUsd: "desc" } : s.orden === "popular" ? { views: "desc" } : { createdAt: "desc" };
 
-  const [products, categories, brands, total] = await Promise.all([
+  const [products, categories, brands, total, hero] = await Promise.all([
     prisma.product.findMany({ where, orderBy, take: 48, include: { brand: true, category: { select: { slug: true } } } }),
     getCategoriesCached(),
     getBrandsCached(),
     prisma.product.count({ where: { active: true } }),
+    leerSeccion("catalogo-hero"),
   ]);
   const link = (o: Record<string, string | undefined>) => {
     const merged = { ...s, ...o };
@@ -81,8 +83,9 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
         </nav>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="font-display text-3xl font-extrabold text-navy">Catálogo</h1>
-            <p className="mt-1 text-sm text-slate-500">{total} productos disponibles{vehLabel && ` · filtrado por ${vehLabel}`}</p>
+            {hero.eyebrow && <span className="eyebrow">{hero.eyebrow}</span>}
+            <h1 className="font-display text-3xl font-extrabold text-navy">{hero.title}</h1>
+            <p className="mt-1 text-sm text-slate-500">{hero.subtitle} {total} productos disponibles{vehLabel && ` · filtrado por ${vehLabel}`}</p>
           </div>
           <form action="/catalogo" className="flex items-center gap-2">
             <input type="hidden" name="categoria" value={s.categoria ?? ""} />

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import Icon from "@/components/brand/Icon";
+import { leerSeccion } from "@/lib/contenido-server";
 
 export const metadata = { title: "Testimonios" };
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ function Estrellas({ n }: { n: number }) {
 }
 
 export default async function Testimonios() {
+  const [hero, vacio] = await Promise.all([leerSeccion("testimonios-hero"), leerSeccion("testimonios-vacio")]);
   const resenas = await prisma.review.findMany({
     where: { visible: true },
     orderBy: { createdAt: "desc" },
@@ -30,12 +32,9 @@ export default async function Testimonios() {
       <section className="relative overflow-hidden bg-[color:var(--color-navy-deep)] text-white">
         <div aria-hidden className="absolute inset-0 blueprint opacity-60" />
         <div className="container-x relative py-14">
-          <span className="eyebrow eyebrow-light">Opiniones</span>
-          <h1 className="mt-2 font-display text-4xl font-extrabold leading-tight">Testimonios</h1>
-          <p className="mt-4 max-w-2xl text-lg text-white/75">
-            Lo que dicen quienes ya han comprado. Solo publicamos reseñas de compras verificadas,
-            y el administrador puede ocultar las que incumplan las normas.
-          </p>
+          <span className="eyebrow eyebrow-light">{hero.eyebrow}</span>
+          <h1 className="mt-2 font-display text-4xl font-extrabold leading-tight">{hero.title}</h1>
+          <p className="mt-4 max-w-2xl text-lg text-white/75">{hero.subtitle}</p>
           {resenas.length > 0 && (
             <div className="mt-6 flex items-center gap-3">
               <Estrellas n={Math.round(media)} />
@@ -50,11 +49,8 @@ export default async function Testimonios() {
         {resenas.length === 0 ? (
           <div className="card p-10 text-center">
             <Icon name="star" size={40} className="mx-auto text-slate-300" />
-            <h2 className="mt-3 font-display text-lg font-bold text-navy">Todavía no hay reseñas publicadas</h2>
-            <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
-              Las reseñas se publican cuando un cliente que ha comprado deja su opinión.
-              Si ya compraste, entra en tu cuenta y valora el producto.
-            </p>
+            <h2 className="mt-3 font-display text-lg font-bold text-navy">{vacio.title}</h2>
+            <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">{vacio.subtitle}</p>
             <div className="mt-5 flex flex-wrap justify-center gap-3">
               <Link href="/cuenta" className="btn btn-primary">Ir a mi cuenta</Link>
               <Link href="/catalogo" className="btn btn-ghost">Ver catálogo</Link>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Logo from "@/components/brand/Logo";
 import Icon from "@/components/brand/Icon";
-import { SITE, SERVICIOS, NAV_EMPRESA, telefono } from "@/lib/site";
+import { SITE, SERVICIOS, NAV_EMPRESA, telefono, waHref } from "@/lib/site";
 
 const TIENDA: [string, string][] = [
   ["/catalogo", "Catálogo completo"],
@@ -21,7 +21,6 @@ const AYUDA: [string, string][] = [
 ];
 
 export default function SiteFooter() {
-  const wa = process.env.NEXT_PUBLIC_WHATSAPP;
   return (
     <footer className="mt-20 bg-[#0b1220] text-white/75">
       {/* Contacto destacado, como la franja de atención de MCV */}
@@ -62,7 +61,7 @@ export default function SiteFooter() {
             atención directa por WhatsApp.
           </p>
           <div className="mt-5 flex gap-2">
-            {wa && <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener" aria-label="WhatsApp" className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 transition hover:bg-white/20"><Icon name="whatsapp" size={20} /></a>}
+            <a href={waHref()} target="_blank" rel="noopener" aria-label="WhatsApp" className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 transition hover:bg-white/20"><Icon name="whatsapp" size={20} /></a>
             <a href="#" aria-label="Instagram" className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 transition hover:bg-white/20"><Icon name="instagram" size={20} /></a>
             <a href="#" aria-label="Facebook" className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 transition hover:bg-white/20"><Icon name="facebook" size={20} /></a>
           </div>

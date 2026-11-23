@@ -15,10 +15,18 @@ const CAT_ICON: Record<string, string> = { frenos: "gauge", "sistema-electrico":
 
 export default async function Home() {
   const hayGiro = skusConGiro().length > 0;
-  const [valor, confianza, accesos] = await Promise.all([
+  const [valor, confianza, accesos, hero, catHead, destHead, ofertasHead, novHead, marcasHead, pasos, cierre] = await Promise.all([
     leerSeccion("portada-valor"),
     leerSeccion("portada-confianza"),
     leerSeccion("portada-accesos"),
+    leerSeccion("portada-hero"),
+    leerSeccion("portada-categorias"),
+    leerSeccion("portada-destacados"),
+    leerSeccion("portada-ofertas"),
+    leerSeccion("portada-novedades"),
+    leerSeccion("portada-marcas"),
+    leerSeccion("portada-pasos"),
+    leerSeccion("portada-cta"),
   ]);
   const [todos, offers, categories, brands, total] = await Promise.all([
     prisma.product.findMany({ where: { active: true }, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true, name: true } } } }),
@@ -39,6 +47,10 @@ export default async function Home() {
     .sort((a, b) => b.items.length - a.items.length)
     .slice(0, 4);
   const marquee = brands.length >= 4 ? brands : [...brands, ...brands];
+  const heroLineas = hero.title.split("\n");
+  const heroCtas = hero.items.filter((i) => i.href);
+  const heroCifras = hero.items.filter((i) => !i.href);
+  const heroEyebrow = hero.eyebrow.replace("{total}", String(total));
 
   return (
     <div>
@@ -49,23 +61,32 @@ export default async function Home() {
         <div aria-hidden className="absolute -bottom-32 left-1/3 h-[360px] w-[360px] rounded-full bg-[color:var(--color-action-hi)]/10 blur-3xl" />
         <div className="container-x relative grid items-center gap-12 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
           <div className="animate-fade-up">
-            <span className="eyebrow eyebrow-light inline-flex items-center gap-2"><Icon name="spark" size={14} /> Tienda oficial · {total}+ productos</span>
+            <span className="eyebrow eyebrow-light inline-flex items-center gap-2"><Icon name="spark" size={14} /> {heroEyebrow}</span>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] sm:text-5xl lg:text-6xl">
-              La pieza correcta<br />para tu vehículo,<br /><span className="bg-gradient-to-r from-[color:var(--color-action-hi)] to-[color:var(--color-action-hi)] bg-clip-text text-transparent">a la primera.</span>
+              {heroLineas.map((linea, i) => (
+                <span key={i} className={i === heroLineas.length - 1 ? "bg-gradient-to-r from-[color:var(--color-action-hi)] to-[color:var(--color-action-hi)] bg-clip-text text-transparent" : ""}>
+                  {i > 0 && <br />}
+                  {linea}
+                </span>
+              ))}
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/75">
-              Catálogo de partes, piezas y accesorios con compatibilidad por vehículo y pago en línea.
-              {hayGiro ? "Los vehículos eléctricos se pueden girar 360°." : "Fotos reales de cada producto."}
+              {hero.subtitle} {hayGiro ? "Los vehículos eléctricos se pueden girar 360°." : "Fotos reales de cada producto."}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/catalogo" className="btn btn-accent text-base"><Icon name="grid" size={18} /> Explorar catálogo</Link>
-              <Link href="/catalogo?vehiculo=1" className="btn btn-outline-light text-base"><Icon name="car" size={18} /> Buscar por mi vehículo</Link>
-            </div>
-            <dl className="mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-white/10 pt-6">
-              {[["Entrega", "En toda Cuba"], ["Pago", "En línea o al recibir"], ["Soporte", "WhatsApp directo"]].map(([k, v]) => (
-                <div key={k}><dt className="font-mono text-[10px] uppercase tracking-widest text-white/45">{k}</dt><dd className="mt-1 text-sm font-semibold text-white/90">{v}</dd></div>
+              {heroCtas.map((it, i) => (
+                <Link key={it.titulo} href={it.href!} className={`btn text-base ${i === 0 ? "btn-accent" : "btn-outline-light"}`}>
+                  <Icon name={it.icono || "grid"} size={18} /> {it.titulo}
+                </Link>
               ))}
-            </dl>
+            </div>
+            {heroCifras.length > 0 && (
+              <dl className="mt-10 grid max-w-lg grid-cols-2 gap-4 border-t border-white/10 pt-6 sm:grid-cols-3">
+                {heroCifras.map((it) => (
+                  <div key={it.titulo}><dt className="font-mono text-[10px] uppercase tracking-widest text-white/45">{it.titulo}</dt><dd className="mt-1 text-sm font-semibold text-white/90">{it.texto}</dd></div>
+                ))}
+              </dl>
+            )}
           </div>
           <div className="animate-fade-up delay-2">
             <VehicleFinder />
@@ -128,9 +149,9 @@ export default async function Home() {
       )}
 
       {/* ── Categorías ── */}
-      {categories.length > 0 && (
+      {catHead.visible && categories.length > 0 && (
         <section className="container-x mt-16">
-          <SectionHead eyebrow="Explora por categoría" title="Encuentra lo que buscas" href="/catalogo" />
+          <SectionHead eyebrow={catHead.eyebrow} title={catHead.title} subtitle={catHead.subtitle} href="/catalogo" linkLabel="Ver catálogo" />
           <Reveal className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {categories.map((c) => (
               <Link key={c.id} href={`/catalogo?categoria=${c.slug}`} className="card card-hover group flex items-center gap-3 p-4">
@@ -139,9 +160,8 @@ export default async function Home() {
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate font-display text-sm font-bold text-navy">{c.name}</span>
-                  <span className="block truncate font-mono text-[10px] uppercase tracking-wider text-slate-500">
-                    {c.description || `${c._count.products} productos`}
-                  </span>
+                  <span className="block truncate font-mono text-[10px] uppercase tracking-wider text-slate-500">{c._count.products} productos</span>
+                  {c.description && <span className="block truncate text-[10px] text-slate-400">{c.description}</span>}
                 </span>
                 <Icon name="chevronRight" size={16} className="ml-auto shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[color:var(--color-action)]" />
               </Link>
@@ -169,9 +189,9 @@ export default async function Home() {
       ))}
 
       {/* ── Destacados ── */}
-      {featured.length > 0 && (
+      {destHead.visible && featured.length > 0 && (
         <section className="container-x mt-16">
-          <SectionHead eyebrow="Lo más buscado" title="Productos destacados" href="/catalogo" linkLabel="Ver catálogo" />
+          <SectionHead eyebrow={destHead.eyebrow} title={destHead.title} subtitle={destHead.subtitle} href="/catalogo" linkLabel="Ver catálogo" />
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {featured.map((p) => <ProductCard key={p.id} p={p} />)}
           </div>
@@ -179,12 +199,18 @@ export default async function Home() {
       )}
 
       {/* ── Ofertas ── */}
-      {offers.length > 0 && (
+      {ofertasHead.visible && offers.length > 0 && (
         <section className="container-x mt-16">
           <div className="overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[color:var(--color-navy)] to-[color:var(--color-navy-deep)] p-6 text-white sm:p-8">
             <div className="flex flex-wrap items-end justify-between gap-4">
-              <div><span className="eyebrow eyebrow-light inline-flex items-center gap-2"><Icon name="tag" size={14} /> Precios rebajados</span><h2 className="mt-1 font-display text-2xl font-extrabold sm:text-3xl">Ofertas del momento</h2></div>
-              <Link href="/ofertas" className="btn btn-outline-light">Ver todas las ofertas <Icon name="arrowRight" size={16} /></Link>
+              <div>
+                <span className="eyebrow eyebrow-light inline-flex items-center gap-2"><Icon name="tag" size={14} /> {ofertasHead.eyebrow}</span>
+                <h2 className="mt-1 font-display text-2xl font-extrabold sm:text-3xl">{ofertasHead.title}</h2>
+                {ofertasHead.subtitle && <p className="mt-1 max-w-xl text-sm text-white/70">{ofertasHead.subtitle}</p>}
+              </div>
+              {ofertasHead.items[0] && (
+                <Link href={ofertasHead.items[0].href || "/ofertas"} className="btn btn-outline-light">{ofertasHead.items[0].titulo} <Icon name="arrowRight" size={16} /></Link>
+              )}
             </div>
             <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
               {offers.map((p) => <ProductCard key={p.id} p={p} />)}
@@ -194,9 +220,9 @@ export default async function Home() {
       )}
 
       {/* ── Novedades ── */}
-      {latest.length > 0 && (
+      {novHead.visible && latest.length > 0 && (
         <section className="container-x mt-16">
-          <SectionHead eyebrow="Recién llegado" title="Novedades" href="/catalogo" />
+          <SectionHead eyebrow={novHead.eyebrow} title={novHead.title} subtitle={novHead.subtitle} href="/catalogo" />
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {latest.map((p) => <ProductCard key={p.id} p={p} />)}
           </div>
@@ -204,9 +230,9 @@ export default async function Home() {
       )}
 
       {/* ── Marcas ── */}
-      {marquee.length > 0 && (
+      {marcasHead.visible && marquee.length > 0 && (
         <section className="container-x mt-16">
-          <p className="text-center font-mono text-xs uppercase tracking-[0.25em] text-slate-400">Trabajamos con las mejores marcas</p>
+          <p className="text-center font-mono text-xs uppercase tracking-[0.25em] text-slate-400">{marcasHead.title}</p>
           <div className="relative mt-5 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
             <div className="marquee gap-4">
               {marquee.concat(marquee).map((b, i) => (
@@ -219,22 +245,25 @@ export default async function Home() {
         </section>
       )}
 
-      <PasosCompra />
+      {pasos.visible && <PasosCompra eyebrow={pasos.eyebrow} title={pasos.title} pasos={pasos.items.map((i) => [i.icono || "check", i.titulo || "", i.texto || ""])} />}
 
       {/* ── CTA final ── */}
-      <section className="container-x mt-16">
-        <div className="card relative overflow-hidden p-8 text-center sm:p-12">
-          <div aria-hidden className="absolute inset-0 blueprint-dark" />
-          <div className="relative">
-            <h2 className="font-display text-2xl font-extrabold text-navy sm:text-3xl">¿No encuentras la pieza?</h2>
-            <p className="mx-auto mt-3 max-w-xl text-slate-500">Escríbenos por WhatsApp con la marca, modelo y año de tu vehículo y te ayudamos a localizarla.</p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link href="/contacto" className="btn btn-primary">Contactar ahora</Link>
-              <Link href="/catalogo" className="btn btn-ghost">Ver catálogo</Link>
+      {cierre.visible && (
+        <section className="container-x mt-16">
+          <div className="card relative overflow-hidden p-8 text-center sm:p-12">
+            <div aria-hidden className="absolute inset-0 blueprint-dark" />
+            <div className="relative">
+              <h2 className="font-display text-2xl font-extrabold text-navy sm:text-3xl">{cierre.title}</h2>
+              <p className="mx-auto mt-3 max-w-xl text-slate-500">{cierre.subtitle}</p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                {cierre.items.map((it, i) => (
+                  <Link key={it.titulo} href={it.href || "/contacto"} className={`btn ${i === 0 ? "btn-primary" : "btn-ghost"}`}>{it.titulo}</Link>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }

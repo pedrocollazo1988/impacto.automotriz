@@ -35,7 +35,9 @@ export const getCategoriesCached = unstable_cache(
   async () => prisma.category.findMany({
     where: { visible: true },
     orderBy: [{ position: "asc" }, { name: "asc" }],
-    include: { _count: { select: { products: true } } },
+    // El contador de la portada y del filtro debe reflejar solo lo que se puede
+    // comprar; los productos archivados no cuentan.
+    include: { _count: { select: { products: { where: { active: true } } } } },
   }),
   ["categorias-con-conteo"],
   { revalidate: 3600, tags: [CATEGORIAS_TAG] },
