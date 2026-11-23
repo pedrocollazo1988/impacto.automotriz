@@ -30,6 +30,7 @@ export default function Checkout() {
   const [pay, setPay] = useState("");
   const [metodos, setMetodos] = useState<Metodo[]>([]);
   const [code, setCode] = useState(""); const [coupon, setCoupon] = useState<{ code: string; discountUsd: number } | null>(null); const [couponMsg, setCouponMsg] = useState("");
+  const [cartOk, setCartOk] = useState(true);
   const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export default function Checkout() {
   useEffect(() => { fetch("/api/account/session").then((r) => r.json()).then((m) => m && setC({ name: m.name ?? "", email: m.email ?? "", phone: m.phone ?? "" })); }, []);
   useEffect(() => {
     if (!items.length) return;
-    fetch("/api/cart/price", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items }) }).then((r) => r.json()).then((d) => setSubtotal(d.subtotalUsd ?? 0));
+    fetch("/api/cart/price", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items }) }).then((r) => r.json()).then((d) => { setSubtotal(d.subtotalUsd ?? 0); setCartOk(d.allOk ?? false); });
   }, [items]);
   const applyCoupon = async () => {
     const r = await fetch("/api/coupon/check", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, subtotalUsd: subtotal }) }); const j = await r.json();
@@ -56,6 +57,7 @@ export default function Checkout() {
   const comisionMonto = metodo?.feePercent ? Math.round((base + fee) * (metodo.feePercent / 100) * 100) / 100 : 0;
 
   const submit = async () => {
+    if (!cartOk) return setErr("Ajusta las cantidades del carrito: superan el stock disponible");
     if (!metodo) return setErr("Elige un método de pago para continuar");
     setBusy(true); setErr("");
     const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items, customer: c, delivery, paymentMethod: pay, coupon: coupon?.code }) });
@@ -70,7 +72,7 @@ export default function Checkout() {
       <Link href="/catalogo" className="btn btn-primary mt-5">Ver catálogo</Link>
     </div></div>
   );
-  const ready = !!delivery && c.name.trim().length > 1 && /\S+@\S+\.\S+/.test(c.email) && c.phone.trim().length > 5 && !!metodo;
+  const ready = cartOk && !!delivery && c.name.trim().length > 1 && /\S+@\S+\.\S+/.test(c.email) && c.phone.trim().length > 5 && !!metodo;
 
   return (
     <div className="container-x py-8">
@@ -153,6 +155,7 @@ export default function Checkout() {
               <div className="flex justify-between border-t border-slate-100 pt-3 text-lg"><dt className="font-semibold">Total</dt><dd className="font-display font-extrabold text-navy">{(base + fee + comisionMonto).toFixed(2)} USD</dd></div>
             </dl>
             {metodo && <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">Pagas con <b className="text-slate-700">{metodo.name}</b></p>}
+            {!cartOk && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">Hay productos por encima del stock disponible. <Link href="/carrito" className="font-semibold underline">Ajusta el carrito</Link> para continuar.</p>}
             {err && <p aria-live="polite" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{err}</p>}
             <button disabled={!ready || busy} onClick={submit} className="btn btn-primary mt-5 w-full text-base disabled:opacity-40">
               {busy ? "Procesando…" : <><Icon name="check" size={18} /> Confirmar pedido</>}

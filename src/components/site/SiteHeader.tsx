@@ -23,32 +23,35 @@ export default function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40">
-      {/* Barra de utilidad: se recoge al bajar para dejar sitio al contenido */}
-      <div
-        className={`hidden overflow-hidden bg-[color:var(--color-navy-deep)] text-white/75 transition-[max-height,opacity] duration-300 lg:block ${scrolled ? "max-h-0 opacity-0" : "max-h-9 opacity-100"}`}
-      >
-        <div className="container-x flex h-9 items-center justify-between gap-4 text-xs">
-          <p className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5"><Icon name="clock" size={13} /> {SITE.horario}</span>
-            {telefono && (
-              <a href={`tel:${telefono.replace(/\s/g, "")}`} className="flex items-center gap-1.5 transition hover:text-white">
-                <Icon name="phone" size={13} /> {telefono}
+      {/* Barra de utilidad: se recoge al bajar para dejar sitio al contenido.
+          En la portada no se muestra, para que el logo quede arriba del todo. */}
+      {path !== "/" && (
+        <div
+          className={`hidden overflow-hidden bg-[color:var(--color-navy-deep)] text-white/75 transition-[max-height,opacity] duration-300 lg:block ${scrolled ? "max-h-0 opacity-0" : "max-h-9 opacity-100"}`}
+        >
+          <div className="container-x flex h-9 items-center justify-between gap-4 text-xs">
+            <p className="flex items-center gap-4">
+              <span className="flex items-center gap-1.5"><Icon name="clock" size={13} /> {SITE.horario}</span>
+              {telefono && (
+                <a href={`tel:${telefono.replace(/\s/g, "")}`} className="flex items-center gap-1.5 transition hover:text-white">
+                  <Icon name="phone" size={13} /> {telefono}
+                </a>
+              )}
+              <a href={`mailto:${SITE.email}`} className="flex items-center gap-1.5 transition hover:text-white">
+                <Icon name="mail" size={13} /> {SITE.email}
               </a>
-            )}
-            <a href={`mailto:${SITE.email}`} className="flex items-center gap-1.5 transition hover:text-white">
-              <Icon name="mail" size={13} /> {SITE.email}
-            </a>
-          </p>
-          <nav className="flex items-center gap-4">
-            {NAV_EMPRESA.map((l) => (
-              <Link key={l.href} href={l.href} className="transition hover:text-white">{l.label}</Link>
-            ))}
-            <Link href="/cuenta" className="flex items-center gap-1.5 font-semibold text-white transition hover:text-[color:var(--color-action-hi)]">
-              <Icon name="user" size={13} /> Mi cuenta
-            </Link>
-          </nav>
+            </p>
+            <nav className="flex items-center gap-4">
+              {NAV_EMPRESA.map((l) => (
+                <Link key={l.href} href={l.href} className="transition hover:text-white">{l.label}</Link>
+              ))}
+              <Link href="/cuenta" className="flex items-center gap-1.5 font-semibold text-white transition hover:text-[color:var(--color-action-hi)]">
+                <Icon name="user" size={13} /> Mi cuenta
+              </Link>
+            </nav>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Barra principal: logo, buscador y acciones */}
       <div className={`border-b border-slate-200/80 transition-all duration-300 ${scrolled ? "bg-white/95 shadow-[0_10px_30px_-24px_rgba(6,24,51,.6)] backdrop-blur-md" : "bg-white"}`}>

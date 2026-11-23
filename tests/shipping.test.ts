@@ -8,8 +8,12 @@ import { quoteDelivery } from "@/lib/shipping";
 describe("quoteDelivery", () => {
   db.municipality.findUnique.mockResolvedValue({ id: 10, provinceId: 3 });
   db.pickupPoint.findMany.mockResolvedValue([]);
-  it("sin regla el método NO está disponible", async () => {
+  it("sin regla usa la tarifa base del método", async () => {
     db.deliveryMethod.findMany.mockResolvedValue([method({})]);
+    expect((await quoteDelivery(10, 50))[0]).toMatchObject({ available: true, feeUsd: 3 });
+  });
+  it("una regla desmarcada bloquea la zona", async () => {
+    db.deliveryMethod.findMany.mockResolvedValue([method({ rules: [{ municipalityId: null, available: false, feeUsd: 5 }] })]);
     expect((await quoteDelivery(10, 50))[0].available).toBe(false);
   });
   it("la regla del municipio gana a la de la provincia", async () => {
@@ -22,9 +26,16 @@ describe("quoteDelivery", () => {
     expect((await quoteDelivery(10, 50))[0].feeUsd).toBe(5);
     expect((await quoteDelivery(10, 150))[0].feeUsd).toBe(0);
   });
-  it("la recogida solo exige puntos activos", async () => {
+  it("la recogida usa los puntos activos del panel", async () => {
     db.pickupPoint.findMany.mockResolvedValue([{ id: 1, name: "Tienda", address: "Calle 1", hours: null, readyHours: 24 }]);
     db.deliveryMethod.findMany.mockResolvedValue([method({ code: "RECOGIDA", kind: "STORE_PICKUP", requiresAddress: false, baseFee: 0 })]);
     expect((await quoteDelivery(10, 5))[0]).toMatchObject({ available: true, feeUsd: 0 });
+  });
+  it("sin puntos en el panel, la recogida usa la dirección de la tienda", async () => {
+    db.pickupPoint.findMany.mockResolvedValueOnce([]);
+    db.deliveryMethod.findMany.mockResolvedValue([method({ code: "RECOGIDA", kind: "STORE_PICKUP", requiresAddress: false, baseFee: 0 })]);
+    const [q] = await quoteDelivery(10, 5);
+    expect(q).toMatchObject({ available: true, feeUsd: 0 });
+    expect(q.pickupPoints[0]).toMatchObject({ id: 0, name: "Recogida en tienda" });
   });
 });

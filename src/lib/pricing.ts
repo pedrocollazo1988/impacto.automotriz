@@ -16,7 +16,7 @@ export async function priceCart(items: CartInput[]) {
     const p = prods.find((x) => x.id === e.productId); if (!p) return [];
     const v = e.variantId ? p.variants.find((x) => x.id === e.variantId) : undefined;
     if ((p.variants.length > 0) !== !!v) return []; // falta o sobra la variante
-    const unit = Number(v?.priceUsd ?? p.priceUsd); const stock = v ? v.stock : p.stock;
+    const unit = Number(v?.priceUsd ?? p.priceUsd); const stock = v ? Math.min(v.stock, p.stock) : p.stock;
     return [{ productId: p.id, variantId: v?.id ?? null, slug: p.slug, name: v ? `${p.name} — ${v.name}` : p.name, image: v?.image ?? p.images[0] ?? null, unitUsd: unit, qty: e.qty, stock, ok: stock >= e.qty, totalUsd: r2(unit * e.qty) }];
   });
   return { lines, subtotalUsd: r2(lines.reduce((s, l) => s + l.totalUsd, 0)), allOk: lines.length > 0 && lines.length === entries.size && lines.every((l) => l.ok) };
