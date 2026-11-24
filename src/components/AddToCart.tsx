@@ -11,6 +11,8 @@ export default function AddToCart({ productId, stock, basePriceUsd, variants = [
   const [done, setDone] = useState(false);
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
   const [vid, setVid] = useState<number | "">(variants.find((v) => v.stock > 0)?.id ?? "");
   const v = variants.find((x) => x.id === vid);
   const avail = variants.length ? (v ? Math.min(v.stock, stock) : 0) : stock;
@@ -18,16 +20,26 @@ export default function AddToCart({ productId, stock, basePriceUsd, variants = [
   const restante = Math.max(0, avail - enCarrito);
   const maxQty = Math.max(1, Math.min(99, restante));
   const price = v?.priceUsd ?? basePriceUsd;
+  const avisar = async () => {
+    setErr(""); setMsg("");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) return setErr("Escribe un correo válido, por ejemplo nombre@correo.com.");
+    setBusy(true);
+    const r = await fetch("/api/stock-alert", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId, email: email.trim() }) });
+    setBusy(false);
+    if (r.ok) { setMsg("¡Listo! Te avisaremos cuando vuelva a estar disponible."); setEmail(""); }
+    else { const d = await r.json().catch(() => ({})); setErr(d.error ?? "No se pudo registrar el aviso. Inténtalo de nuevo."); }
+  };
 
   if (stock <= 0) return (
     <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
       <p className="flex items-center gap-2 text-sm font-semibold text-amber-800"><Icon name="info" size={16} /> Producto agotado</p>
       <p className="text-xs text-amber-700">Déjanos tu correo y te avisamos en cuanto llegue.</p>
       <div className="flex gap-2">
-        <input className="input flex-1" placeholder="tu@correo.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <button className="btn btn-primary" onClick={async () => { const r = await fetch("/api/stock-alert", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId, email }) }); setMsg(r.ok ? "¡Listo! Te avisaremos." : "Revisa el correo"); }}>Avisarme</button>
+        <input className="input flex-1" type="email" autoComplete="email" placeholder="tu@correo.com" value={email} onChange={(e) => setEmail(e.target.value)} aria-invalid={!!err} />
+        <button className="btn btn-primary" disabled={busy} onClick={avisar}>{busy ? "Enviando…" : "Avisarme"}</button>
       </div>
-      {msg && <p className="text-sm text-amber-800">{msg}</p>}
+      {err && <p role="alert" className="text-sm text-red-700">{err}</p>}
+      {msg && <p role="status" className="text-sm text-emerald-700">{msg}</p>}
     </div>
   );
 

@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import Icon, { NOMBRES_ICONO } from "@/components/brand/Icon";
 import { Field, inputCls, Modal } from "@/components/admin/ui";
+import { grupoDe } from "@/lib/contenido-orden";
 import type { Item, Seccion } from "@/lib/contenido";
 
 type Bloque = { eyebrow: string; title: string; subtitle: string; items: Item[]; visible: boolean };
@@ -89,8 +90,16 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
     }
   };
 
+  let grupoAnterior = "";
   return (
     <div className="space-y-3">
+      <div className="adm-panel flex items-start gap-3 px-4 py-3 text-sm text-slate-600">
+        <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name="info" size={16} /></span>
+        <div>
+          <p className="font-semibold text-navy">Cómo editar el contenido</p>
+          <p className="mt-0.5 text-xs leading-relaxed">Los bloques están ordenados como aparecen en la web. Abre uno, cambia el texto y pulsa «Guardar». Si desmarcas «Visible en la web», la sección se oculta sin borrar lo escrito.</p>
+        </div>
+      </div>
       {aviso && (
         <div className={`adm-panel px-4 py-3 text-sm font-medium ${aviso.tipo === "ok" ? "text-emerald-700" : "text-red-600"}`} role="status">
           {aviso.texto}
@@ -102,8 +111,18 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
         const activa = abierta === sec.key;
         const max = sec.maxItems ?? 30;
         const camposItem = sec.camposItem ?? [];
+        const grupo = grupoDe(sec);
+        const nuevoGrupo = grupo !== grupoAnterior;
+        grupoAnterior = grupo;
         return (
-          <section key={sec.key} className="adm-panel overflow-hidden">
+          <Fragment key={sec.key}>
+            {nuevoGrupo && (
+              <div className="flex items-center gap-3 px-1 pt-3 first:pt-0">
+                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{grupo}</span>
+                <span className="h-px flex-1 bg-slate-200" />
+              </div>
+            )}
+          <section className="adm-panel overflow-hidden">
             <button
               type="button"
               onClick={() => setAbierta(activa ? null : sec.key)}
@@ -230,6 +249,7 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
               </div>
             )}
           </section>
+          </Fragment>
         );
       })}
 

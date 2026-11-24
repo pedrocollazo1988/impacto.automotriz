@@ -8,7 +8,12 @@ type V = { id: number; make: string; model: string; year: number; alias: string 
 export default function GarageManager({ vehicles }: { vehicles: V[] }) {
   const router = useRouter(); const [f, setF] = useState({ make: "", model: "", year: "" }); const [err, setErr] = useState("");
   const add = async () => {
-    const r = await fetch("/api/account/garage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ make: f.make, model: f.model, year: Number(f.year) }) });
+    setErr("");
+    if (f.make.trim().length < 2) return setErr("Escribe la marca del vehículo.");
+    if (f.model.trim().length < 1) return setErr("Escribe el modelo del vehículo.");
+    const year = Number(f.year);
+    if (!Number.isInteger(year) || year < 1900 || year > 2100) return setErr("Escribe un año válido, entre 1900 y 2100.");
+    const r = await fetch("/api/account/garage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ make: f.make, model: f.model, year }) });
     if (!r.ok) return setErr((await r.json()).error ?? "Revisa los datos"); setF({ make: "", model: "", year: "" }); setErr(""); router.refresh();
   };
   return (

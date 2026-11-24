@@ -7,7 +7,7 @@ import Analytics from "@/components/Analytics";
 import SiteHeader from "@/components/site/SiteHeader";
 import DepartamentosBar from "@/components/site/DepartamentosBar";
 import SiteFooter from "@/components/site/SiteFooter";
-import WhatsAppFab from "@/components/site/WhatsAppFab";
+import ActionRail from "@/components/site/ActionRail";
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
   const vehicles = await getVehiclesCached().catch(() => []);
@@ -21,7 +21,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       <MiVehiculoBar vehicles={vehicles.map((v) => ({ slug: v.slug, brand: v.brand, model: v.model, version: v.version }))} />
       <main className="min-h-[60vh]">{children}</main>
       <SiteFooter />
-      <WhatsAppFab />
+      <ActionRail />
     </CartProvider>
     </VehicleProvider>
   );
