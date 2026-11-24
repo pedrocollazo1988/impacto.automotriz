@@ -14,7 +14,7 @@ export default function Logo({ variant = "dark", size = "md", href = "/", taglin
   const light = variant === "light";
   const s = SIZES[size];
   const inner = (
-    <span className={`group/logo inline-flex items-center gap-3 ${className}`}>
+    <span className={`logo ${light ? "logo-light" : "logo-default"} group/logo inline-flex items-center gap-3 ${className}`}>
       <span className="relative inline-flex shrink-0 items-center justify-center">
         {animated && <span aria-hidden className="absolute -inset-3 rounded-full bg-[conic-gradient(from_0deg,rgba(10,132,255,.55),transparent_35%,transparent_65%,rgba(255,176,32,.5))] blur-md opacity-70 animate-[spin_9s_linear_infinite]" />}
         <Image
@@ -23,16 +23,16 @@ export default function Logo({ variant = "dark", size = "md", href = "/", taglin
           width={anchoMarca(s.mark)}
           height={s.mark}
           priority
-          className="relative transition-transform duration-300 group-hover/logo:scale-[1.06]"
+          className={`${light ? "logo-mark-light" : "logo-mark"} relative transition-transform duration-300 group-hover/logo:scale-[1.06]`}
           style={{ height: s.mark, width: "auto" }}
         />
       </span>
       <span className="hidden min-[360px]:flex min-w-0 flex-col leading-none">
-        <span className={`font-display font-extrabold tracking-tight ${s.name} ${light ? "text-white" : "text-navy"}`}>
-          IMPACTO<span className={light ? " text-[color:var(--color-brand-hi)]" : " text-[color:var(--color-brand)]"}>·</span>AUTOMOTRIZ
+        <span className={`logo-name font-display font-extrabold tracking-tight ${s.name} ${light ? "text-white" : "text-navy"}`}>
+          IMPACTO<span className={`logo-dot ${light ? " text-[color:var(--color-brand-hi)]" : " text-[color:var(--color-brand)]"}`}>·</span>AUTOMOTRIZ
         </span>
         {tagline && (
-          <span className={`mt-1 font-mono uppercase tracking-[0.28em] ${s.tag} ${light ? "text-white/55" : "text-slate-500"}`}>
+          <span className={`logo-tagline mt-1 font-mono uppercase tracking-[0.28em] ${s.tag} ${light ? "text-white/55" : "text-slate-500"}`}>
             Piezas · Accesorios · Eléctrico
           </span>
         )}

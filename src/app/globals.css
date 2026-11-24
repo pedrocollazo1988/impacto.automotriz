@@ -352,3 +352,14 @@
 .dark .btn-danger svg,
 .dark .text-red-600 svg,
 .dark .text-red-700 svg { color: #f87171; }
+
+/* La marca oscura se vuelve blanca en modo noche. La prefactura es papel
+   blanco incluso con el tema oscuro, así que conserva el logo original. */
+.dark .logo-default .logo-mark { filter: brightness(0) invert(1); }
+.dark .logo-default .logo-name,
+.dark .logo-default .logo-dot { color: #fff !important; }
+.dark .logo-default .logo-tagline { color: rgb(255 255 255 / 0.65) !important; }
+.dark .factura .logo-default .logo-mark { filter: none; }
+.dark .factura .logo-default .logo-name { color: #0a2c5e !important; }
+.dark .factura .logo-default .logo-dot { color: var(--color-brand) !important; }
+.dark .factura .logo-default .logo-tagline { color: #5a6b80 !important; }

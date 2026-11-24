@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { canViewOrder } from "@/lib/order-access";
 import { leerSeccion } from "@/lib/contenido-server";
 import PrintButton from "@/components/PrintButton";
+import Logo from "@/components/brand/Logo";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Prefactura", robots: { index: false } };
 
@@ -29,7 +30,7 @@ export default async function Factura({ params, searchParams }: { params: Promis
     <div className="factura mx-auto max-w-3xl bg-white p-6 text-[12px] leading-snug text-slate-700 print:max-w-none print:p-0">
       <div className="flex items-start justify-between gap-6 border-b-2 border-navy pb-3">
         <div>
-          <p className="font-display text-lg font-extrabold text-navy">Impacto Automotriz</p>
+          <Logo href={null} size="md" tagline={false} className="mb-1" />
           <p className="text-[11px] text-slate-500">{valor("Domicilio social")}</p>
           <p className="text-[11px] text-slate-500">{valor("Teléfonos")} · {valor("Correo")}</p>
           <p className="text-[11px] text-slate-500">NIT: {valor("NIT") || "—"}</p>
