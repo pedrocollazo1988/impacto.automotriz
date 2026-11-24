@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useCart } from "./CartProvider";
 import Icon from "@/components/brand/Icon";
+import Turnstile from "@/components/Turnstile";
 
 export type VariantOpt = { id: number; name: string; priceUsd: number | null; stock: number };
 
@@ -13,6 +14,7 @@ export default function AddToCart({ productId, stock, basePriceUsd, variants = [
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [captcha, setCaptcha] = useState(""); const [captchaKey, setCaptchaKey] = useState(0);
   const [vid, setVid] = useState<number | "">(variants.find((v) => v.stock > 0)?.id ?? "");
   const v = variants.find((x) => x.id === vid);
   const avail = variants.length ? (v ? Math.min(v.stock, stock) : 0) : stock;
@@ -23,11 +25,12 @@ export default function AddToCart({ productId, stock, basePriceUsd, variants = [
   const avisar = async () => {
     setErr(""); setMsg("");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) return setErr("Escribe un correo válido, por ejemplo nombre@correo.com.");
+    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !captcha) return setErr("Completa la verificación anti-bots.");
     setBusy(true);
-    const r = await fetch("/api/stock-alert", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId, email: email.trim() }) });
+    const r = await fetch("/api/stock-alert", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId, email: email.trim(), turnstileToken: captcha }) });
     setBusy(false);
-    if (r.ok) { setMsg("¡Listo! Te avisaremos cuando vuelva a estar disponible."); setEmail(""); }
-    else { const d = await r.json().catch(() => ({})); setErr(d.error ?? "No se pudo registrar el aviso. Inténtalo de nuevo."); }
+    if (r.ok) { setMsg("¡Listo! Te avisaremos cuando vuelva a estar disponible."); setEmail(""); setCaptcha(""); setCaptchaKey((k) => k + 1); }
+    else { setCaptcha(""); setCaptchaKey((k) => k + 1); const d = await r.json().catch(() => ({})); setErr(d.error ?? "No se pudo registrar el aviso. Inténtalo de nuevo."); }
   };
 
   if (stock <= 0) return (
@@ -38,6 +41,7 @@ export default function AddToCart({ productId, stock, basePriceUsd, variants = [
         <input className="input flex-1" type="email" autoComplete="email" placeholder="tu@correo.com" value={email} onChange={(e) => setEmail(e.target.value)} aria-invalid={!!err} />
         <button className="btn btn-primary" disabled={busy} onClick={avisar}>{busy ? "Enviando…" : "Avisarme"}</button>
       </div>
+      <Turnstile key={captchaKey} onToken={setCaptcha} />
       {err && <p role="alert" className="text-sm text-red-700">{err}</p>}
       {msg && <p role="status" className="text-sm text-emerald-700">{msg}</p>}
     </div>

@@ -2,25 +2,35 @@
 import { useState } from "react";
 import Icon from "@/components/brand/Icon";
 import PasswordField from "@/components/PasswordField";
+import Turnstile from "@/components/Turnstile";
 
 export default function AuthForm({ google = false }: { google?: boolean }) {
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
   const [f, setF] = useState({ name: "", email: "", phone: "", password: "", marketing: false });
+  const [acepto, setAcepto] = useState(false);
+  const [website, setWebsite] = useState(""); // honeypot
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [captchaKey, setCaptchaKey] = useState(0);
   const [msg, setMsg] = useState(""); const [msgOk, setMsgOk] = useState(false); const [busy, setBusy] = useState(false); const [intento, setIntento] = useState(false);
   const set = (k: keyof typeof f, v: string | boolean) => setF((p) => ({ ...p, [k]: v }));
   const errores = {
     name: mode === "register" && f.name.trim().length < 2 ? "Escribe tu nombre completo." : "",
     email: !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f.email.trim()) ? "Escribe un correo válido, por ejemplo nombre@correo.com." : "",
-    password: mode !== "forgot" && f.password.length < 8 ? "La contraseña debe tener al menos 8 caracteres." : "",
+    password: mode !== "forgot" && (f.password.length < 10 || !/[A-Za-z]/.test(f.password) || !/\d/.test(f.password)) ? "La contraseña debe tener 10 caracteres, una letra y un número." : "",
+    acepto: mode === "register" && !acepto ? "Acepta la política de privacidad para crear la cuenta." : "",
   };
   const go = async () => {
     setIntento(true);
     if (Object.values(errores).some(Boolean)) { setMsgOk(false); return setMsg("Revisa los campos marcados."); }
+    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken) {
+      setMsgOk(false); return setMsg("Completa la verificación anti-bots.");
+    }
     setBusy(true); setMsg(""); setMsgOk(false);
     const url = mode === "login" ? "/api/account/session" : mode === "register" ? "/api/account/register" : "/api/account/forgot";
-    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(f) });
+    const payload = mode === "register" ? { ...f, acepto, website, turnstileToken } : { ...f, turnstileToken };
+    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const j = await r.json(); setBusy(false);
-    if (!r.ok) return setMsg(j.error ?? "Revisa los datos");
+    if (!r.ok) { setTurnstileToken(""); setCaptchaKey((k) => k + 1); return setMsg(j.error ?? "Revisa los datos"); }
     if (mode === "forgot") { setMsgOk(true); return setMsg("Si el correo existe, te enviamos un enlace para restablecer la contraseña."); }
     location.reload();
   };
@@ -29,7 +39,7 @@ export default function AuthForm({ google = false }: { google?: boolean }) {
     <div className="card p-6">
       <div className="mb-5 flex gap-1 rounded-xl bg-slate-100 p-1">
         {(["login", "register"] as const).map((m) => (
-          <button key={m} onClick={() => { setMode(m); setMsg(""); setIntento(false); }} className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${mode === m ? "bg-white text-navy shadow-sm" : "text-slate-600 hover:text-navy"}`}>
+          <button key={m} onClick={() => { setMode(m); setMsg(""); setIntento(false); setTurnstileToken(""); setCaptchaKey((k) => k + 1); }} className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${mode === m ? "bg-white text-navy shadow-sm" : "text-slate-600 hover:text-navy"}`}>
             {m === "login" ? "Entrar" : "Crear cuenta"}
           </button>
         ))}
@@ -51,13 +61,25 @@ export default function AuthForm({ google = false }: { google?: boolean }) {
         </label>
         {mode !== "forgot" && (
           <div>
-            <PasswordField placeholder="Contraseña (mínimo 8 caracteres)" autoComplete={mode === "login" ? "current-password" : "new-password"} value={f.password} onChange={(e) => set("password", e.target.value)} />
+            <PasswordField placeholder="Contraseña (10 caracteres, letra y número)" autoComplete={mode === "login" ? "current-password" : "new-password"} value={f.password} onChange={(e) => set("password", e.target.value)} />
             {intento && errores.password && <span className="mt-1 block text-xs text-red-600">{errores.password}</span>}
           </div>
         )}
         {mode === "register" && (
-          <label className="flex gap-2 text-xs text-slate-600"><input type="checkbox" checked={f.marketing} onChange={(e) => set("marketing", e.target.checked)} className="mt-0.5" />Quiero recibir novedades y ofertas por correo (puedes darte de baja cuando quieras).</label>
+          <>
+            <label className="flex gap-2 text-xs text-slate-600"><input type="checkbox" checked={f.marketing} onChange={(e) => set("marketing", e.target.checked)} className="mt-0.5" />Quiero recibir novedades y ofertas por correo (puedes darte de baja cuando quieras).</label>
+            <label className={`flex gap-2 text-xs ${intento && errores.acepto ? "text-red-600" : "text-slate-600"}`}>
+              <input type="checkbox" checked={acepto} onChange={(e) => setAcepto(e.target.checked)} className="mt-0.5" aria-invalid={intento && !!errores.acepto} />
+              <span>Acepto la <a href="/politicas/privacidad" target="_blank" rel="noopener" className="font-semibold underline">política de privacidad</a> y los <a href="/politicas/terminos" target="_blank" rel="noopener" className="font-semibold underline">términos</a>.</span>
+            </label>
+            {intento && errores.acepto && <span className="block text-xs text-red-600">{errores.acepto}</span>}
+          </>
         )}
+        {/* Campo trampa: una persona no lo ve ni lo rellena. */}
+        <div className="absolute -left-[9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+          <label>No rellenar<input tabIndex={-1} autoComplete="off" name="website" value={website} onChange={(e) => setWebsite(e.target.value)} /></label>
+        </div>
+        <Turnstile key={captchaKey} onToken={setTurnstileToken} />
         <button disabled={busy} onClick={go} className="btn btn-primary w-full disabled:opacity-50">
           {mode === "login" ? "Entrar" : mode === "register" ? "Crear cuenta" : "Enviar enlace"}
         </button>

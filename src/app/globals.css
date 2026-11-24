@@ -339,3 +339,16 @@
 .dark .factura .text-slate-500, .dark .factura .text-slate-400 { color: #5a6b80 !important; }
 .dark .factura .bg-slate-50, .dark .factura .bg-slate-100 { background-color: #f4f6f9 !important; }
 .dark .factura .border-slate-200, .dark .factura .border-slate-300, .dark .factura .border-slate-100 { border-color: #cbd5e1 !important; }
+
+/* Iconos de botones y menús: en modo noche se fuerzan a blanco para que el
+   trazo se lea sobre las superficies oscuras. Los iconos de estado (error,
+   peligro) conservan su color. */
+.dark .btn svg,
+.dark .iconbtn svg,
+.dark .chip svg,
+.dark .adm-topbar svg,
+.dark header nav svg,
+.dark .adm-navlink svg { color: #fff; }
+.dark .btn-danger svg,
+.dark .text-red-600 svg,
+.dark .text-red-700 svg { color: #f87171; }

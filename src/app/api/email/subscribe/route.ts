@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { handle } from "@/lib/auth";
 import { limit } from "@/lib/ratelimit";
 import { confirmUrl, sendTransactional } from "@/lib/mailer";
+import { requireTurnstile } from "@/lib/turnstile";
 
 // Suscripción pública con DOBLE CONFIRMACIÓN: queda PENDIENTE hasta que la persona pulsa el enlace del correo.
 // `website` es un honeypot anti-bots (debe ir vacío).
@@ -10,10 +11,12 @@ const Body = z.object({
   email: z.string().email().max(160).transform((s) => s.toLowerCase()), name: z.string().max(80).optional(),
   provinceId: z.number().int().optional(), consent: z.literal(true), website: z.string().max(0).optional(),
   tags: z.array(z.string().max(40)).max(5).optional(), source: z.string().max(30).optional(),
+  turnstileToken: z.string().max(2048).optional(),
 });
 export const POST = handle(async (req: Request) => {
   await limit(req, "subscribe", 5);
   const b = Body.parse(await req.json());
+  await requireTurnstile(req, b.turnstileToken);
   const cur = await prisma.subscriber.findUnique({ where: { email: b.email } });
   if (cur?.status === "ACTIVE") return Response.json({ ok: true }); // no revela si ya existía
   await prisma.subscriber.upsert({

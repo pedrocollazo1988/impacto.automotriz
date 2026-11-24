@@ -1,13 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { handle } from "@/lib/auth";
-import { limit } from "@/lib/ratelimit";
+import { limit, limitKey } from "@/lib/ratelimit";
 import { requireCustomer } from "@/lib/customer-auth";
-import { sendVerification } from "@/lib/verify";
+import { sendVerificationPin } from "@/lib/verify";
 
 export const POST = handle(async (req: Request) => {
-  await limit(req, "verify-resend", 3);
+  await limit(req, "verify-resend", 3, 5 * 60_000);
   const me = await requireCustomer();
+  await limitKey(me.id, "verify-resend", 3, 10 * 60_000);
   const c = await prisma.customer.findUniqueOrThrow({ where: { id: me.id } });
-  if (!c.emailVerified) await sendVerification(c);
+  if (!c.emailVerified) await sendVerificationPin(c);
   return Response.json({ ok: true });
 });

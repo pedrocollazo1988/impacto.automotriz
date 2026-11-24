@@ -68,9 +68,24 @@ const paths: Record<string, React.ReactNode> = {
 /** Nombres válidos, para que el panel ofrezca un selector en vez de texto libre. */
 export const NOMBRES_ICONO = Object.keys(paths);
 
-export default function Icon({ name, size = "1em", strokeWidth = 1.8, ...rest }: { name: keyof typeof paths | string; size?: number | string; strokeWidth?: number } & SVGProps<SVGSVGElement>) {
+export default function Icon({ name, size = "1em", strokeWidth = 2, className, style, ...rest }: { name: keyof typeof paths | string; size?: number | string; strokeWidth?: number } & SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" {...rest}>
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      shapeRendering="geometricPrecision"
+      aria-hidden="true"
+      focusable="false"
+      className={className ? `shrink-0 ${className}` : "shrink-0"}
+      style={{ display: "inline-block", verticalAlign: "-0.125em", ...style }}
+      {...rest}
+    >
       {paths[name] ?? paths.info}
     </svg>
   );

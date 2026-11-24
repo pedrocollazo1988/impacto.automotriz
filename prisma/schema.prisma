@@ -409,7 +409,7 @@ model AuthToken {
   id         Int       @id @default(autoincrement())
   customerId String
   customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  kind       String // RESET | VERIFY
+  kind       String // RESET | VERIFY | VERIFY_PIN
   tokenHash  String    @unique
   expiresAt  DateTime
   usedAt     DateTime?

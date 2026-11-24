@@ -8,6 +8,7 @@ import Icon from "@/components/brand/Icon";
 import { textoEnvio, validarCheckout } from "@/lib/checkout-validation";
 import { usePreferences } from "@/components/site/Preferences";
 import { track } from "@/lib/analytics";
+import Turnstile from "@/components/Turnstile";
 
 // Los métodos los define el panel (nombre, icono, descripción, datos y
 // comisión). Aquí no hay una lista fija de pasarelas.
@@ -49,6 +50,7 @@ export default function Checkout() {
   const [code, setCode] = useState(""); const [coupon, setCoupon] = useState<{ code: string; discountUsd: number } | null>(null); const [couponMsg, setCouponMsg] = useState("");
   const [cartOk, setCartOk] = useState(true);
   const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
+  const [captcha, setCaptcha] = useState(""); const [captchaKey, setCaptchaKey] = useState(0);
 
   useEffect(() => {
     const total = Math.max(0, subtotal - (coupon?.discountUsd ?? 0)) + fee;
@@ -80,10 +82,11 @@ export default function Checkout() {
     if (faltantes.length) { setErr(t("checkout.review")); return; }
     if (!cartOk) return setErr(t("checkout.adjustStock"));
     if (!metodo) return setErr(t("checkout.choosePayment"));
+    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !captcha) return setErr(t("checkout.captcha"));
     setBusy(true); setErr("");
-    const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items, customer: c, delivery, paymentMethod: pay, coupon: coupon?.code }) });
+    const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items, customer: c, delivery, paymentMethod: pay, coupon: coupon?.code, turnstileToken: captcha }) });
     const j = await r.json(); setBusy(false);
-    if (!r.ok) return setErr(j.error ?? t("checkout.createError"));
+    if (!r.ok) { setCaptcha(""); setCaptchaKey((k) => k + 1); return setErr(j.error ?? t("checkout.createError")); }
     clear(); if (j.paymentUrl) window.location.href = j.paymentUrl; else router.push(`/pedido/${j.orderId}`);
   };
   if (!cartReady) return (
@@ -200,7 +203,8 @@ export default function Checkout() {
               </div>
             )}
             {err && <p aria-live="polite" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{err}</p>}
-            <button disabled={busy} onClick={submit} className="btn btn-primary mt-5 w-full text-base disabled:opacity-40">
+            <Turnstile key={captchaKey} onToken={setCaptcha} className="mt-4" />
+            <button disabled={busy} onClick={submit} className="btn btn-primary mt-3 w-full text-base disabled:opacity-40">
               {busy ? t("checkout.processing") : <><Icon name="check" size={18} /> {t("checkout.confirm")}</>}
             </button>
             {!ready && <p className="mt-3 text-center text-xs text-slate-400">{t("checkout.pressConfirm")}</p>}

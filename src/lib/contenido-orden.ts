@@ -5,6 +5,7 @@ import type { Seccion } from "./contenido";
 // orden que el contenido real.
 export const ORDEN_WEB = [
   "portada-hero",
+  "portada-slider",
   "portada-confianza",
   "portada-accesos",
   "portada-valor",

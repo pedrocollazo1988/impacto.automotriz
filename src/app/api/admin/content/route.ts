@@ -9,6 +9,7 @@ const ItemBody = z.object({
   titulo: z.string().max(300).optional(),
   texto: z.string().max(2000).optional(),
   href: z.string().max(500).optional(),
+  imagen: z.string().max(1000).optional(),
 });
 
 const Body = z.object({

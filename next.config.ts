@@ -30,20 +30,22 @@ const config: NextConfig = {
       "default-src 'self'",
       // 'wasm-unsafe-eval' lo exige el visor 3D de Google: compila WebAssembly
       // para decodificar el glTF. No abre eval() de JavaScript, solo WASM.
-      // googletagmanager sirve el script de GA4 cuando hay NEXT_PUBLIC_GA_ID.
-      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com",
+      // googletagmanager sirve el script de GA4; challenges.cloudflare.com, Turnstile.
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com https://challenges.cloudflare.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
       "connect-src 'self' https:",
       "form-action 'self'",
+      // Turnstile pinta el desafío en un iframe de Cloudflare.
+      `frame-src 'self' https://challenges.cloudflare.com${process.env.VERCEL_ENV === "production" ? "" : " https://vercel.live"}`,
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "object-src 'none'",
       "upgrade-insecure-requests",
       // Vercel inyecta su barra de feedback solo en las previsualizaciones; en
       // produccion no se sirve, asi que el dominio real mantiene la CSP cerrada.
-      ...(process.env.VERCEL_ENV === "production" ? [] : ["script-src-elem 'self' 'unsafe-inline' https://vercel.live", "frame-src 'self' https://vercel.live"]),
+      ...(process.env.VERCEL_ENV === "production" ? [] : ["script-src-elem 'self' 'unsafe-inline' https://vercel.live https://challenges.cloudflare.com https://www.googletagmanager.com"]),
     ].join("; ");
     return [{ source: "/:path*", headers: [
       { key: "X-Content-Type-Options", value: "nosniff" },

@@ -3,18 +3,21 @@ import { useState } from "react";
 import Icon from "@/components/brand/Icon";
 import Logo from "@/components/brand/Logo";
 import PasswordField from "@/components/PasswordField";
+import Turnstile from "@/components/Turnstile";
 
 export default function Login() {
   const [e, setE] = useState(""); const [p, setP] = useState(""); const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
+  const [captcha, setCaptcha] = useState(""); const [captchaKey, setCaptchaKey] = useState(0);
   const go = async () => {
     setErr("");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e.trim())) return setErr("Escribe el correo de administración.");
     if (!p) return setErr("Escribe tu contraseña.");
+    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !captcha) return setErr("Completa la verificación anti-bots.");
     setBusy(true);
     try {
-      const r = await fetch("/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: e, password: p }) });
+      const r = await fetch("/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: e, password: p, turnstileToken: captcha }) });
       if (r.ok) location.href = "/admin";
-      else setErr((await r.json()).error ?? "No se pudo entrar");
+      else { setCaptcha(""); setCaptchaKey((k) => k + 1); setErr((await r.json()).error ?? "No se pudo entrar"); }
     } catch { setErr("No hay conexión con el servidor"); } finally { setBusy(false); }
   };
   return (
@@ -29,6 +32,7 @@ export default function Login() {
             <input type="email" autoComplete="username" className="input" placeholder="tu@correo.com" value={e} onChange={(x) => setE(x.target.value)} onKeyDown={(x) => x.key === "Enter" && go()} /></label>
           <label className="block space-y-1"><span className="text-xs font-semibold text-slate-600">Contraseña</span>
             <PasswordField autoComplete="current-password" placeholder="••••••••" value={p} onChange={(x) => setP(x.target.value)} onKeyDown={(x) => x.key === "Enter" && go()} /></label>
+          <Turnstile key={captchaKey} onToken={setCaptcha} />
           {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
           <button className="btn btn-primary w-full" disabled={busy} onClick={go}>{busy ? "Entrando…" : <>Entrar <Icon name="arrowRight" size={16} /></>}</button>
         </div>
