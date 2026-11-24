@@ -30,7 +30,8 @@ const config: NextConfig = {
       "default-src 'self'",
       // 'wasm-unsafe-eval' lo exige el visor 3D de Google: compila WebAssembly
       // para decodificar el glTF. No abre eval() de JavaScript, solo WASM.
-      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+      // googletagmanager sirve el script de GA4 cuando hay NEXT_PUBLIC_GA_ID.
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
