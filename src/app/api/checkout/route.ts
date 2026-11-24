@@ -10,6 +10,7 @@ import { leerPasarelas } from "@/lib/payment-gateways";
 import { comision, esCobroAutomatico, estaOperativa, redirigeAlPagar, requiereContraEntrega } from "@/lib/pasarelas";
 import { sendTransactional } from "@/lib/mailer";
 import { orderToken, rememberOrder } from "@/lib/order-access";
+import { requireTurnstile } from "@/lib/turnstile";
 
 const Body = z.object({
   items: z.array(z.object({ productId: z.number().int(), variantId: z.number().int().nullish(), qty: z.number().int().min(1).max(99) })).min(1).max(50),
@@ -18,11 +19,13 @@ const Body = z.object({
   // La clave la crea el panel: no es un enum fijo.
   paymentMethod: z.string().min(1).max(40),
   coupon: z.string().max(30).optional(),
+  turnstileToken: z.string().max(2048).optional(),
 });
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
 export const POST = handle(async (req: Request) => {
   const b = Body.parse(await req.json());
+  await requireTurnstile(req, b.turnstileToken);
   await asegurarEsquema();
   // 1) Todo se recalcula en el servidor: precios, existencias, cupón y envío.
   const cart = await priceCart(b.items);

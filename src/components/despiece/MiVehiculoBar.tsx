@@ -9,7 +9,7 @@ export default function MiVehiculoBar({ vehicles }: { vehicles: MiVehiculo[] }) 
   if (!ready || vehicles.length === 0) return null;
 
   return (
-    <div className="border-b border-slate-200 bg-slate-50/80">
+    <div className="border-b border-slate-200 bg-slate-50/80 print:hidden">
       <div className="container-x flex flex-wrap items-center gap-2 py-1.5 text-xs">
         <span className="flex items-center gap-1.5 font-semibold text-slate-500">
           <Icon name="car" size={13} /> Mi vehículo:

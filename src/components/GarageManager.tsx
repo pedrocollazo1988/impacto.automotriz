@@ -3,18 +3,21 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Icon from "@/components/brand/Icon";
+import Turnstile from "@/components/Turnstile";
 
 type V = { id: number; make: string; model: string; year: number; alias: string | null };
 export default function GarageManager({ vehicles }: { vehicles: V[] }) {
   const router = useRouter(); const [f, setF] = useState({ make: "", model: "", year: "" }); const [err, setErr] = useState("");
+  const [captcha, setCaptcha] = useState(""); const [captchaKey, setCaptchaKey] = useState(0);
   const add = async () => {
     setErr("");
     if (f.make.trim().length < 2) return setErr("Escribe la marca del vehículo.");
     if (f.model.trim().length < 1) return setErr("Escribe el modelo del vehículo.");
     const year = Number(f.year);
     if (!Number.isInteger(year) || year < 1900 || year > 2100) return setErr("Escribe un año válido, entre 1900 y 2100.");
-    const r = await fetch("/api/account/garage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ make: f.make, model: f.model, year }) });
-    if (!r.ok) return setErr((await r.json()).error ?? "Revisa los datos"); setF({ make: "", model: "", year: "" }); setErr(""); router.refresh();
+    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !captcha) return setErr("Completa la verificación anti-bots.");
+    const r = await fetch("/api/account/garage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ make: f.make, model: f.model, year, turnstileToken: captcha }) });
+    if (!r.ok) { setCaptcha(""); setCaptchaKey((k) => k + 1); return setErr((await r.json()).error ?? "Revisa los datos"); } setF({ make: "", model: "", year: "" }); setCaptcha(""); setCaptchaKey((k) => k + 1); setErr(""); router.refresh();
   };
   return (
     <div className="space-y-4">
@@ -36,6 +39,7 @@ export default function GarageManager({ vehicles }: { vehicles: V[] }) {
         <input className="input w-28" type="number" placeholder="Año" value={f.year} onChange={(e) => setF({ ...f, year: e.target.value })} />
         <button className="btn btn-primary" onClick={add}><Icon name="plus" size={16} /> Añadir</button>
       </div>
+      <Turnstile key={captchaKey} onToken={setCaptcha} />
       {err && <p className="text-sm text-red-600">{err}</p>}
     </div>);
 }

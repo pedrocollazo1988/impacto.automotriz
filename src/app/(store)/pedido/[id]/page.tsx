@@ -27,7 +27,7 @@ export default async function Pedido({ params, searchParams }: { params: Promise
       <div className="mx-auto max-w-3xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div><span className="eyebrow">Pedido</span><h1 className="mt-1 font-display text-3xl font-extrabold text-navy">#{o.number}</h1></div>
-          <Link href={`/pedido/${o.id}/factura${tok ? `?t=${tok}` : ""}`} className="btn btn-ghost"><Icon name="box" size={16} /> Ver comprobante</Link>
+          <Link href={`/pedido/${o.id}/factura${tok ? `?t=${tok}` : ""}`} className="btn btn-ghost"><Icon name="box" size={16} /> Ver prefactura</Link>
         </div>
 
         {canceled ? (

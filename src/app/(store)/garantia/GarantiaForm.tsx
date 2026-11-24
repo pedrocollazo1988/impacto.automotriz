@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Icon from "@/components/brand/Icon";
+import Turnstile from "@/components/Turnstile";
 import { waHref } from "@/lib/site";
 
 // La reclamación no se guarda en la base de datos: el negocio atiende la
@@ -24,6 +25,7 @@ export default function GarantiaForm() {
   const [validado, setValidado] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
+  const [captcha, setCaptcha] = useState(""); const [captchaKey, setCaptchaKey] = useState(0);
 
   const validar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,19 +33,21 @@ export default function GarantiaForm() {
     const n = numero.replace(/\D/g, "");
     if (!n) return setError("Escribe el número de pedido.");
     if (contacto.trim().length < 5) return setError("Escribe el correo o teléfono con el que compraste.");
+    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !captcha) return setError("Completa la verificación anti-bots.");
 
     setCargando(true);
     try {
       const r = await fetch("/api/pedidos/rastrear", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ numero: Number(n), contacto: contacto.trim() }),
+        body: JSON.stringify({ numero: Number(n), contacto: contacto.trim(), turnstileToken: captcha }),
       });
       const d = await r.json().catch(() => ({}));
       if (r.ok && d.url) {
         setValidado(d.url);
         return;
       }
+      setCaptcha(""); setCaptchaKey((k) => k + 1);
       setError(r.status === 429 ? "Demasiados intentos. Espera un minuto." : d.error ?? "No encontramos ese pedido.");
     } catch {
       setError("No se pudo conectar. Inténtalo otra vez.");
@@ -127,6 +131,7 @@ export default function GarantiaForm() {
         </p>
       )}
 
+      <Turnstile key={captchaKey} onToken={setCaptcha} />
       <button type="submit" disabled={cargando} className="btn btn-accent h-12 w-full text-base disabled:opacity-60">
         {cargando ? <><Icon name="spinner" size={17} className="animate-spin" /> Comprobando…</> : <><Icon name="shield" size={17} /> Comprobar mi pedido</>}
       </button>

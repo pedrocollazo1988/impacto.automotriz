@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { hashPassword, verifyPassword } from "@/lib/password";
+import { pinHash } from "@/lib/verify";
 
 describe("contraseñas", () => {
   it("verifica la correcta y rechaza la incorrecta o vacía", () => {
@@ -95,5 +96,16 @@ describe("cookie de pedidos (compra como invitado)", () => {
     expect(unpackOrderIds("pedido-a")).toEqual([]);
     expect(unpackOrderIds(undefined)).toEqual([]);
     expect(ids).toBe("pedido-a");
+  });
+});
+
+describe("PIN de verificación", () => {
+  it("liga el PIN al cliente y al secreto del servidor", () => {
+    process.env.APP_SECRET = "secreto-de-prueba";
+    const a = pinHash("cliente-a", "123456");
+    expect(a).toHaveLength(64);
+    expect(a).toBe(pinHash("cliente-a", "123456"));
+    expect(a).not.toBe(pinHash("cliente-b", "123456"));
+    expect(a).not.toBe(pinHash("cliente-a", "654321"));
   });
 });

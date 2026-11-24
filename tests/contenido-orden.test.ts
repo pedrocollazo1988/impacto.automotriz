@@ -33,10 +33,11 @@ describe("orden real de la web", () => {
     expect(SECCIONES.filter((s) => !orden.has(s.key)).map((s) => s.key)).toEqual([]);
   });
 
-  it("empieza por la portada y termina por las políticas", () => {
+  it("empieza por la portada y termina por la configuración del carrito", () => {
     const lista = ordenarSecciones(SECCIONES);
     expect(lista[0].key).toBe("portada-hero");
-    expect(lista.at(-1)?.key).toBe("politicas-terminos");
+    expect(lista.at(-1)?.key).toBe("carrito-config");
+    expect(lista.some((s) => s.key === "facturacion")).toBe(true);
   });
 });
 

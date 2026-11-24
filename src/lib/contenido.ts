@@ -8,12 +8,12 @@
 // Este módulo lo importan páginas de servidor y el editor del panel: no debe
 // tocar APIs de navegador.
 
-import { SITE } from "./site";
+import { SITE, telefono } from "./site";
 
 export type Campo = {
   key: string;
   label: string;
-  tipo?: "texto" | "parrafo" | "icono" | "url";
+  tipo?: "texto" | "parrafo" | "icono" | "url" | "imagen";
   /** Ancho completo en el editor, para los textos largos. */
   ancho?: boolean;
 };
@@ -31,7 +31,7 @@ export type Seccion = {
   defecto: { eyebrow?: string; title?: string; subtitle?: string; items?: Item[] };
 };
 
-export type Item = { icono?: string; titulo?: string; texto?: string; href?: string };
+export type Item = { icono?: string; titulo?: string; texto?: string; href?: string; imagen?: string };
 
 export type Bloque = { eyebrow: string; title: string; subtitle: string; items: Item[]; visible: boolean };
 
@@ -243,6 +243,21 @@ export const SECCIONES: Seccion[] = [
         { titulo: "Soporte", texto: "WhatsApp directo" },
       ],
     },
+  },
+  {
+    key: "portada-slider",
+    label: "Portada · carrusel de ofertas",
+    descripcion: "Banner de fotos que rota bajo la cabecera. Si lo dejas vacío, se usan las ofertas y los productos destacados.",
+    campos: [],
+    camposItem: [
+      { key: "imagen", label: "Imagen (URL o /media/...)", tipo: "imagen", ancho: true },
+      { key: "titulo", label: "Título", ancho: true },
+      { key: "texto", label: "Texto / precio", ancho: true },
+      { key: "href", label: "Enlace", tipo: "url", ancho: true },
+      { key: "icono", label: "Icono", tipo: "icono" },
+    ],
+    maxItems: 8,
+    defecto: { items: [] },
   },
   {
     key: "portada-categorias",
@@ -735,6 +750,53 @@ export const SECCIONES: Seccion[] = [
       ],
     },
   },
+  {
+    key: "facturacion",
+    label: "Prefactura · datos de la MIPYME",
+    descripcion: "Estos datos salen en la prefactura de cada pedido: nombre, NIT, domicilio, cuentas, representante y firmas.",
+    campos: [
+      { key: "title", label: "Título del documento", ancho: true },
+      { key: "subtitle", label: "Nota legal o pie de página", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [
+      { key: "titulo", label: "Dato", ancho: true },
+      { key: "texto", label: "Valor", tipo: "parrafo", ancho: true },
+    ],
+    maxItems: 16,
+    defecto: {
+      title: "PREFACTURA",
+      subtitle: "Documento no fiscal. El importe queda confirmado cuando se valida el pago.",
+      items: [
+        { titulo: "Nombre de la MIPYME", texto: SITE.razonSocial },
+        { titulo: "NIT", texto: "" },
+        { titulo: "Domicilio social", texto: SITE.direccion },
+        { titulo: "Cuenta bancaria CUP", texto: "" },
+        { titulo: "Cuenta bancaria USD", texto: "" },
+        { titulo: "Representante legal", texto: "" },
+        { titulo: "Teléfonos", texto: telefono },
+        { titulo: "Correo", texto: SITE.email },
+        { titulo: "Emitido por", texto: SITE.razonSocial },
+        { titulo: "Recibido por", texto: "Cliente" },
+      ],
+    },
+  },
+  {
+    key: "carrito-config",
+    label: "Carrito · caducidad",
+    descripcion: "Cuánto tiempo se guardan los productos elegidos y qué aviso ve el cliente.",
+    campos: [],
+    camposItem: [
+      { key: "titulo", label: "Concepto", ancho: true },
+      { key: "texto", label: "Valor", tipo: "parrafo", ancho: true },
+    ],
+    maxItems: 3,
+    defecto: {
+      items: [
+        { titulo: "Horas que se guarda el carrito", texto: "24" },
+        { titulo: "Aviso al cliente", texto: "Tus productos se guardan 24 horas. Si no confirmas el pedido, el carrito se vacía y las unidades vuelven a estar disponibles." },
+      ],
+    },
+  },
 ];
 
 export const buscarSeccion = (key: string) => SECCIONES.find((s) => s.key === key);
@@ -749,8 +811,9 @@ export function limpiarItems(items: unknown, max = 30): Item[] {
       titulo: typeof i.titulo === "string" ? i.titulo.slice(0, 300) : undefined,
       texto: typeof i.texto === "string" ? i.texto.slice(0, 2000) : undefined,
       href: typeof i.href === "string" ? i.href.slice(0, 500) : undefined,
+      imagen: typeof i.imagen === "string" && /^(\/(?!\/)|https?:\/\/)/i.test(i.imagen) ? i.imagen.slice(0, 1000) : undefined,
     }))
-    .filter((i) => i.titulo || i.texto)
+    .filter((i) => i.titulo || i.texto || i.imagen)
     .slice(0, max);
 }
 

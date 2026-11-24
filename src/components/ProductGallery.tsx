@@ -12,7 +12,9 @@ import { ZOOM_INICIAL, ZOOM_MAX, ZOOM_MIN, anchoParaZoom, origenEn, zoomConBoton
 export default function ProductGallery({ images, videos = [], name }: { images: string[]; videos?: string[]; name: string }) {
   const medios = mediosDeFicha(images, videos);
   const lista = medios.length ? medios : [{ url: "/placeholder.svg", tipo: "foto" as const }];
-  const [i, setI] = useState(0);
+  // Si la ficha tiene vídeo, se abre en el vídeo: es lo primero que quiere ver
+  // quien entra a comprobar cómo funciona la pieza. Si no, se abre en la foto.
+  const [i, setI] = useState(() => Math.max(0, medios.findIndex((m) => m.tipo === "video")));
   const [lupa, setLupa] = useState(false);
   const [zoom, setZoom] = useState(ZOOM_INICIAL);
   const [pos, setPos] = useState({ x: 50, y: 50 });
@@ -82,7 +84,7 @@ export default function ProductGallery({ images, videos = [], name }: { images: 
         style={esVideoActual ? undefined : { cursor: ampliada ? "zoom-out" : "zoom-in" }}
       >
         {esVideoActual ? (
-          <video key={actual.url} src={actual.url} className="h-full w-full bg-black object-cover" controls playsInline preload="metadata" aria-label={`Vídeo de ${name}`} />
+          <video key={actual.url} src={actual.url} poster={images[0]} className="h-full w-full bg-black object-cover" controls autoPlay muted loop playsInline preload="metadata" aria-label={`Vídeo de ${name}`} />
         ) : (
           <Image
             src={actual.url}

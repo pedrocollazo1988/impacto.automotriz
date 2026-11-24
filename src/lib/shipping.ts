@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "./prisma";
 import { HttpError } from "./auth";
 import { SITE } from "./site";
+import { calcularTarifaEntrega } from "./shipping-fee";
 
 const num = (v: unknown) => (v == null ? null : Number(v));
 
@@ -50,8 +51,13 @@ export async function quoteDelivery(municipalityId: number, subtotalUsd: number)
     if (rule && !rule.available) return { ...base, available: false, feeUsd: 0, reason: "No disponible en este municipio" };
     const min = num(rule?.minOrderUsd);
     if (min != null && subtotalUsd < min) return { ...base, available: false, feeUsd: 0, reason: `Pedido mínimo: ${min} USD` };
-    const freeFrom = num(rule?.freeFromUsd) ?? num(m.freeFromUsd);
-    const fee = freeFrom != null && subtotalUsd >= freeFrom ? 0 : num(rule?.feeUsd) ?? Number(m.baseFee);
+    const fee = calcularTarifaEntrega({
+      baseFee: m.baseFee,
+      ruleFee: rule?.feeUsd,
+      // La regla de zona manda sobre el umbral general del método.
+      freeFromUsd: num(rule?.freeFromUsd) || num(m.freeFromUsd),
+      subtotalUsd,
+    });
     return { ...base, available: true, feeUsd: fee, etaMinDays: rule?.etaMinDays ?? m.etaMinDays, etaMaxDays: rule?.etaMaxDays ?? m.etaMaxDays, reason: undefined };
   });
 }

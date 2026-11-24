@@ -18,6 +18,7 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
   );
   const [aviso, setAviso] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
+  const [subiendo, setSubiendo] = useState<string | null>(null);
   const [confirmar, setConfirmar] = useState<Seccion | null>(null);
 
   const cambiar = (key: string, campo: keyof Bloque, valor: unknown) =>
@@ -40,6 +41,23 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
 
   const quitar = (key: string, i: number) =>
     setEstado((s) => ({ ...s, [key]: { ...s[key], items: s[key].items.filter((_, j) => j !== i) } }));
+
+  const subirImagen = async (key: string, i: number, campo: keyof Item, file: File) => {
+    setSubiendo(`${key}-${i}`);
+    setAviso(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const r = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ?? "No se pudo subir la imagen");
+      cambiarItem(key, i, campo, d.url);
+    } catch (e) {
+      setAviso({ tipo: "error", texto: e instanceof Error ? e.message : "Error al subir la imagen" });
+    } finally {
+      setSubiendo(null);
+    }
+  };
 
   const anadir = (key: string) =>
     setEstado((s) => ({ ...s, [key]: { ...s[key], items: [...s[key].items, { icono: "box", titulo: "", texto: "" }] } }));
@@ -110,6 +128,7 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
         const b = estado[sec.key];
         const activa = abierta === sec.key;
         const max = sec.maxItems ?? 30;
+        const fijo = sec.key === "facturacion" || sec.key === "carrito-config";
         const camposItem = sec.camposItem ?? [];
         const grupo = grupoDe(sec);
         const nuevoGrupo = grupo !== grupoAnterior;
@@ -157,11 +176,17 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
                               onChange={(e) => cambiar(sec.key, c.key as keyof Bloque, e.target.value)}
                             />
                           ) : (
-                            <input
-                              className={inputCls}
-                              value={(b as unknown as Record<string, string>)[c.key] ?? ""}
-                              onChange={(e) => cambiar(sec.key, c.key as keyof Bloque, e.target.value)}
-                            />
+                            <>
+                              <input
+                                className={inputCls}
+                                placeholder={c.tipo === "imagen" ? "https://… o /media/archivo.jpg" : undefined}
+                                value={(b as unknown as Record<string, string>)[c.key] ?? ""}
+                                onChange={(e) => cambiar(sec.key, c.key as keyof Bloque, e.target.value)}
+                              />
+                              {c.tipo === "imagen" && (b as unknown as Record<string, string>)[c.key] && (
+                                <img src={(b as unknown as Record<string, string>)[c.key]} alt="" className="mt-2 h-24 w-full max-w-xs rounded-lg border border-slate-200 object-cover" />
+                              )}
+                            </>
                           )}
                         </Field>
                       </div>
@@ -174,18 +199,20 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
                     {b.items.map((it, i) => (
                       <div key={i} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
                         <div className="mb-2 flex items-center justify-between gap-2">
-                          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">Elemento {i + 1}</span>
-                          <div className="flex gap-1">
-                            <button type="button" className="btn btn-quiet btn-xs" onClick={() => mover(sec.key, i, -1)} disabled={i === 0} aria-label="Subir">
-                              <Icon name="chevronLeft" size={14} className="rotate-90" />
-                            </button>
-                            <button type="button" className="btn btn-quiet btn-xs" onClick={() => mover(sec.key, i, 1)} disabled={i === b.items.length - 1} aria-label="Bajar">
-                              <Icon name="chevronRight" size={14} className="rotate-90" />
-                            </button>
-                            <button type="button" className="btn btn-quiet btn-xs text-red-600" onClick={() => quitar(sec.key, i)} aria-label="Quitar">
-                              <Icon name="trash" size={14} />
-                            </button>
-                          </div>
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">{it.titulo || `Elemento ${i + 1}`}</span>
+                          {!fijo && (
+                            <div className="flex gap-1">
+                              <button type="button" className="btn btn-quiet btn-xs" onClick={() => mover(sec.key, i, -1)} disabled={i === 0} aria-label="Subir">
+                                <Icon name="chevronLeft" size={14} className="rotate-90" />
+                              </button>
+                              <button type="button" className="btn btn-quiet btn-xs" onClick={() => mover(sec.key, i, 1)} disabled={i === b.items.length - 1} aria-label="Bajar">
+                                <Icon name="chevronRight" size={14} className="rotate-90" />
+                              </button>
+                              <button type="button" className="btn btn-quiet btn-xs text-red-600" onClick={() => quitar(sec.key, i)} aria-label="Quitar">
+                                <Icon name="trash" size={14} />
+                              </button>
+                            </div>
+                          )}
                         </div>
                         <div className="grid gap-2 sm:grid-cols-2">
                           {camposItem.map((c) => (
@@ -208,11 +235,27 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
                                     onChange={(e) => cambiarItem(sec.key, i, c.key as keyof Item, e.target.value)}
                                   />
                                 ) : (
-                                  <input
-                                    className={inputCls}
-                                    value={(it as Record<string, string | undefined>)[c.key] ?? ""}
-                                    onChange={(e) => cambiarItem(sec.key, i, c.key as keyof Item, e.target.value)}
-                                  />
+                                  <>
+                                    <input
+                                      className={inputCls}
+                                      placeholder={c.tipo === "imagen" ? "https://… o /media/archivo.jpg" : undefined}
+                                      value={(it as Record<string, string | undefined>)[c.key] ?? ""}
+                                      onChange={(e) => cambiarItem(sec.key, i, c.key as keyof Item, e.target.value)}
+                                    />
+                                    {c.tipo === "imagen" && (
+                                      <>
+                                        <label className="btn btn-ghost btn-sm mt-2 inline-flex cursor-pointer items-center gap-1">
+                                          <Icon name={subiendo === `${sec.key}-${i}` ? "spinner" : "upload"} size={13} className={subiendo === `${sec.key}-${i}` ? "animate-spin" : ""} />
+                                          Subir imagen
+                                          <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={!!subiendo}
+                                            onChange={(e) => { const f = e.target.files?.[0]; if (f) void subirImagen(sec.key, i, c.key as keyof Item, f); e.currentTarget.value = ""; }} />
+                                        </label>
+                                        {(it as Record<string, string | undefined>)[c.key] && (
+                                          <img src={(it as Record<string, string | undefined>)[c.key]} alt="" className="mt-2 h-24 w-full max-w-xs rounded-lg border border-slate-200 object-cover" />
+                                        )}
+                                      </>
+                                    )}
+                                  </>
                                 )}
                               </Field>
                             </div>
@@ -220,7 +263,7 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
                         </div>
                       </div>
                     ))}
-                    {b.items.length < max && (
+                    {!fijo && b.items.length < max && (
                       <button type="button" className="btn btn-ghost btn-sm" onClick={() => anadir(sec.key)}>
                         <Icon name="plus" size={15} /> Añadir elemento
                       </button>

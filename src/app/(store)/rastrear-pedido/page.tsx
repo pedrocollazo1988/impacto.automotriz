@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/brand/Icon";
+import Turnstile from "@/components/Turnstile";
 
 // Rastreo público: número de pedido + el contacto con el que se compró.
 // Se piden los dos datos a propósito. Con solo el número, cualquiera podría ir
@@ -12,6 +13,7 @@ export default function RastrearPedido() {
   const [contacto, setContacto] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captcha, setCaptcha] = useState(""); const [captchaKey, setCaptchaKey] = useState(0);
 
   const buscar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,19 +21,21 @@ export default function RastrearPedido() {
     const n = numero.replace(/\D/g, "");
     if (!n) return setError("Escribe el número de pedido, solo dígitos.");
     if (contacto.trim().length < 5) return setError("Escribe el correo o teléfono con el que hiciste el pedido.");
+    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !captcha) return setError("Completa la verificación anti-bots.");
 
     setCargando(true);
     try {
       const r = await fetch("/api/pedidos/rastrear", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ numero: Number(n), contacto: contacto.trim() }),
+        body: JSON.stringify({ numero: Number(n), contacto: contacto.trim(), turnstileToken: captcha }),
       });
       const d = await r.json().catch(() => ({}));
       if (r.ok && d.url) {
         window.location.href = d.url;
         return;
       }
+      setCaptcha(""); setCaptchaKey((k) => k + 1);
       setError(
         r.status === 429
           ? "Demasiados intentos. Espera un minuto y vuelve a probar."
@@ -89,6 +93,7 @@ export default function RastrearPedido() {
             </p>
           )}
 
+          <Turnstile key={captchaKey} onToken={setCaptcha} />
           <button type="submit" disabled={cargando} className="btn btn-accent h-12 w-full text-base disabled:opacity-60">
             {cargando ? <><Icon name="spinner" size={17} className="animate-spin" /> Buscando…</> : <><Icon name="search" size={17} /> Ver mi pedido</>}
           </button>

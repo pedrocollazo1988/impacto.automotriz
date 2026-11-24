@@ -5,6 +5,7 @@ import type { Seccion } from "./contenido";
 // orden que el contenido real.
 export const ORDEN_WEB = [
   "portada-hero",
+  "portada-slider",
   "portada-confianza",
   "portada-accesos",
   "portada-valor",
@@ -44,6 +45,8 @@ export const ORDEN_WEB = [
   "politicas-devoluciones",
   "politicas-privacidad",
   "politicas-terminos",
+  "facturacion",
+  "carrito-config",
 ] as const;
 
 const posicion = new Map<string, number>(ORDEN_WEB.map((key, i) => [key, i]));

@@ -6,6 +6,8 @@ import Icon from "@/components/brand/Icon";
 import VehicleFinder from "@/components/site/VehicleFinder";
 import SectionHead from "@/components/site/SectionHead";
 import PasosCompra from "@/components/site/PasosCompra";
+import PromoSlider, { type Slide } from "@/components/site/PromoSlider";
+import StoreBars from "@/components/site/StoreBars";
 import Reveal from "@/components/site/Reveal";
 import { skusConGiro } from "@/lib/photo360";
 import { leerSeccion } from "@/lib/contenido-server";
@@ -15,11 +17,12 @@ const CAT_ICON: Record<string, string> = { frenos: "gauge", "sistema-electrico":
 
 export default async function Home() {
   const hayGiro = skusConGiro().length > 0;
-  const [valor, confianza, accesos, hero, catHead, destHead, ofertasHead, novHead, marcasHead, pasos, cierre] = await Promise.all([
+  const [valor, confianza, accesos, hero, slider, catHead, destHead, ofertasHead, novHead, marcasHead, pasos, cierre] = await Promise.all([
     leerSeccion("portada-valor"),
     leerSeccion("portada-confianza"),
     leerSeccion("portada-accesos"),
     leerSeccion("portada-hero"),
+    leerSeccion("portada-slider"),
     leerSeccion("portada-categorias"),
     leerSeccion("portada-destacados"),
     leerSeccion("portada-ofertas"),
@@ -52,8 +55,37 @@ export default async function Home() {
   const heroCifras = hero.items.filter((i) => !i.href);
   const heroEyebrow = hero.eyebrow.replace("{total}", String(total));
 
+  // El carrusel usa lo que el panel haya guardado. Si está vacío, se arma solo
+  // con ofertas y destacados, sin repetir productos.
+  const vistos = new Set<number>();
+  const autoSlides: Slide[] = [...offers, ...featured, ...latest]
+    .filter((p) => {
+      if (!p.images[0] || vistos.has(p.id)) return false;
+      vistos.add(p.id);
+      return true;
+    })
+    .slice(0, 6)
+    .map((p) => {
+      const precio = Number(p.priceUsd);
+      const antes = p.compareAtUsd && Number(p.compareAtUsd) > precio ? `Antes ${Number(p.compareAtUsd).toFixed(2)} USD · ` : "";
+      return {
+        imagen: p.images[0],
+        titulo: p.name,
+        texto: `${antes}${precio.toFixed(2)} USD${p.brand?.name ? ` · ${p.brand.name}` : ""}`,
+        href: `/producto/${p.slug}`,
+        icono: p.compareAtUsd ? "tag" : "star",
+      };
+    });
+  const slidesPersonalizados: Slide[] = slider.items
+    .filter((i) => i.imagen && i.titulo)
+    .map((i) => ({ imagen: i.imagen!, titulo: i.titulo!, texto: i.texto, href: /^(\/(?!\/)|https?:\/\/)/i.test(i.href ?? "") ? i.href! : "/ofertas", icono: i.icono }));
+  const slides: Slide[] = slider.visible ? (slidesPersonalizados.length ? slidesPersonalizados : autoSlides) : [];
+
   return (
     <div>
+      <PromoSlider items={slides} />
+      <StoreBars />
+
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-[color:var(--color-navy-deep)] text-white">
         <div className="absolute inset-0 blueprint opacity-70" aria-hidden />

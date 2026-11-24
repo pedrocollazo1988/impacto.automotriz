@@ -4,10 +4,16 @@ import { prisma } from "@/lib/prisma";
 import { handle, HttpError } from "@/lib/auth";
 import { limit } from "@/lib/ratelimit";
 import { hashPassword } from "@/lib/customer-auth";
+import { requireTurnstile } from "@/lib/turnstile";
 
 export const POST = handle(async (req: Request) => {
   await limit(req, "reset", 5);
-  const b = z.object({ token: z.string().length(64), password: z.string().min(8).max(100) }).parse(await req.json());
+  const b = z.object({
+    token: z.string().length(64),
+    password: z.string().min(10).max(100).regex(/[A-Za-z]/, "La contraseña debe incluir una letra.").regex(/\d/, "La contraseña debe incluir un número."),
+    turnstileToken: z.string().max(2048).optional(),
+  }).parse(await req.json());
+  await requireTurnstile(req, b.turnstileToken);
   const r = await prisma.authToken.findUnique({ where: { tokenHash: crypto.createHash("sha256").update(b.token).digest("hex") } });
   if (!r || r.kind !== "RESET" || r.usedAt || r.expiresAt < new Date()) throw new HttpError(400, "Enlace inválido o vencido");
   await prisma.$transaction([

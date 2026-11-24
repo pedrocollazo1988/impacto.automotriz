@@ -60,14 +60,32 @@ const paths: Record<string, React.ReactNode> = {
   ruler: <><path d="M3 15 15 3l6 6L9 21z" /><path d="m7.5 13.5 2 2M10.5 10.5l2 2M13.5 7.5l2 2" /></>,
   battery: <><rect x="3" y="8" width="15" height="8" rx="2" /><path d="M21 11v2M6.5 11h6" /></>,
   edit: <><path d="M4 20h4l10-10a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5z" /><path d="M13.5 6.5 17.5 10.5" /></>,
+  sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19" /></>,
+  moon: <><path d="M20 14.5A8 8 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" /></>,
+  monitor: <><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></>,
 };
 
 /** Nombres válidos, para que el panel ofrezca un selector en vez de texto libre. */
 export const NOMBRES_ICONO = Object.keys(paths);
 
-export default function Icon({ name, size = "1em", strokeWidth = 1.8, ...rest }: { name: keyof typeof paths | string; size?: number | string; strokeWidth?: number } & SVGProps<SVGSVGElement>) {
+export default function Icon({ name, size = "1em", strokeWidth = 2, className, style, ...rest }: { name: keyof typeof paths | string; size?: number | string; strokeWidth?: number } & SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" {...rest}>
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      shapeRendering="geometricPrecision"
+      aria-hidden="true"
+      focusable="false"
+      className={className ? `shrink-0 ${className}` : "shrink-0"}
+      style={{ display: "inline-block", verticalAlign: "-0.125em", ...style }}
+      {...rest}
+    >
       {paths[name] ?? paths.info}
     </svg>
   );

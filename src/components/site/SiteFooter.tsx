@@ -22,7 +22,7 @@ const AYUDA: [string, string][] = [
 
 export default function SiteFooter() {
   return (
-    <footer className="mt-20 bg-[#0b1220] text-white/75">
+    <footer className="mt-20 bg-[#0b1220] text-white/75 print:hidden">
       {/* Contacto destacado, como la franja de atención de MCV */}
       <div className="border-b border-white/10">
         <div className="container-x grid gap-6 py-8 sm:grid-cols-3">

@@ -299,3 +299,56 @@
     .adm-main { padding: 1.1rem 0.9rem 3rem; }
   }
 }
+
+/* ── Prefactura ───────────────────────────────────────────────── */
+@page { size: A4; margin: 10mm; }
+
+@media print {
+  html, body { background: #fff !important; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  /* La prefactura debe caber en una hoja: se compacta solo al imprimir. */
+  .factura { width: 100% !important; max-width: none !important; padding: 0 !important; font-size: 9.5pt !important; line-height: 1.25 !important; }
+  .factura table { font-size: 8.5pt !important; }
+  .factura tr, .factura > div, .factura dl > div { break-inside: avoid; page-break-inside: avoid; }
+  .factura h1, .factura p { margin-top: 0; }
+}
+
+/* ── Modo noche ──────────────────────────────────────────────────
+   La tienda usa muchas utilidades claras (bg-white, text-slate-800…).
+   En vez de duplicar cada componente con dark:, se reasignan aquí las
+   superficies y los textos más usados. Las tarjetas de marca y los
+   botones de acción conservan su color. */
+.dark body { background: #0b1220; color: #e2e8f0; }
+.dark .card, .dark .panel, .dark .adm-panel, .dark .adm-shell { background: #101a2e; border-color: #24314a; }
+.dark .bg-white { background-color: #101a2e !important; }
+.dark .bg-slate-50, .dark .bg-slate-50\/60, .dark .bg-slate-50\/80, .dark .bg-slate-100 { background-color: #0f172a !important; }
+.dark .bg-white\/90, .dark .bg-white\/95 { background-color: rgb(16 26 46 / 0.95) !important; }
+.dark .text-navy, .dark .text-slate-800, .dark .text-slate-700, .dark .text-slate-600, .dark .text-ink { color: #e2e8f0 !important; }
+.dark .text-slate-500, .dark .text-slate-400 { color: #94a3b8 !important; }
+.dark .border-slate-200, .dark .border-slate-100, .dark .border-slate-50, .dark .border-slate-200\/80 { border-color: #24314a !important; }
+.dark .divide-slate-50 > :not([hidden]) ~ :not([hidden]), .dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: #24314a !important; }
+.dark .input, .dark .input-select { background: #0b1220; color: #e2e8f0; border-color: #334155; }
+.dark .btn-ghost { background: #101a2e; color: #e2e8f0; border-color: #334155; }
+.dark .btn-ghost:hover { background: #17233a; }
+.dark .chip { background: #101a2e; color: #cbd5e1; border-color: #334155; }
+.dark .chip:hover { background: #17233a; color: #67e8f9; }
+.dark .badge { filter: brightness(0.95); }
+.dark .shadow-card, .dark .shadow-lift { box-shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6); }
+.dark .factura { background: #fff !important; color: #0c1526 !important; }
+.dark .factura .text-navy, .dark .factura .text-slate-700, .dark .factura .text-slate-800 { color: #0a2c5e !important; }
+.dark .factura .text-slate-500, .dark .factura .text-slate-400 { color: #5a6b80 !important; }
+.dark .factura .bg-slate-50, .dark .factura .bg-slate-100 { background-color: #f4f6f9 !important; }
+.dark .factura .border-slate-200, .dark .factura .border-slate-300, .dark .factura .border-slate-100 { border-color: #cbd5e1 !important; }
+
+/* Iconos de botones y menús: en modo noche se fuerzan a blanco para que el
+   trazo se lea sobre las superficies oscuras. Los iconos de estado (error,
+   peligro) conservan su color. */
+.dark .btn svg,
+.dark .iconbtn svg,
+.dark .chip svg,
+.dark .adm-topbar svg,
+.dark header nav svg,
+.dark .adm-navlink svg { color: #fff; }
+.dark .btn-danger svg,
+.dark .text-red-600 svg,
+.dark .text-red-700 svg { color: #f87171; }

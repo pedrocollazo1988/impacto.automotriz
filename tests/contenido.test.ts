@@ -9,6 +9,7 @@ describe("catálogo de secciones", () => {
 
   it("cada sección trae texto de fábrica suficiente para pintarse sola", () => {
     for (const s of SECCIONES) {
+      if (s.key === "portada-slider") continue; // se arma con productos si está vacío
       const tieneTexto = !!(s.defecto.title || s.defecto.subtitle);
       const tieneItems = (s.defecto.items?.length ?? 0) > 0;
       expect(tieneTexto || tieneItems, `${s.key} no tiene nada con lo que pintarse`).toBe(true);
@@ -23,7 +24,7 @@ describe("catálogo de secciones", () => {
 
   it("los campos de elemento usan las claves que guarda la API", () => {
     for (const s of SECCIONES) {
-      for (const c of s.camposItem ?? []) expect(["icono", "titulo", "texto", "href"], `${s.key}: ${c.key}`).toContain(c.key);
+      for (const c of s.camposItem ?? []) expect(["icono", "titulo", "texto", "href", "imagen"], `${s.key}: ${c.key}`).toContain(c.key);
     }
   });
 
@@ -59,6 +60,15 @@ describe("limpiarItems", () => {
     const [it] = limpiarItems([{ titulo: "x".repeat(500), texto: "y".repeat(5000) }]);
     expect(it.titulo!.length).toBe(300);
     expect(it.texto!.length).toBe(2000);
+  });
+
+  it("conserva la imagen del carrusel aunque no haya texto", () => {
+    const [it] = limpiarItems([{ imagen: "/media/oferta.jpg" }]);
+    expect(it.imagen).toBe("/media/oferta.jpg");
+  });
+
+  it("descarta imágenes con esquemas no seguros", () => {
+    expect(limpiarItems([{ imagen: "javascript:alert(1)" }])).toHaveLength(0);
   });
 
   it("acepta cualquier cosa sin romperse", () => {

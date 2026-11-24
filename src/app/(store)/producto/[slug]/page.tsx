@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
@@ -18,7 +19,7 @@ import { waHref } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
-const get = async (slug: string) => {
+const get = cache(async (slug: string) => {
   return prisma.product.findFirst({
     where: { slug, active: true },
     include: {
@@ -32,7 +33,7 @@ const get = async (slug: string) => {
       },
     },
   });
-};
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await get((await params).slug);
@@ -40,17 +41,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function Producto({ params }: Props) {
-  const p = await get((await params).slug);
+  const [p, me] = await Promise.all([get((await params).slug), getCustomer()]);
   if (!p) notFound();
   prisma.product.update({ where: { id: p.id }, data: { views: { increment: 1 } } }).catch(() => {});
-  const me = await getCustomer();
-  const [reviews, inWish, bought] = await Promise.all([
+  // Las cuatro consultas dependen solo del producto y de la sesión: se lanzan
+  // juntas para que la ficha no encadene cuatro viajes a la base de datos.
+  const [reviews, inWish, bought, related] = await Promise.all([
     prisma.review.findMany({ where: { productId: p.id, visible: true }, orderBy: { id: "desc" }, take: 20, include: { customer: { select: { name: true } } } }),
     me ? prisma.wishlistItem.count({ where: { customerId: me.id, productId: p.id } }) : 0,
     me ? prisma.orderItem.count({ where: { productId: p.id, order: { customerId: me.id, status: { in: ["PAID", "PREPARING", "SHIPPED", "DELIVERED"] } } } }) : 0,
+    prisma.product.findMany({ where: { active: true, categoryId: p.categoryId, id: { not: p.id } }, take: 4, include: { brand: true, category: { select: { slug: true } } } }),
   ]);
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
-  const related = await prisma.product.findMany({ where: { active: true, categoryId: p.categoryId, id: { not: p.id } }, take: 4, include: { brand: true, category: { select: { slug: true } } } });
   // Los fotogramas pueden venir del panel (subidos) o de la secuencia estática de
   // /public/products/360. Se prefiere la del panel: es la que el admin ve y edita.
   const frames = p.spin360Frames.length

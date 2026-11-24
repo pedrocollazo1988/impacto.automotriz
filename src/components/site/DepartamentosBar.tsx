@@ -9,7 +9,7 @@ export default async function DepartamentosBar() {
   if (categorias.length === 0) return null;
 
   return (
-    <div className="border-b border-slate-200 bg-white">
+    <div className="border-b border-slate-200 bg-white print:hidden">
       <div className="container-x flex items-center gap-1 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Link
           href="/catalogo"

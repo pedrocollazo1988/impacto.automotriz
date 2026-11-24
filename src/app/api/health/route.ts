@@ -18,6 +18,8 @@ export async function GET() {
       PUBLIC_URL: has("PUBLIC_URL"),
       CRON_SECRET: has("CRON_SECRET"),
       BLOB_READ_WRITE_TOKEN: has("BLOB_READ_WRITE_TOKEN"),
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: has("NEXT_PUBLIC_TURNSTILE_SITE_KEY"),
+      TURNSTILE_SECRET_KEY: has("TURNSTILE_SECRET_KEY"),
     },
     db,
   });

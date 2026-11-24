@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { handle, HttpError } from "@/lib/auth";
 import { limit } from "@/lib/ratelimit";
 import { orderToken } from "@/lib/order-access";
+import { requireTurnstile } from "@/lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export const POST = handle(async (req: Request) => {
   await limit(req, "rastreo", 10);
 
   const body = await req.json().catch(() => null);
+  await requireTurnstile(req, typeof body?.turnstileToken === "string" ? body.turnstileToken : undefined);
   const numero = Number(body?.numero);
   const contacto = typeof body?.contacto === "string" ? body.contacto : "";
   if (!Number.isInteger(numero) || numero <= 0 || contacto.length < 5) {
