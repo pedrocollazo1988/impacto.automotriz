@@ -36,4 +36,10 @@ describe("textoEnvio", () => {
   it("muestra el importe con dos decimales", () => {
     expect(textoEnvio(true, 12.5)).toBe("12.50 USD");
   });
+
+  it("traduce al inglés", () => {
+    expect(textoEnvio(false, 0, "en")).toBe("To calculate");
+    expect(textoEnvio(true, 0, "en")).toBe("Free");
+    expect(textoEnvio(true, 12.5, "en")).toBe("12.50 USD");
+  });
 });

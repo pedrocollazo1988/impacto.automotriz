@@ -44,6 +44,8 @@ export const ORDEN_WEB = [
   "politicas-devoluciones",
   "politicas-privacidad",
   "politicas-terminos",
+  "facturacion",
+  "carrito-config",
 ] as const;
 
 const posicion = new Map<string, number>(ORDEN_WEB.map((key, i) => [key, i]));

@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { SITE } from "@/lib/site";
+import { PreferencesProvider } from "@/components/site/Preferences";
 
 // Fuentes autoalojadas (variables) para que el build no dependa de la red de Google Fonts.
 const archivo = localFont({ src: "./fonts/archivo-latin.woff2", weight: "500 800", variable: "--font-archivo", display: "swap" });
@@ -61,10 +62,12 @@ const sitioWeb = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${archivo.variable} ${manrope.variable} ${mono.variable}`}>
+    <html lang="es" suppressHydrationWarning className={`${archivo.variable} ${manrope.variable} ${mono.variable}`}>
       <body className="min-h-screen antialiased">
+        {/* Antes de pintar: evita el destello blanco al entrar en modo noche. */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem("theme")||"system";var d=t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.dataset.theme=d?"dark":"light";document.documentElement.style.colorScheme=d?"dark":"light";var l=localStorage.getItem("lang");if(l==="en")document.documentElement.lang="en";}catch(e){}})()` }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([organizacion, sitioWeb]).replace(/</g, "\\u003c") }} />
-        {children}
+        <PreferencesProvider>{children}</PreferencesProvider>
       </body>
     </html>
   );

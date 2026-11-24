@@ -8,7 +8,7 @@
 // Este módulo lo importan páginas de servidor y el editor del panel: no debe
 // tocar APIs de navegador.
 
-import { SITE } from "./site";
+import { SITE, telefono } from "./site";
 
 export type Campo = {
   key: string;
@@ -732,6 +732,53 @@ export const SECCIONES: Seccion[] = [
         { titulo: "Pedidos", texto: "Un pedido queda confirmado tras la validación del pago y la verificación de existencias. Nos reservamos el derecho de cancelar pedidos con datos incorrectos o falta de stock, con reembolso total." },
         { titulo: "Compatibilidad", texto: "La compatibilidad de las piezas se ofrece según los datos del fabricante y del vendedor. Recomendamos confirmar con los datos exactos de tu vehículo antes de comprar." },
         { titulo: "Uso del sitio", texto: "Te comprometes a usar el sitio de forma lícita y a no interferir con su funcionamiento." },
+      ],
+    },
+  },
+  {
+    key: "facturacion",
+    label: "Prefactura · datos de la MIPYME",
+    descripcion: "Estos datos salen en la prefactura de cada pedido: nombre, NIT, domicilio, cuentas, representante y firmas.",
+    campos: [
+      { key: "title", label: "Título del documento", ancho: true },
+      { key: "subtitle", label: "Nota legal o pie de página", tipo: "parrafo", ancho: true },
+    ],
+    camposItem: [
+      { key: "titulo", label: "Dato", ancho: true },
+      { key: "texto", label: "Valor", tipo: "parrafo", ancho: true },
+    ],
+    maxItems: 16,
+    defecto: {
+      title: "PREFACTURA",
+      subtitle: "Documento no fiscal. El importe queda confirmado cuando se valida el pago.",
+      items: [
+        { titulo: "Nombre de la MIPYME", texto: SITE.razonSocial },
+        { titulo: "NIT", texto: "" },
+        { titulo: "Domicilio social", texto: SITE.direccion },
+        { titulo: "Cuenta bancaria CUP", texto: "" },
+        { titulo: "Cuenta bancaria USD", texto: "" },
+        { titulo: "Representante legal", texto: "" },
+        { titulo: "Teléfonos", texto: telefono },
+        { titulo: "Correo", texto: SITE.email },
+        { titulo: "Emitido por", texto: SITE.razonSocial },
+        { titulo: "Recibido por", texto: "Cliente" },
+      ],
+    },
+  },
+  {
+    key: "carrito-config",
+    label: "Carrito · caducidad",
+    descripcion: "Cuánto tiempo se guardan los productos elegidos y qué aviso ve el cliente.",
+    campos: [],
+    camposItem: [
+      { key: "titulo", label: "Concepto", ancho: true },
+      { key: "texto", label: "Valor", tipo: "parrafo", ancho: true },
+    ],
+    maxItems: 3,
+    defecto: {
+      items: [
+        { titulo: "Horas que se guarda el carrito", texto: "24" },
+        { titulo: "Aviso al cliente", texto: "Tus productos se guardan 24 horas. Si no confirmas el pedido, el carrito se vacía y las unidades vuelven a estar disponibles." },
       ],
     },
   },

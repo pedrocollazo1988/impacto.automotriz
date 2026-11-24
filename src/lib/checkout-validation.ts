@@ -22,7 +22,7 @@ export function validarCheckout(d: CheckoutDraft): CheckoutErrors {
   return errores;
 }
 
-export function textoEnvio(hasDelivery: boolean, feeUsd: number): string {
-  if (!hasDelivery) return "Por calcular";
-  return feeUsd === 0 ? "Gratis" : `${feeUsd.toFixed(2)} USD`;
+export function textoEnvio(hasDelivery: boolean, feeUsd: number, lang: "es" | "en" = "es"): string {
+  if (!hasDelivery) return lang === "en" ? "To calculate" : "Por calcular";
+  return feeUsd === 0 ? (lang === "en" ? "Free" : "Gratis") : `${feeUsd.toFixed(2)} USD`;
 }

@@ -6,6 +6,8 @@ import { useCart } from "@/components/CartProvider";
 import DeliverySelector, { type DeliveryChoice } from "@/components/DeliverySelector";
 import Icon from "@/components/brand/Icon";
 import { textoEnvio, validarCheckout } from "@/lib/checkout-validation";
+import { usePreferences } from "@/components/site/Preferences";
+import { track } from "@/lib/analytics";
 
 // Los métodos los define el panel (nombre, icono, descripción, datos y
 // comisión). Aquí no hay una lista fija de pasarelas.
@@ -23,8 +25,20 @@ type Metodo = {
   url: string | null;
 };
 
+const ERROR_EN: Record<string, string> = {
+  "Ajusta el carrito: hay productos por encima del stock disponible.": "Adjust the cart: some products exceed available stock.",
+  "Escribe tu nombre completo.": "Enter your full name.",
+  "Escribe un correo válido, por ejemplo nombre@correo.com.": "Enter a valid email, for example name@email.com.",
+  "Escribe un teléfono con al menos 6 dígitos.": "Enter a phone with at least 6 digits.",
+  "Completa la entrega: provincia, municipio, método y datos de quien recibe.": "Complete delivery: province, municipality, method and recipient details.",
+  "Elige un método de pago.": "Choose a payment method.",
+};
+
 export default function Checkout() {
-  const { items, clear } = useCart();
+  const { items, clear, ready: cartReady } = useCart();
+  const { t, lang } = usePreferences();
+  const tt = (key: string, vars: Record<string, string | number>) => Object.entries(vars).reduce((txt, [k, v]) => txt.replace(`{${k}}`, String(v)), t(key));
+  const msg = (texto: string) => (lang === "en" ? ERROR_EN[texto] ?? texto : texto);
   const router = useRouter();
   const [subtotal, setSubtotal] = useState(0); const [fee, setFee] = useState(0); const [delivery, setDelivery] = useState<DeliveryChoice | null>(null);
   const [deliveryName, setDeliveryName] = useState("");
@@ -53,7 +67,7 @@ export default function Checkout() {
   }, [items]);
   const applyCoupon = async () => {
     const r = await fetch("/api/coupon/check", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, subtotalUsd: subtotal }) }); const j = await r.json();
-    if (r.ok && j.code) { setCoupon(j); setCouponMsg(`Cupón ${j.code} aplicado`); } else { setCoupon(null); setCouponMsg(j.error ?? "Cupón no válido"); }
+    if (r.ok && j.code) { setCoupon(j); setCouponMsg(tt("checkout.couponOk", { code: j.code })); } else { setCoupon(null); setCouponMsg(j.error ?? t("checkout.couponBad")); }
   };
   const discount = coupon?.discountUsd ?? 0; const base = Math.max(0, subtotal - discount);
   const metodo = metodos.find((m) => m.key === pay);
@@ -63,44 +77,54 @@ export default function Checkout() {
 
   const submit = async () => {
     setIntento(true);
-    if (faltantes.length) { setErr("Revisa los datos marcados antes de confirmar el pedido."); return; }
-    if (!cartOk) return setErr("Ajusta las cantidades del carrito: superan el stock disponible");
-    if (!metodo) return setErr("Elige un método de pago para continuar");
+    if (faltantes.length) { setErr(t("checkout.review")); return; }
+    if (!cartOk) return setErr(t("checkout.adjustStock"));
+    if (!metodo) return setErr(t("checkout.choosePayment"));
     setBusy(true); setErr("");
     const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items, customer: c, delivery, paymentMethod: pay, coupon: coupon?.code }) });
     const j = await r.json(); setBusy(false);
-    if (!r.ok) return setErr(j.error ?? "No se pudo crear el pedido");
+    if (!r.ok) return setErr(j.error ?? t("checkout.createError"));
     clear(); if (j.paymentUrl) window.location.href = j.paymentUrl; else router.push(`/pedido/${j.orderId}`);
   };
+  if (!cartReady) return (
+    <div className="container-x py-8" aria-busy="true">
+      <div className="h-9 w-56 animate-pulse rounded-lg bg-slate-100" />
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_380px]">
+        <div className="space-y-4">{[0, 1, 2].map((i) => <div key={i} className="card h-40 animate-pulse bg-slate-50" />)}</div>
+        <div className="card h-64 animate-pulse bg-slate-50" />
+      </div>
+    </div>
+  );
+
   if (!items.length) return (
     <div className="container-x py-16"><div className="card mx-auto grid max-w-md place-items-center p-10 text-center">
       <span className="grid h-16 w-16 place-items-center rounded-2xl bg-slate-100 text-slate-400"><Icon name="cart" size={30} /></span>
-      <h1 className="mt-4 font-display text-xl font-bold text-navy">Tu carrito está vacío</h1>
-      <Link href="/catalogo" className="btn btn-primary mt-5">Ver catálogo</Link>
+      <h1 className="mt-4 font-display text-xl font-bold text-navy">{t("checkout.empty")}</h1>
+      <Link href="/catalogo" className="btn btn-primary mt-5">{t("checkout.viewCatalog")}</Link>
     </div></div>
   );
   const ready = faltantes.length === 0;
 
   return (
     <div className="container-x py-8">
-      <h1 className="font-display text-3xl font-extrabold text-navy">Finalizar compra</h1>
+      <h1 className="font-display text-3xl font-extrabold text-navy">{t("checkout.title")}</h1>
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-5">
           <section className="card p-5">
-            <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><span className="grid h-6 w-6 place-items-center rounded-full bg-[color:var(--color-navy)] text-xs text-white">1</span> Tus datos</h2>
+            <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><span className="grid h-6 w-6 place-items-center rounded-full bg-[color:var(--color-navy)] text-xs text-white">1</span> {t("checkout.stepData")}</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="block sm:col-span-2">
-                <span className="mb-1 block text-xs font-semibold text-slate-600">Nombre completo</span>
+                <span className="mb-1 block text-xs font-semibold text-slate-600">{t("checkout.name")}</span>
                 <input className={`input ${intento && errores.name ? "border-red-400 ring-2 ring-red-100" : ""}`} autoComplete="name" placeholder="Nombre y apellidos" value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} aria-invalid={intento && !!errores.name} />
                 {intento && errores.name && <span className="mt-1 block text-xs text-red-600">{errores.name}</span>}
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold text-slate-600">Correo electrónico</span>
+                <span className="mb-1 block text-xs font-semibold text-slate-600">{t("checkout.email")}</span>
                 <input className={`input ${intento && errores.email ? "border-red-400 ring-2 ring-red-100" : ""}`} type="email" autoComplete="email" placeholder="tu@correo.com" value={c.email} onChange={(e) => setC({ ...c, email: e.target.value })} aria-invalid={intento && !!errores.email} />
                 {intento && errores.email && <span className="mt-1 block text-xs text-red-600">{errores.email}</span>}
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold text-slate-600">Teléfono</span>
+                <span className="mb-1 block text-xs font-semibold text-slate-600">{t("checkout.phone")}</span>
                 <input className={`input ${intento && errores.phone ? "border-red-400 ring-2 ring-red-100" : ""}`} type="tel" autoComplete="tel" placeholder="+53 5 000 0000" value={c.phone} onChange={(e) => setC({ ...c, phone: e.target.value })} aria-invalid={intento && !!errores.phone} />
                 {intento && errores.phone && <span className="mt-1 block text-xs text-red-600">{errores.phone}</span>}
               </label>
@@ -108,16 +132,16 @@ export default function Checkout() {
           </section>
 
           <section className="card p-5">
-            <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><span className="grid h-6 w-6 place-items-center rounded-full bg-[color:var(--color-navy)] text-xs text-white">2</span> Entrega</h2>
-            <p className="mt-1 text-xs text-slate-500">El precio del servicio de entrega se calcula al elegir provincia y municipio. Se confirma al seleccionar el método.</p>
+            <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><span className="grid h-6 w-6 place-items-center rounded-full bg-[color:var(--color-navy)] text-xs text-white">2</span> {t("checkout.stepDelivery")}</h2>
+            <p className="mt-1 text-xs text-slate-500">{t("checkout.deliveryHint")}</p>
             <div className="mt-4"><DeliverySelector subtotalUsd={base} onChange={(d, f, n) => { setDelivery(d); setFee(f); setDeliveryName(n ?? ""); }} /></div>
             {intento && errores.delivery && <p role="alert" className="mt-2 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700"><Icon name="info" size={14} className="mt-0.5 shrink-0" />{errores.delivery}</p>}
           </section>
 
           <section className="card p-5">
-            <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><span className="grid h-6 w-6 place-items-center rounded-full bg-[color:var(--color-navy)] text-xs text-white">3</span> Pago</h2>
+            <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><span className="grid h-6 w-6 place-items-center rounded-full bg-[color:var(--color-navy)] text-xs text-white">3</span> {t("checkout.stepPayment")}</h2>
             <div className="mt-4 space-y-2">
-              {!metodos.length && <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">No hay métodos de pago disponibles ahora mismo. Escríbenos para coordinar el cobro.</p>}
+              {!metodos.length && <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{t("checkout.noPayments")}</p>}
               {metodos.map((m) => (
                 <label key={m.key} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${pay === m.key ? "border-[color:var(--color-action)] bg-[color:var(--color-action)]/5 ring-2 ring-[color:var(--color-action)]/20" : "border-slate-200 hover:border-slate-300"}`}>
                   <input type="radio" name="payment" checked={pay === m.key} onChange={() => setPay(m.key)} className="mt-1 accent-[color:var(--color-action)]" />
@@ -125,10 +149,10 @@ export default function Checkout() {
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-semibold text-slate-800">{m.name}</span>
-                      <span className={`badge ${m.automatic ? "badge-info" : "badge-mute"}`}>{m.automatic ? "Automático" : "Manual"}</span>
+                      <span className={`badge ${m.automatic ? "badge-info" : "badge-mute"}`}>{m.automatic ? t("checkout.auto") : t("checkout.manual")}</span>
                     </span>
                     <span className="mt-0.5 block text-xs text-slate-500">{m.description}</span>
-                    {m.feePercent > 0 && <span className="mt-0.5 block text-xs font-semibold text-[color:var(--color-action-deep)]">+{m.feePercent} % de comisión</span>}
+                    {m.feePercent > 0 && <span className="mt-0.5 block text-xs font-semibold text-[color:var(--color-action-deep)]">{tt("checkout.commission", { n: m.feePercent })}</span>}
                     {pay === m.key && (m.instructions || m.details.length > 0 || m.url) && (
                       <span className="mt-2 block rounded-lg bg-slate-50 px-2.5 py-2 text-xs leading-relaxed text-slate-600">
                         {m.instructions && <span className="block whitespace-pre-line">{m.instructions}</span>}
@@ -148,10 +172,10 @@ export default function Checkout() {
           </section>
 
           <section className="card p-5">
-            <h2 className="flex items-center gap-2 font-display text-sm font-bold text-navy"><Icon name="tag" size={16} /> Cupón de descuento</h2>
+            <h2 className="flex items-center gap-2 font-display text-sm font-bold text-navy"><Icon name="tag" size={16} /> {t("checkout.coupon")}</h2>
             <div className="mt-3 flex gap-2">
-              <input className="input" placeholder="Código de descuento" value={code} onChange={(e) => setCode(e.target.value)} />
-              <button className="btn btn-ghost" onClick={applyCoupon}>Aplicar</button>
+              <input className="input" placeholder={t("checkout.code")} value={code} onChange={(e) => setCode(e.target.value)} />
+              <button className="btn btn-ghost" onClick={applyCoupon}>{t("checkout.apply")}</button>
             </div>
             {couponMsg && <p className={`mt-2 text-sm ${coupon ? "text-emerald-700" : "text-red-600"}`}>{couponMsg}</p>}
           </section>
@@ -159,28 +183,28 @@ export default function Checkout() {
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <div className="card p-5">
-            <h2 className="font-display text-lg font-bold text-navy">Tu pedido</h2>
+            <h2 className="font-display text-lg font-bold text-navy">{t("checkout.summary")}</h2>
             <dl className="mt-4 space-y-2 text-sm">
-              <div className="flex justify-between"><dt className="text-slate-500">Subtotal</dt><dd className="font-semibold">{subtotal.toFixed(2)} USD</dd></div>
-              {discount > 0 && <div className="flex justify-between text-emerald-700"><dt>Descuento</dt><dd className="font-semibold">−{discount.toFixed(2)} USD</dd></div>}
-              <div className="flex justify-between gap-3"><dt className="text-slate-500">Servicio de entrega{deliveryName && <span className="block text-[11px] font-normal text-slate-400">{deliveryName}</span>}</dt><dd className={`font-semibold ${delivery ? "" : "text-slate-400"}`}>{textoEnvio(!!delivery, fee)}</dd></div>
-              {comisionMonto > 0 && <div className="flex justify-between"><dt className="text-slate-500">Comisión de pago</dt><dd className="font-semibold">{comisionMonto.toFixed(2)} USD</dd></div>}
-              <div className="flex justify-between border-t border-slate-100 pt-3 text-lg"><dt className="font-semibold">Total</dt><dd className="font-display font-extrabold text-navy">{(base + fee + comisionMonto).toFixed(2)} USD</dd></div>
+              <div className="flex justify-between"><dt className="text-slate-500">{t("checkout.subtotal")}</dt><dd className="font-semibold">{subtotal.toFixed(2)} USD</dd></div>
+              {discount > 0 && <div className="flex justify-between text-emerald-700"><dt>{t("checkout.discount")}</dt><dd className="font-semibold">−{discount.toFixed(2)} USD</dd></div>}
+              <div className="flex justify-between gap-3"><dt className="text-slate-500">{t("checkout.deliveryFee")}{deliveryName && <span className="block text-[11px] font-normal text-slate-400">{deliveryName}</span>}</dt><dd className={`font-semibold ${delivery ? "" : "text-slate-400"}`}>{textoEnvio(!!delivery, fee, lang)}</dd></div>
+              {comisionMonto > 0 && <div className="flex justify-between"><dt className="text-slate-500">{t("checkout.paymentFee")}</dt><dd className="font-semibold">{comisionMonto.toFixed(2)} USD</dd></div>}
+              <div className="flex justify-between border-t border-slate-100 pt-3 text-lg"><dt className="font-semibold">{t("checkout.total")}</dt><dd className="font-display font-extrabold text-navy">{(base + fee + comisionMonto).toFixed(2)} USD</dd></div>
             </dl>
-            {metodo && <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">Pagas con <b className="text-slate-700">{metodo.name}</b></p>}
-            {!cartOk && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">Hay productos por encima del stock disponible. <Link href="/carrito" className="font-semibold underline">Ajusta el carrito</Link> para continuar.</p>}
+            {metodo && <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">{t("checkout.payWith")} <b className="text-slate-700">{metodo.name}</b></p>}
+            {!cartOk && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">{t("checkout.stockWarn")} <Link href="/carrito" className="font-semibold underline">{t("checkout.adjustCart")}</Link></p>}
             {intento && faltantes.length > 0 && (
               <div role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-                <p className="font-semibold">Falta completar:</p>
-                <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">{faltantes.map((t) => <li key={t}>{t}</li>)}</ul>
+                <p className="font-semibold">{t("checkout.missing")}</p>
+                <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">{faltantes.map((x) => <li key={x}>{msg(x)}</li>)}</ul>
               </div>
             )}
             {err && <p aria-live="polite" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{err}</p>}
             <button disabled={busy} onClick={submit} className="btn btn-primary mt-5 w-full text-base disabled:opacity-40">
-              {busy ? "Procesando…" : <><Icon name="check" size={18} /> Confirmar pedido</>}
+              {busy ? t("checkout.processing") : <><Icon name="check" size={18} /> {t("checkout.confirm")}</>}
             </button>
-            {!ready && <p className="mt-3 text-center text-xs text-slate-400">Pulsa «Confirmar pedido» y te indicaremos qué dato falta.</p>}
-            <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-400"><Icon name="shield" size={13} /> El importe final lo confirma el servidor.</p>
+            {!ready && <p className="mt-3 text-center text-xs text-slate-400">{t("checkout.pressConfirm")}</p>}
+            <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-400"><Icon name="shield" size={13} /> {t("checkout.finalNote")}</p>
           </div>
         </aside>
       </div>

@@ -110,6 +110,7 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
         const b = estado[sec.key];
         const activa = abierta === sec.key;
         const max = sec.maxItems ?? 30;
+        const fijo = sec.key === "facturacion" || sec.key === "carrito-config";
         const camposItem = sec.camposItem ?? [];
         const grupo = grupoDe(sec);
         const nuevoGrupo = grupo !== grupoAnterior;
@@ -174,18 +175,20 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
                     {b.items.map((it, i) => (
                       <div key={i} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
                         <div className="mb-2 flex items-center justify-between gap-2">
-                          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">Elemento {i + 1}</span>
-                          <div className="flex gap-1">
-                            <button type="button" className="btn btn-quiet btn-xs" onClick={() => mover(sec.key, i, -1)} disabled={i === 0} aria-label="Subir">
-                              <Icon name="chevronLeft" size={14} className="rotate-90" />
-                            </button>
-                            <button type="button" className="btn btn-quiet btn-xs" onClick={() => mover(sec.key, i, 1)} disabled={i === b.items.length - 1} aria-label="Bajar">
-                              <Icon name="chevronRight" size={14} className="rotate-90" />
-                            </button>
-                            <button type="button" className="btn btn-quiet btn-xs text-red-600" onClick={() => quitar(sec.key, i)} aria-label="Quitar">
-                              <Icon name="trash" size={14} />
-                            </button>
-                          </div>
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">{it.titulo || `Elemento ${i + 1}`}</span>
+                          {!fijo && (
+                            <div className="flex gap-1">
+                              <button type="button" className="btn btn-quiet btn-xs" onClick={() => mover(sec.key, i, -1)} disabled={i === 0} aria-label="Subir">
+                                <Icon name="chevronLeft" size={14} className="rotate-90" />
+                              </button>
+                              <button type="button" className="btn btn-quiet btn-xs" onClick={() => mover(sec.key, i, 1)} disabled={i === b.items.length - 1} aria-label="Bajar">
+                                <Icon name="chevronRight" size={14} className="rotate-90" />
+                              </button>
+                              <button type="button" className="btn btn-quiet btn-xs text-red-600" onClick={() => quitar(sec.key, i)} aria-label="Quitar">
+                                <Icon name="trash" size={14} />
+                              </button>
+                            </div>
+                          )}
                         </div>
                         <div className="grid gap-2 sm:grid-cols-2">
                           {camposItem.map((c) => (
@@ -220,7 +223,7 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
                         </div>
                       </div>
                     ))}
-                    {b.items.length < max && (
+                    {!fijo && b.items.length < max && (
                       <button type="button" className="btn btn-ghost btn-sm" onClick={() => anadir(sec.key)}>
                         <Icon name="plus" size={15} /> Añadir elemento
                       </button>
