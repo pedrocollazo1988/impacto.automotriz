@@ -7,6 +7,7 @@ import VehicleFinder from "@/components/site/VehicleFinder";
 import SectionHead from "@/components/site/SectionHead";
 import PasosCompra from "@/components/site/PasosCompra";
 import PromoSlider, { type Slide } from "@/components/site/PromoSlider";
+import StoreBars from "@/components/site/StoreBars";
 import Reveal from "@/components/site/Reveal";
 import { skusConGiro } from "@/lib/photo360";
 import { leerSeccion } from "@/lib/contenido-server";
@@ -83,6 +84,7 @@ export default async function Home() {
   return (
     <div>
       <PromoSlider items={slides} />
+      <StoreBars />
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-[color:var(--color-navy-deep)] text-white">
