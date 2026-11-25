@@ -20,6 +20,9 @@ const COLUMNAS = [
   // El pedido guarda la clave del método y su nombre visible. Deja de ser un
   // enum para que el panel pueda crear métodos sin migración.
   `ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "paymentMethodName" TEXT`,
+  `ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "lang" TEXT NOT NULL DEFAULT 'es'`,
+  `ALTER TABLE "Subscriber" ADD COLUMN IF NOT EXISTS "lang" TEXT NOT NULL DEFAULT 'es'`,
+  `ALTER TABLE "StockAlert" ADD COLUMN IF NOT EXISTS "lang" TEXT NOT NULL DEFAULT 'es'`,
   `ALTER TABLE "Order" ALTER COLUMN "paymentMethod" TYPE TEXT USING "paymentMethod"::text`,
   // Relleno de las filas que ya existían antes de este cambio.
   `UPDATE "PaymentGateway" SET "provider" = 'tropipay', "icon" = 'card' WHERE "key" = 'TROPIPAY' AND "provider" = 'manual'`,
@@ -45,6 +48,26 @@ const TABLAS = [
      CONSTRAINT "ContentBlock_pkey" PRIMARY KEY ("id")
    )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "ContentBlock_key_key" ON "ContentBlock"("key")`,
+  `CREATE TABLE IF NOT EXISTS "ProductMovement" (
+     "id" SERIAL NOT NULL,
+     "productId" INTEGER NOT NULL,
+     "variantId" INTEGER,
+     "productName" TEXT NOT NULL,
+     "sku" TEXT NOT NULL,
+     "kind" TEXT NOT NULL DEFAULT 'AJUSTE',
+     "delta" INTEGER NOT NULL DEFAULT 0,
+     "stockBefore" INTEGER NOT NULL,
+     "stockAfter" INTEGER NOT NULL,
+     "detail" TEXT NOT NULL DEFAULT '',
+     "orderId" TEXT,
+     "orderNumber" INTEGER,
+     "actor" TEXT NOT NULL DEFAULT '',
+     "source" TEXT NOT NULL DEFAULT 'admin',
+     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     CONSTRAINT "ProductMovement_pkey" PRIMARY KEY ("id")
+   )`,
+  `CREATE INDEX IF NOT EXISTS "ProductMovement_productId_createdAt_idx" ON "ProductMovement"("productId", "createdAt")`,
+  `CREATE INDEX IF NOT EXISTS "ProductMovement_orderId_idx" ON "ProductMovement"("orderId")`,
 ];
 
 type Cliente = { $executeRawUnsafe(sql: string): Promise<unknown> };

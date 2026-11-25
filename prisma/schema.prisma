@@ -123,6 +123,7 @@ model StockAlert {
   id         Int       @id @default(autoincrement())
   productId  String
   email      String
+  lang       String    @default("es")
   createdAt  DateTime  @default(now())
   notifiedAt DateTime?
 
@@ -164,6 +165,8 @@ model Order {
   couponCode    String?
   customerId    String?
   customer      Customer?      @relation(fields: [customerId], references: [id])
+  // Idioma con el que se compró: los correos de estado salen en ese idioma.
+  lang          String         @default("es")
   createdAt     DateTime       @default(now())
   items         OrderItem[]
   delivery      OrderDelivery?
@@ -249,6 +252,31 @@ model Product {
   pins           DiagramPin[]
   compatWith     ProductCompatibility[] @relation("compatSource")
   compatOf       ProductCompatibility[] @relation("compatTarget")
+  movements      ProductMovement[]
+}
+
+// Historial de inventario: altas, ediciones de existencias, ventas, devoluciones
+// y cancelaciones. `stockAfter` es la existencia final que queda tras el cambio.
+model ProductMovement {
+  id          Int      @id @default(autoincrement())
+  productId   Int
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId   Int?
+  productName String
+  sku         String
+  kind        String   @default("AJUSTE") // ALTA, EDICION, AJUSTE, VENTA, DEVOLUCION, CANCELACION, BAJA
+  delta       Int      @default(0)
+  stockBefore Int
+  stockAfter  Int
+  detail      String   @default("")
+  orderId     String?
+  orderNumber Int?
+  actor       String   @default("")
+  source      String   @default("admin") // admin, import, checkout, sistema
+  createdAt   DateTime @default(now())
+
+  @@index([productId, createdAt])
+  @@index([orderId])
 }
 
 model ProductFit {
@@ -325,6 +353,8 @@ model Subscriber {
   status     SubscriberStatus @default(ACTIVE)
   consentAt  DateTime
   source     String?
+  // Idioma con el que se suscribió: las campañas y confirmaciones salen así.
+  lang       String           @default("es")
   createdAt  DateTime         @default(now())
   sends      CampaignSend[]
 }

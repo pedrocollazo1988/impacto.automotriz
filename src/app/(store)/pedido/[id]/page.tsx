@@ -12,6 +12,7 @@ export const metadata = { title: "Estado del pedido", robots: { index: false } }
 const STEPS = ["PENDING_PAYMENT", "PAID", "PREPARING", "SHIPPED", "DELIVERED"] as const;
 const L: Record<string, string> = { PENDING_PAYMENT: "Pendiente de pago", PAID: "Pagado", PREPARING: "En preparación", SHIPPED: "Enviado", DELIVERED: "Entregado", CANCELED: "Cancelado" };
 const ICONS: Record<string, string> = { PENDING_PAYMENT: "card", PAID: "check", PREPARING: "box", SHIPPED: "truck", DELIVERED: "pin" };
+const DELIVERY_LABEL: Record<string, string> = { PENDING: "Entrega pendiente", READY: "Listo para entrega", OUT_FOR_DELIVERY: "En reparto", DELIVERED: "Entregado", FAILED: "Entrega fallida" };
 
 export default async function Pedido({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ t?: string }> }) {
   const o = await prisma.order.findUnique({ where: { id: (await params).id }, include: { items: true, delivery: true } });
@@ -74,7 +75,11 @@ export default async function Pedido({ params, searchParams }: { params: Promise
             <p className="mt-2 text-slate-600"><b>{o.delivery.methodName}</b></p>
             <p className="text-slate-600">{o.delivery.address ?? "Recogida en tienda"}</p>
             <p className="text-slate-600">Recibe: {o.delivery.recipientName} · {o.delivery.recipientPhone}</p>
-            <p className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[color:var(--color-navy)]/8 px-3 py-2 text-navy">PIN de entrega: <b className="font-display text-lg tracking-widest">{o.delivery.confirmationCode}</b></p>
+            <p className="mt-2 text-slate-600">Estado de entrega: <b>{DELIVERY_LABEL[o.delivery.status] ?? o.delivery.status}</b></p>
+            {!canceled && (
+              <p className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[color:var(--color-navy)]/8 px-3 py-2 text-navy">PIN de entrega: <b className="font-display text-lg tracking-widest">{o.delivery.confirmationCode}</b></p>
+            )}
+            {!canceled && <p className="mt-2 text-xs text-slate-500">Este PIN se pide al recibir el pedido; no es el número de rastreo.</p>}
           </div>
         )}
 

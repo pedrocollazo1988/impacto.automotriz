@@ -4,13 +4,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // que con un número de pedido cualquiera devuelva datos de otra persona.
 const { pedidoFalso, prismaFalso, limitFalso } = vi.hoisted(() => {
   const pedidoFalso = {
-    valor: null as null | { id: string; customerEmail: string; customerPhone: string },
+    valor: [] as { id: string; customerEmail: string; customerPhone: string }[],
   };
   return {
     pedidoFalso,
     limitFalso: vi.fn(async () => {}),
     prismaFalso: {
-      order: { findUnique: async () => pedidoFalso.valor },
+      order: { findMany: vi.fn(async () => pedidoFalso.valor) },
       rateLimit: { upsert: async () => ({ count: 1, resetAt: new Date(Date.now() + 60_000) }), update: async () => {} },
     },
   };
@@ -39,7 +39,7 @@ const pedir = (cuerpo: unknown) =>
   );
 
 beforeEach(() => {
-  pedidoFalso.valor = pedido;
+  pedidoFalso.valor = [pedido];
   vi.clearAllMocks();
 });
 
@@ -63,12 +63,12 @@ describe("rastreo público de pedidos", () => {
   });
 
   it("da el mismo error si el pedido no existe: no revela qué números son válidos", async () => {
-    pedidoFalso.valor = null;
+    pedidoFalso.valor = [];
     const r = await pedir({ numero: 999999, contacto: "ana.perez@ejemplo.com" });
     expect(r.status).toBe(404);
     const inexistente = await r.json();
 
-    pedidoFalso.valor = pedido;
+    pedidoFalso.valor = [pedido];
     const r2 = await pedir({ numero: 1024, contacto: "desconocido@ejemplo.com" });
     const noCoincide = await r2.json();
 
@@ -83,6 +83,19 @@ describe("rastreo público de pedidos", () => {
   it("no acepta un número de pedido que no sea entero positivo", async () => {
     const r = await pedir({ numero: "abc", contacto: "ana.perez@ejemplo.com" });
     expect(r.status).toBe(400);
+  });
+
+  it("acepta el PIN de entrega junto al contacto", async () => {
+    const r = await pedir({ numero: "482913", contacto: "ana.perez@ejemplo.com" });
+    expect(r.status).toBe(200);
+    expect(prismaFalso.order.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { OR: expect.arrayContaining([{ delivery: { confirmationCode: "482913" } }]) },
+    }));
+  });
+
+  it("no acepta un PIN sin el contacto correcto", async () => {
+    const r = await pedir({ numero: "482913", contacto: "otra.persona@ejemplo.com" });
+    expect(r.status).toBe(404);
   });
 
   it("aplica el límite de intentos antes de tocar la base de datos", async () => {

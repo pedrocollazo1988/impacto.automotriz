@@ -67,7 +67,9 @@ export type ProductInput = {
 };
 
 // Alta o actualización (por id o, si no hay, por SKU). Crea categoría y marca si no existen.
-export async function saveProduct(i: ProductInput, id?: number) {
+export type ProductMovementContext = { actor?: string; source?: string };
+
+export async function saveProduct(i: ProductInput, id?: number, ctx: ProductMovementContext = {}) {
   const category = await prisma.category.upsert({ where: { slug: slugify(i.categoryName) }, update: {}, create: { slug: slugify(i.categoryName), name: i.categoryName.trim() } });
   const brand = i.brandName?.trim() ? await prisma.brand.upsert({ where: { slug: slugify(i.brandName) }, update: {}, create: { slug: slugify(i.brandName), name: i.brandName.trim() } }) : null;
   const data = {
@@ -84,7 +86,10 @@ export async function saveProduct(i: ProductInput, id?: number) {
     specs: i.specs ?? undefined, featured: i.featured ?? false,
     active: i.active ?? true, categoryId: category.id, brandId: brand?.id ?? null,
   };
-  const existing = id ? { id } : await prisma.product.findUnique({ where: { sku: data.sku }, select: { id: true } });
+  const seleccion = { id: true, stock: true, sku: true, name: true, slug: true, priceUsd: true, active: true, categoryId: true, brandId: true } as const;
+  const existing = id
+    ? await prisma.product.findUnique({ where: { id }, select: seleccion })
+    : await prisma.product.findUnique({ where: { sku: data.sku }, select: seleccion });
   let row;
   if (existing) row = await prisma.product.update({ where: { id: existing.id }, data: { ...data, ...(i.slug ? { slug: slugify(i.slug) } : {}) } });
   else {
@@ -107,6 +112,41 @@ export async function saveProduct(i: ProductInput, id?: number) {
       await prisma.product.update({ where: { id: row.id }, data: { stock: sum } });
     }
   }
+
+  // Historial: una fila por alta, cambio de existencias o edición relevante.
+  const after = await prisma.product.findUnique({ where: { id: row.id }, select: seleccion });
+  const beforeStock = existing?.stock ?? 0;
+  if (after) {
+    const delta = after.stock - beforeStock;
+    const cambios: string[] = [];
+    if (!existing) cambios.push("Producto creado");
+    else {
+      if (existing.name !== after.name) cambios.push(`Nombre: ${existing.name} → ${after.name}`);
+      if (Number(existing.priceUsd) !== Number(after.priceUsd)) cambios.push(`Precio: ${Number(existing.priceUsd).toFixed(2)} → ${Number(after.priceUsd).toFixed(2)} USD`);
+      if (existing.active !== after.active) cambios.push(after.active ? "Producto reactivado" : "Producto desactivado");
+      if (existing.categoryId !== after.categoryId) cambios.push("Cambió la categoría");
+      if (existing.brandId !== after.brandId) cambios.push("Cambió la marca");
+      if (delta !== 0) cambios.push(`Existencias: ${beforeStock} → ${after.stock}`);
+    }
+    if (!existing || delta !== 0 || cambios.length) {
+      await prisma.productMovement.create({
+        data: {
+          productId: after.id, productName: after.name, sku: after.sku,
+          kind: !existing ? "ALTA" : delta !== 0 ? "AJUSTE" : "EDICION",
+          delta, stockBefore: beforeStock, stockAfter: after.stock,
+          detail: cambios.join(" · "), actor: ctx.actor ?? "", source: ctx.source ?? "admin",
+        },
+      });
+    }
+  }
+
+  // Si el producto pasa de agotado a disponible, avisa a quienes lo esperaban.
+  if (after && beforeStock <= 0 && after.stock > 0) {
+    const { notifyBackInStock } = await import("./mailer");
+    const base = (process.env.PUBLIC_URL ?? "https://impacto-automotriz.vercel.app").replace(/\/+$/, "");
+    await notifyBackInStock(String(after.id), after.name, `${base}/producto/${after.slug ?? after.id}`).catch(() => {});
+  }
+
   invalidarCacheCatalogo();
   return { row, created: !existing };
 }

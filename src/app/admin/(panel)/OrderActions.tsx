@@ -33,11 +33,11 @@ export default function OrderActions({ id, paid, status, items, puedeQuitar }: {
 
       <Modal open={pin !== null} title="Confirmar entrega" onClose={() => setPin(null)}>
         <p className="mb-2 text-sm text-slate-600">Introduce el PIN que muestra el cliente para confirmar la entrega.</p>
-        <input className={inputCls} autoFocus value={pin ?? ""} onChange={(e) => setPin(e.target.value)} placeholder="PIN de 4 a 6 dígitos"
-          onKeyDown={(e) => e.key === "Enter" && pin && call({ action: "deliver", pin }).then((ok) => ok && setPin(null))} />
+        <input className={inputCls} autoFocus value={pin ?? ""} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="PIN de 6 dígitos" inputMode="numeric" maxLength={6}
+          onKeyDown={(e) => e.key === "Enter" && pin?.length === 6 && call({ action: "deliver", pin }).then((ok) => ok && setPin(null))} />
         <div className="mt-4 flex justify-end gap-2">
           <button className="btn btn-ghost btn-sm" onClick={() => setPin(null)}>Cancelar</button>
-          <button className="btn btn-primary btn-sm" disabled={!pin} onClick={() => call({ action: "deliver", pin }).then((ok) => ok && setPin(null))}>Entregar</button>
+          <button className="btn btn-primary btn-sm" disabled={(pin?.length ?? 0) !== 6} onClick={() => call({ action: "deliver", pin }).then((ok) => ok && setPin(null))}>Entregar</button>
         </div>
       </Modal>
 

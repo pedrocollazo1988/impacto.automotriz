@@ -33,7 +33,7 @@ export function parseSpecs(v: string): Record<string, string> {
 }
 
 // Importa filas (cabecera + datos). Columnas: sku, nombre, precio, existencias, categoria, [marca, descripcion, imagenes, modelo3d, destacado, compatibilidad, especificaciones]
-export async function importRows(rows: string[][]) {
+export async function importRows(rows: string[][], ctx: { actor?: string } = {}) {
   const head = rows[0].map(norm); const col = (r: string[], n: string) => (r[head.indexOf(n)] ?? "").trim();
   for (const need of ["sku", "nombre", "precio", "existencias", "categoria"]) if (!head.includes(need)) throw new Error(`Falta la columna «${need}»`);
   let created = 0, updated = 0; const errors: { fila: number; error: string }[] = [];
@@ -49,7 +49,7 @@ export async function importRows(rows: string[][]) {
         images: col(r, "imagenes").split("|").map((u) => u.trim()).filter(Boolean),
         specs: Object.keys(specs).length ? specs : undefined,
         featured: /^(si|sí|1|true|x)$/i.test(col(r, "destacado")), fits: head.includes("compatibilidad") ? fits : undefined,
-      });
+      }, undefined, { actor: ctx.actor, source: "import" });
       c ? created++ : updated++;
     } catch (e) { errors.push({ fila: idx + 2, error: e instanceof Error ? e.message : "Error" }); }
   }

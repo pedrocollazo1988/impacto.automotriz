@@ -9,7 +9,9 @@ import { createOnlinePayment } from "@/lib/payments";
 import { leerPasarelas } from "@/lib/payment-gateways";
 import { comision, esCobroAutomatico, estaOperativa, redirigeAlPagar, requiereContraEntrega } from "@/lib/pasarelas";
 import { sendTransactional } from "@/lib/mailer";
-import { orderConfirmationEmail } from "@/lib/email-templates";
+import { adminOrderEmail, orderConfirmationEmail } from "@/lib/email-templates";
+import { emailT } from "@/lib/email-i18n";
+import { getLang } from "@/lib/i18n";
 import { orderToken, rememberOrder } from "@/lib/order-access";
 import { requireTurnstile } from "@/lib/turnstile";
 
@@ -47,8 +49,18 @@ export const POST = handle(async (req: Request) => {
   const feeUsd = comision(gw, baseUsd);
   const totalUsd = r2(baseUsd + feeUsd);
 
+  const lang = await getLang();
   // 2) Pedido + stock + cupón en una sola transacción (si algo falla, se revierte todo).
   const order = await prisma.$transaction(async (tx) => {
+    // El pedido se crea primero para tener número y poder enlazar cada movimiento.
+    const created = await tx.order.create({
+      data: {
+        paymentMethod: gw.key, paymentMethodName: gw.name, customerName: b.customer.name || me.name, customerEmail: me.email, customerPhone: b.customer.phone || me.phone || "", customerId: me.id, lang,
+        subtotalUsd: cart.subtotalUsd, discountUsd: coupon.discountUsd, couponCode: coupon.code, shippingUsd: delivery.feeUsd, paymentFeeUsd: feeUsd, totalUsd,
+        items: { create: cart.lines.map((l) => ({ productId: l.productId, variantId: l.variantId, name: l.name, unitUsd: l.unitUsd, qty: l.qty })) },
+        delivery: { create: delivery },
+      },
+    });
     for (const l of cart.lines) {
       if (l.variantId) { // el stock del producto es la suma de sus variantes: se descuentan ambos
         const rv = await tx.productVariant.updateMany({ where: { id: l.variantId, stock: { gte: l.qty } }, data: { stock: { decrement: l.qty } } });
@@ -56,19 +68,22 @@ export const POST = handle(async (req: Request) => {
       }
       const r = await tx.product.updateMany({ where: { id: l.productId, stock: { gte: l.qty } }, data: { stock: { decrement: l.qty } } });
       if (r.count === 0) throw new HttpError(409, `Sin existencias suficientes: ${l.name}`);
+      const after = await tx.product.findUnique({ where: { id: l.productId }, select: { stock: true, sku: true, name: true } });
+      const stockAfter = after?.stock ?? 0;
+      await tx.productMovement.create({
+        data: {
+          productId: l.productId, variantId: l.variantId ?? null, productName: after?.name ?? l.name, sku: after?.sku ?? "",
+          kind: "VENTA", delta: -l.qty, stockBefore: stockAfter + l.qty, stockAfter,
+          detail: `Pedido #${created.number}${l.variantId ? ` · variante #${l.variantId}` : ""}`,
+          orderId: created.id, orderNumber: created.number, actor: me.name, source: "checkout",
+        },
+      });
     }
     if (coupon.id) {
       const r = await tx.coupon.updateMany({ where: { id: coupon.id, ...(coupon.maxUses != null ? { used: { lt: coupon.maxUses } } : {}) }, data: { used: { increment: 1 } } });
       if (r.count === 0) throw new HttpError(422, "Cupón agotado");
     }
-    return tx.order.create({
-      data: {
-        paymentMethod: gw.key, paymentMethodName: gw.name, customerName: b.customer.name || me.name, customerEmail: me.email, customerPhone: b.customer.phone || me.phone || "", customerId: me.id,
-        subtotalUsd: cart.subtotalUsd, discountUsd: coupon.discountUsd, couponCode: coupon.code, shippingUsd: delivery.feeUsd, paymentFeeUsd: feeUsd, totalUsd,
-        items: { create: cart.lines.map((l) => ({ productId: l.productId, variantId: l.variantId, name: l.name, unitUsd: l.unitUsd, qty: l.qty })) },
-        delivery: { create: delivery },
-      },
-    });
+    return created;
   });
 
   // 3) Pago en línea (si falla, el pedido queda pendiente y se puede reintentar desde /pedido/[id]).
@@ -85,14 +100,27 @@ export const POST = handle(async (req: Request) => {
     paymentUrl = gw.config.url;
     await prisma.order.update({ where: { id: order.id }, data: { paymentRef: paymentUrl } });
   }
-  await sendTransactional(me.email, `Pedido #${order.number} recibido`, orderConfirmationEmail({
+  await sendTransactional(me.email, emailT(lang, "order.subject", { number: order.number }), orderConfirmationEmail({
     name: b.customer.name || me.name,
     orderNumber: order.number,
     total: `${totalUsd.toFixed(2)} USD`,
     items: cart.lines.map((l) => ({ name: l.name, qty: l.qty, price: `${l.totalUsd.toFixed(2)} USD` })),
     trackingUrl: `${process.env.PUBLIC_URL}/pedido/${order.id}?t=${orderToken(order.id)}`,
     deliveryPin: delivery.confirmationCode,
+    lang,
   }));
+  const adminEmail = process.env.ADMIN_EMAIL?.trim();
+  if (adminEmail) {
+    await sendTransactional(adminEmail, emailT("es", "adminOrder.subject", { number: order.number }), adminOrderEmail({
+      orderNumber: order.number,
+      customerName: b.customer.name || me.name,
+      customerEmail: me.email,
+      total: `${totalUsd.toFixed(2)} USD`,
+      items: cart.lines.map((l) => ({ name: l.name, qty: l.qty, price: `${l.totalUsd.toFixed(2)} USD` })),
+      proformaUrl: `${process.env.PUBLIC_URL}/admin/pedidos/${order.id}/prefactura`,
+      lang: "es",
+    })).catch(() => null);
+  }
   await rememberOrder(order.id);
   return Response.json({ orderId: order.id, paymentUrl });
 });

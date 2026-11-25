@@ -2,6 +2,8 @@ import nodemailer from "nodemailer";
 import crypto from "node:crypto";
 import type { Prisma, EmailSettings } from "@prisma/client";
 import { prisma } from "./prisma";
+import { backInStockEmail, campaignEmail, testEmail } from "./email-templates";
+import { emailLang, emailT } from "./email-i18n";
 
 const secret = () => { if (!process.env.APP_SECRET) throw new Error("Falta APP_SECRET"); return process.env.APP_SECRET; };
 const key = () => crypto.createHash("sha256").update(secret()).digest();
@@ -120,13 +122,13 @@ function render(html: string, to: { email: string; name?: string | null }, c: Ma
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e)).slice(0, 300);
 
-async function deliver(c: MailConfig, to: { email: string; name?: string | null }, subject: string, html: string, footer: boolean): Promise<SendResult> {
+async function deliver(c: MailConfig, to: { email: string; name?: string | null }, subject: string, html: string, footer: boolean, unsubscribeHeader = false): Promise<SendResult> {
   try {
     const tr = transportFor(c);
     await tr.sendMail({
       from: `"${c.fromName}" <${c.fromEmail}>`, replyTo: c.replyTo ?? undefined, to: to.email, subject,
       html: footer ? render(html, to, c) : html,
-      ...(footer ? { headers: { "List-Unsubscribe": `<${unsubUrl(to.email)}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } } : {}),
+      ...(footer || unsubscribeHeader ? { headers: { "List-Unsubscribe": `<${unsubUrl(to.email)}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } } : {}),
     });
     return { ok: true };
   } catch (e) {
@@ -135,10 +137,11 @@ async function deliver(c: MailConfig, to: { email: string; name?: string | null 
   }
 }
 
-export async function sendTest(to: string, subject: string, html: string) {
+export async function sendTest(to: string, subject: string, html?: string) {
   const c = await loadMailConfig();
   if (!c) throw new Error("Configura la cuenta de correo (o define SMTP_HOST, SMTP_USER, SMTP_PASS y MAIL_FROM_EMAIL)");
-  const r = await deliver(c, { email: to, name: "Prueba" }, `[PRUEBA] ${subject}`, html, false);
+  const cuerpo = html ? campaignEmail({ subject, html, lang: "es" }) : testEmail({ lang: "es" });
+  const r = await deliver(c, { email: to, name: "Prueba" }, `[PRUEBA] ${subject}`, cuerpo, false);
   if (!r.ok) throw new Error(r.error);
 }
 
@@ -157,7 +160,9 @@ export async function processQueue() {
     const subs = await prisma.subscriber.findMany({ where: { ...audienceWhere(campaign.segment as Segment), sends: { none: { campaignId: campaign.id } } }, take: budget });
     if (!subs.length) { await prisma.campaign.update({ where: { id: campaign.id }, data: { status: "SENT", sentAt: new Date() } }); continue; }
     for (const sub of subs) {
-      const r = await deliver(c, sub, campaign.subject, campaign.html, true);
+      const lang = emailLang(sub.lang);
+      const html = campaignEmail({ subject: campaign.subject, html: campaign.html, lang, unsubscribeUrl: unsubUrl(sub.email) });
+      const r = await deliver(c, sub, campaign.subject, html, false, true);
       await prisma.campaignSend.create({ data: { campaignId: campaign.id, subscriberId: sub.id, status: r.ok ? "SENT" : "FAILED", error: r.ok ? undefined : r.error } });
       if (r.ok) sent++;
       budget--;
@@ -182,7 +187,8 @@ export async function sendTransactional(to: string, subject: string, html: strin
 export async function notifyBackInStock(productId: string, productName: string, productUrl: string) {
   const alerts = await prisma.stockAlert.findMany({ where: { productId, notifiedAt: null } });
   for (const a of alerts) {
-    const r = await sendTransactional(a.email, `¡Ya hay existencias de ${productName}!`, `<p>El producto que esperabas ya está disponible: <a href="${productUrl}">${esc(productName)}</a>.</p>`);
+    const lang = emailLang(a.lang);
+    const r = await sendTransactional(a.email, emailT(lang, "stock.subject", { product: productName }), backInStockEmail({ productName, productUrl, lang }));
     if (r.ok) await prisma.stockAlert.update({ where: { id: a.id }, data: { notifiedAt: new Date() } });
   }
 }

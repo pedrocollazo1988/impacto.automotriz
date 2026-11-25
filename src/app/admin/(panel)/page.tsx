@@ -5,7 +5,8 @@ import { PageHeader, EmptyState, Badge } from "@/components/admin/ui";
 export const dynamic = "force-dynamic";
 
 const STATUS: Record<string, { label: string; tone: "ok" | "warn" | "info" | "danger" | "mute" }> = {
-  PENDING: { label: "Pendiente", tone: "warn" },
+  PENDING_PAYMENT: { label: "Pendiente de pago", tone: "warn" },
+  PAID: { label: "Pagado", tone: "ok" },
   PREPARING: { label: "En preparación", tone: "info" },
   SHIPPED: { label: "Enviado", tone: "info" },
   DELIVERED: { label: "Entregado", tone: "ok" },

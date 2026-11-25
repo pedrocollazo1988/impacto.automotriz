@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { invoiceStatus } from "@/lib/qvapay";
 import { porClave } from "@/lib/payment-gateways";
+import { sendTransactional } from "@/lib/mailer";
+import { orderStatusEmail } from "@/lib/email-templates";
+import { emailLang, emailT } from "@/lib/email-i18n";
+import { orderToken } from "@/lib/order-access";
 
 // Webhook de QvaPay: NO se confía en el cuerpo; se vuelve a consultar el estado de la factura y se compara el importe.
 export async function POST(req: Request) {
@@ -18,6 +22,11 @@ export async function POST(req: Request) {
     if (!s.paid) return Response.json({ ok: true, paid: false });
     if (Math.abs(s.amount - Number(order.totalUsd)) > 0.01) return new Response("Amount mismatch", { status: 422 });
     await prisma.order.update({ where: { id: order.id }, data: { paid: true, paidAt: new Date(), status: "PAID" } });
+    const lang = emailLang(order.lang);
+    await sendTransactional(order.customerEmail, emailT(lang, "status.subject", { number: order.number, status: emailT(lang, "status.PAID") }), orderStatusEmail({
+      name: order.customerName, orderNumber: order.number, status: "PAID",
+      trackingUrl: `${process.env.PUBLIC_URL}/pedido/${order.id}?t=${orderToken(order.id)}`, lang,
+    })).catch(() => null);
     return Response.json({ ok: true });
   } catch { return new Response("Verification failed", { status: 502 }); }
 }
