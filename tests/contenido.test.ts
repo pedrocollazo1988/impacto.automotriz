@@ -23,8 +23,9 @@ describe("catálogo de secciones", () => {
   });
 
   it("los campos de elemento usan las claves que guarda la API", () => {
+    const claves = ["icono", "titulo", "texto", "href", "imagen", "fecha", "marca", "lectura", "parrafos", "puntos"];
     for (const s of SECCIONES) {
-      for (const c of s.camposItem ?? []) expect(["icono", "titulo", "texto", "href", "imagen"], `${s.key}: ${c.key}`).toContain(c.key);
+      for (const c of s.camposItem ?? []) expect(claves, `${s.key}: ${c.key}`).toContain(c.key);
     }
   });
 
@@ -65,6 +66,35 @@ describe("limpiarItems", () => {
   it("conserva la imagen del carrusel aunque no haya texto", () => {
     const [it] = limpiarItems([{ imagen: "/media/oferta.jpg" }]);
     expect(it.imagen).toBe("/media/oferta.jpg");
+  });
+
+  it("conserva los campos de las guías del blog", () => {
+    const [it] = limpiarItems([
+      {
+        titulo: "Guía",
+        href: "guia-x",
+        fecha: "2026-01-01",
+        marca: "Brembo",
+        lectura: "6",
+        parrafos: "Uno\n\nDos",
+        puntos: "A\nB",
+      },
+    ]);
+    expect(it).toMatchObject({
+      titulo: "Guía",
+      href: "guia-x",
+      fecha: "2026-01-01",
+      marca: "Brembo",
+      lectura: "6",
+      parrafos: "Uno\n\nDos",
+      puntos: "A\nB",
+    });
+  });
+
+  it("trunca los párrafos del blog sin perder el resto", () => {
+    const [it] = limpiarItems([{ titulo: "Guía", parrafos: "x".repeat(25000) }]);
+    expect(it.parrafos!.length).toBe(20000);
+    expect(it.titulo).toBe("Guía");
   });
 
   it("descarta imágenes con esquemas no seguros", () => {

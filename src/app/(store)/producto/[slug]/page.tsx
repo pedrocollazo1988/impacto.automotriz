@@ -189,7 +189,7 @@ export default async function Producto({ params }: Props) {
           <h2 className="font-display text-xl font-extrabold text-navy">Valoraciones</h2>
           {reviews.length > 0 && <span className="badge bg-amber-100 text-amber-700">{avg.toFixed(1)} ★ · {reviews.length}</span>}
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
           {reviews.map((r) => (
             <div key={r.id} className="card p-4 text-sm">
               <div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-full bg-[color:var(--color-navy)]/8 font-display text-xs font-bold text-navy">{r.customer.name.slice(0, 1)}</span><b>{r.customer.name.split(" ")[0]}</b><span className="ml-auto text-amber-500">{"★".repeat(r.rating)}</span></div>

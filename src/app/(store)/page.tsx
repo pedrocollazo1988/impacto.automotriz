@@ -158,7 +158,7 @@ export default async function Home() {
       {/* ── Accesos rápidos, como los botones de MCV ── */}
       {accesos.visible && accesos.items.length > 0 && (
         <section className="container-x mt-10">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {accesos.items.map((it) => (
               <Link key={it.href ?? it.titulo} href={it.href || "/catalogo"} className="card card-hover group flex items-start gap-3 p-4">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)] text-white transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-[color:var(--color-action)] group-hover:text-white">
@@ -178,7 +178,7 @@ export default async function Home() {
       {valor.visible && valor.items.length > 0 && (
         <section className="container-x mt-4 relative z-10">
           <h2 className="sr-only">{valor.title || t("home.why")}</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {valor.items.map((it, i) => (
               <div key={it.titulo} className={`card p-5 animate-fade-up delay-${(i % 4) + 1}`}>
                 <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name={it.icono || "check"} size={22} /></span>
@@ -194,7 +194,7 @@ export default async function Home() {
       {catHead.visible && categories.length > 0 && (
         <section className="container-x mt-16">
           <SectionHead eyebrow={catHead.eyebrow} title={catHead.title} subtitle={catHead.subtitle} href="/catalogo" linkLabel={t("home.seeCatalog")} />
-          <Reveal className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <Reveal className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {categories.map((c) => (
               <Link key={c.id} href={`/catalogo?categoria=${c.slug}`} className="card card-hover group flex items-center gap-3 p-4">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[color:var(--color-navy)] to-[color:var(--color-action)] text-white transition group-hover:scale-105">
@@ -214,7 +214,7 @@ export default async function Home() {
 
       {/* ── Departamentos, como las secciones de la tienda de MCV ── */}
       {departamentos.map((d) => (
-        <section key={d.id} className="container-x mt-14">
+        <section key={d.id} className="container-x mt-16">
           <div className="flex items-end justify-between gap-4 border-b border-slate-200 pb-3">
             <div>
               <h2 className="font-display text-xl font-extrabold text-navy sm:text-2xl">{d.name}</h2>

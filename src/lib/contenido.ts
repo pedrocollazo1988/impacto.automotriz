@@ -8,6 +8,7 @@
 // Este módulo lo importan páginas de servidor y el editor del panel: no debe
 // tocar APIs de navegador.
 
+import { BLOG_ARTICLES } from "./blog";
 import { NAV_EMPRESA, NAV_PRINCIPAL, SITE, telefono } from "./site";
 
 export type Campo = {
@@ -31,7 +32,21 @@ export type Seccion = {
   defecto: { eyebrow?: string; title?: string; subtitle?: string; items?: Item[] };
 };
 
-export type Item = { icono?: string; titulo?: string; texto?: string; href?: string; imagen?: string };
+export type Item = {
+  icono?: string;
+  titulo?: string;
+  texto?: string;
+  href?: string;
+  imagen?: string;
+  /** Campos de las guías del blog. `href` es el slug y `titulo`/`texto` el título y el extracto. */
+  fecha?: string;
+  marca?: string;
+  lectura?: string;
+  /** Párrafos separados por una línea en blanco. */
+  parrafos?: string;
+  /** Puntos clave, uno por línea. */
+  puntos?: string;
+};
 
 export type Bloque = { eyebrow: string; title: string; subtitle: string; items: Item[]; visible: boolean };
 
@@ -775,6 +790,82 @@ export const SECCIONES: Seccion[] = [
     },
   },
   {
+    key: "blog-hero",
+    label: "Blog · encabezado",
+    descripcion: "El encabezado de la página del blog. Mientras nadie lo edite se muestra también en inglés.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    defecto: {
+      eyebrow: "Blog · Marcas destacadas",
+      title: "Marcas que sostienen tu vehículo, explicadas sin humo",
+      subtitle: "Cuatro guías para decidir mejor: frenos Brembo, eléctricos y filtros Bosch, suspensión KYB y el mantenimiento conjunto de Varta y Monroe. Qué mirar, cuándo cambiar y cómo evitar imitaciones.",
+    },
+  },
+  {
+    key: "blog-guias",
+    label: "Blog · encabezado de guías",
+    descripcion: "El encabezado de la cuadrícula de guías. Mientras nadie lo edite se muestra también en inglés.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Entradilla", tipo: "parrafo", ancho: true },
+    ],
+    defecto: {
+      eyebrow: "Guías de compra",
+      title: "Cuatro marcas, cuatro decisiones",
+      subtitle: "Consejos de compra y mantenimiento, sin datos inventados ni promesas de rendimiento. Cada guía enlaza al catálogo filtrado por marca.",
+    },
+  },
+  {
+    key: "blog-articulos",
+    label: "Blog · guías",
+    descripcion: "Las guías del blog. El «Slug» es el ancla del artículo y el enlace de marca se arma con la marca; los párrafos van separados por una línea en blanco y los puntos clave por saltos de línea.",
+    campos: [],
+    camposItem: [
+      { key: "titulo", label: "Título de la guía", ancho: true },
+      { key: "texto", label: "Extracto", tipo: "parrafo", ancho: true },
+      { key: "href", label: "Slug del artículo (sin espacios)", ancho: true },
+      { key: "imagen", label: "Imagen de portada (URL o /media/...)", tipo: "imagen", ancho: true },
+      { key: "fecha", label: "Fecha (AAAA-MM-DD)" },
+      { key: "marca", label: "Marca" },
+      { key: "lectura", label: "Minutos de lectura" },
+      { key: "parrafos", label: "Párrafos (separados por una línea en blanco)", tipo: "parrafo", ancho: true },
+      { key: "puntos", label: "Puntos clave (uno por línea)", tipo: "parrafo", ancho: true },
+    ],
+    maxItems: 12,
+    defecto: {
+      items: BLOG_ARTICLES.map((a) => ({
+        titulo: a.title,
+        texto: a.excerpt,
+        href: a.slug,
+        imagen: a.image,
+        fecha: a.date,
+        marca: a.brand,
+        lectura: String(a.readingTime),
+        parrafos: a.paragraphs.join("\n\n"),
+        puntos: a.highlights.join("\n"),
+      })),
+    },
+  },
+  {
+    key: "blog-boletin",
+    label: "Blog · boletín",
+    descripcion: "El bloque de suscripción al final del blog. Mientras nadie lo edite se muestra también en inglés.",
+    campos: [
+      { key: "eyebrow", label: "Antetítulo", ancho: true },
+      { key: "title", label: "Título", ancho: true },
+      { key: "subtitle", label: "Texto", tipo: "parrafo", ancho: true },
+    ],
+    defecto: {
+      eyebrow: "Boletín técnico",
+      title: "Recibe guías de compra y avisos de nuevas piezas",
+      subtitle: "Una vez al mes: comparativas de marcas, señales de desgaste y novedades del catálogo. Sin spam y con baja en un clic.",
+    },
+  },
+  {
     key: "facturacion",
     label: "Prefactura · datos de la MIPYME",
     descripcion: "Estos datos salen en la prefactura de cada pedido: nombre, NIT, domicilio, cuentas, representante y firmas.",
@@ -836,8 +927,13 @@ export function limpiarItems(items: unknown, max = 30): Item[] {
       texto: typeof i.texto === "string" ? i.texto.slice(0, 2000) : undefined,
       href: typeof i.href === "string" ? i.href.slice(0, 500) : undefined,
       imagen: typeof i.imagen === "string" && /^(\/(?!\/)|https?:\/\/)/i.test(i.imagen) ? i.imagen.slice(0, 1000) : undefined,
+      fecha: typeof i.fecha === "string" ? i.fecha.slice(0, 40) : undefined,
+      marca: typeof i.marca === "string" ? i.marca.slice(0, 120) : undefined,
+      lectura: typeof i.lectura === "string" ? i.lectura.slice(0, 20) : undefined,
+      parrafos: typeof i.parrafos === "string" ? i.parrafos.slice(0, 20000) : undefined,
+      puntos: typeof i.puntos === "string" ? i.puntos.slice(0, 4000) : undefined,
     }))
-    .filter((i) => i.titulo || i.texto || i.imagen)
+    .filter((i) => i.titulo || i.texto || i.imagen || i.parrafos || i.puntos)
     .slice(0, max);
 }
 

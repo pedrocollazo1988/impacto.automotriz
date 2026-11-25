@@ -26,7 +26,7 @@ export default async function Contacto() {
       </section>
       <section className="container-x py-10">
         <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="card p-5">
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name="whatsapp" size={22} /></span>
               <h2 className="mt-3 font-display text-sm font-bold text-navy">WhatsApp</h2>

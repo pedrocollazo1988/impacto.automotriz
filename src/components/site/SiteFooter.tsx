@@ -32,8 +32,9 @@ const AYUDA: [string, string][] = [
 
 export default async function SiteFooter() {
   const [{ t }, menuEmpresa] = await Promise.all([getT(), getMenuEmpresa().catch(() => [])]);
+  const menuEmpresaUnico = Array.from(new Map(menuEmpresa.map((l) => [l.href, l])).values());
   return (
-    <footer className="mt-20 bg-[#0b1220] text-white/75 print:hidden">
+    <footer className="mt-12 bg-[#0b1220] text-white/75 print:hidden">
       {/* Contacto destacado, como la franja de atención de MCV */}
       <div className="border-b border-white/10">
         <div className="container-x grid gap-6 py-8 sm:grid-cols-3">
@@ -87,7 +88,7 @@ export default async function SiteFooter() {
         <div>
           <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-white/50">{t("footer.services")}</h2>
           <ul className="mt-4 space-y-2.5 text-sm">
-            {SERVICIOS.map((s) => <li key={s.href}><Link href={s.href} className="text-white/70 transition hover:text-[color:var(--color-action-hi)]">{s.label}</Link></li>)}
+            {SERVICIOS.map((s) => <li key={`${s.href}-${s.label}`}><Link href={s.href} className="text-white/70 transition hover:text-[color:var(--color-action-hi)]">{s.label}</Link></li>)}
           </ul>
         </div>
 
@@ -103,7 +104,7 @@ export default async function SiteFooter() {
         <div className="container-x flex flex-col items-center justify-between gap-3 py-6 text-xs text-white/55 sm:flex-row">
           <p>© {new Date().getFullYear()} {SITE.razonSocial} {t("footer.rights")}</p>
           <nav className="flex flex-wrap items-center gap-4">
-            {menuEmpresa.map((l) => <Link key={l.href} href={l.href} className="transition hover:text-white">{CLAVE_MENU[l.href] ? t(CLAVE_MENU[l.href]) : l.label}</Link>)}
+            {menuEmpresaUnico.map((l) => <Link key={l.href} href={l.href} className="transition hover:text-white">{CLAVE_MENU[l.href] ? t(CLAVE_MENU[l.href]) : l.label}</Link>)}
             <span className="flex items-center gap-2"><Icon name="shield" size={14} /> {t("footer.secure")}</span>
           </nav>
         </div>

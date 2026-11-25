@@ -10,6 +10,11 @@ const ItemBody = z.object({
   texto: z.string().max(2000).optional(),
   href: z.string().max(500).optional(),
   imagen: z.string().max(1000).optional(),
+  fecha: z.string().max(40).optional(),
+  marca: z.string().max(120).optional(),
+  lectura: z.string().max(20).optional(),
+  parrafos: z.string().max(20000).optional(),
+  puntos: z.string().max(4000).optional(),
 });
 
 const Body = z.object({

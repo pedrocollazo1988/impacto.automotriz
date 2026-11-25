@@ -20,7 +20,7 @@ export default async function Nosotros() {
 
       {cifras.visible && (
         <section className="container-x -mt-8 relative z-10">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {cifras.items.map((it) => (
               <div key={it.texto} className="card p-5 text-center">
                 <p className="font-display text-3xl font-extrabold text-navy">{it.titulo}</p>

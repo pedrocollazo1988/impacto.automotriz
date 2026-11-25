@@ -39,7 +39,7 @@ export default async function Servicios() {
         <section className="container-x pb-16">
           <h2 className="font-display text-2xl font-extrabold text-navy">{lineas.title}</h2>
           {lineas.subtitle && <p className="mt-2 max-w-2xl text-sm text-slate-500">{lineas.subtitle}</p>}
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {lineas.items.map((s) => (
               <Link key={s.titulo} href={s.href || "/contacto"} className="card card-hover group flex items-center gap-4 p-5">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name={s.icono || "wrench"} size={22} /></span>

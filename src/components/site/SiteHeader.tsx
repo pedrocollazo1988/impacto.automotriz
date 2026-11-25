@@ -35,6 +35,8 @@ export default function SiteHeader({
     { href: "/renta", label: "Renta y leasing" },
     { href: "/cuenta", label: "Mi cuenta" },
   ].map((l) => [l.href, l] as const)).values());
+  const navEmpresaUnico = Array.from(new Map(navEmpresa.map((l) => [l.href, l] as const)).values());
+  const navPrincipalUnico = Array.from(new Map(navPrincipal.map((l) => [l.href, l] as const)).values());
 
   useEffect(() => setOpen(false), [path]);
 
@@ -76,7 +78,7 @@ export default function SiteHeader({
               </a>
             </p>
             <nav className="flex items-center gap-4">
-              {navEmpresa.filter((l) => l.href !== "/novedades").map((l) => (
+              {navEmpresaUnico.filter((l) => l.href !== "/novedades").map((l) => (
                 <Link key={l.href} href={l.href} className="transition hover:text-white">{tr(l.href, l.label)}</Link>
               ))}
               <ThemeToggle />
@@ -136,7 +138,7 @@ export default function SiteHeader({
       {/* Menú principal en escritorio */}
       <nav className="hidden border-b border-slate-200 bg-white lg:block">
         <div className="container-x flex items-center gap-1">
-          {navPrincipal.map((l) => {
+          {navPrincipalUnico.map((l) => {
             const activo = path === l.href || (l.href !== "/" && path.startsWith(l.href));
             return (
               <Link
