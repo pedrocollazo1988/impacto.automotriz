@@ -3,9 +3,11 @@ import { prisma } from "@/lib/prisma";
 import Icon from "@/components/brand/Icon";
 import { PageHeader, Panel, EmptyState } from "@/components/admin/ui";
 import TablaProductos from "./TablaProductos";
+import { puedeEliminarProducto, requirePage } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export default async function Productos() {
+  const u = await requirePage("products");
   const ps = await prisma.product.findMany({ where: { active: true }, orderBy: { stock: "asc" }, include: { category: true } });
   const filas = ps.map((p) => ({
     id: p.id,
@@ -27,7 +29,7 @@ export default async function Productos() {
         {!ps.length ? (
           <EmptyState icon="cube" title="Aún no hay productos" hint="Crea uno con «Nuevo producto» o súbelos en lote desde un CSV." />
         ) : (
-          <TablaProductos filas={filas} />
+          <TablaProductos filas={filas} puedeEliminar={puedeEliminarProducto(u)} />
         )}
       </Panel>
     </>);

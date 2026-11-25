@@ -4,7 +4,7 @@ import { handle, HttpError } from "@/lib/auth";
 import { priceCart } from "@/lib/pricing";
 import { buildOrderDelivery, deliveryInput } from "@/lib/shipping";
 import { evaluateCoupon } from "@/lib/coupons";
-import { getCustomer } from "@/lib/customer-auth";
+import { requireCustomer } from "@/lib/customer-auth";
 import { createOnlinePayment } from "@/lib/payments";
 import { leerPasarelas } from "@/lib/payment-gateways";
 import { comision, esCobroAutomatico, estaOperativa, redirigeAlPagar, requiereContraEntrega } from "@/lib/pasarelas";
@@ -24,6 +24,7 @@ const Body = z.object({
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
 export const POST = handle(async (req: Request) => {
+  const me = await requireCustomer(); // comprar exige una cuenta con sesión iniciada
   const b = Body.parse(await req.json());
   await requireTurnstile(req, b.turnstileToken);
   await asegurarEsquema();
@@ -44,7 +45,6 @@ export const POST = handle(async (req: Request) => {
   if (requiereContraEntrega(gw) && !cashOnDelivery) throw new HttpError(422, "Este método de entrega no admite pago contra entrega");
   const feeUsd = comision(gw, baseUsd);
   const totalUsd = r2(baseUsd + feeUsd);
-  const me = await getCustomer();
 
   // 2) Pedido + stock + cupón en una sola transacción (si algo falla, se revierte todo).
   const order = await prisma.$transaction(async (tx) => {
@@ -62,7 +62,7 @@ export const POST = handle(async (req: Request) => {
     }
     return tx.order.create({
       data: {
-        paymentMethod: gw.key, paymentMethodName: gw.name, customerName: b.customer.name, customerEmail: b.customer.email, customerPhone: b.customer.phone, customerId: me?.id,
+        paymentMethod: gw.key, paymentMethodName: gw.name, customerName: b.customer.name || me.name, customerEmail: me.email, customerPhone: b.customer.phone || me.phone || "", customerId: me.id,
         subtotalUsd: cart.subtotalUsd, discountUsd: coupon.discountUsd, couponCode: coupon.code, shippingUsd: delivery.feeUsd, paymentFeeUsd: feeUsd, totalUsd,
         items: { create: cart.lines.map((l) => ({ productId: l.productId, variantId: l.variantId, name: l.name, unitUsd: l.unitUsd, qty: l.qty })) },
         delivery: { create: delivery },
@@ -84,8 +84,8 @@ export const POST = handle(async (req: Request) => {
     paymentUrl = gw.config.url;
     await prisma.order.update({ where: { id: order.id }, data: { paymentRef: paymentUrl } });
   }
-  sendTransactional(b.customer.email, `Pedido #${order.number} recibido`,
-    `<p>Hola ${b.customer.name.replace(/[<>&]/g, "")}, recibimos tu pedido <b>#${order.number}</b> por <b>${totalUsd.toFixed(2)} USD</b>.</p><p>PIN de entrega: <b>${delivery.confirmationCode}</b> (dáselo a quien entrega para confirmar la recepción).</p><p>Seguimiento: ${process.env.PUBLIC_URL}/pedido/${order.id}?t=${orderToken(order.id)}</p>`).catch(() => {});
+  await sendTransactional(me.email, `Pedido #${order.number} recibido`,
+    `<p>Hola ${b.customer.name.replace(/[<>&]/g, "")}, recibimos tu pedido <b>#${order.number}</b> por <b>${totalUsd.toFixed(2)} USD</b>.</p><p>PIN de entrega: <b>${delivery.confirmationCode}</b> (dáselo a quien entrega para confirmar la recepción).</p><p>Seguimiento: ${process.env.PUBLIC_URL}/pedido/${order.id}?t=${orderToken(order.id)}</p>`);
   await rememberOrder(order.id);
   return Response.json({ orderId: order.id, paymentUrl });
 });

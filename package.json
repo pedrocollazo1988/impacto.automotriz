@@ -9,10 +9,11 @@
     "typecheck": "prisma generate && tsc --noEmit",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed.ts && tsx prisma/seed-despiece.ts",
+    "db:seed": "tsx prisma/seed.ts && tsx prisma/seed-despiece.ts && tsx prisma/seed-muestras.ts",
     "test": "vitest run",
     "db:seed:despiece": "tsx prisma/seed-despiece.ts",
-    "fotos360": "tsx scripts/fotos-360.ts"
+    "fotos360": "tsx scripts/fotos-360.ts",
+    "db:seed:muestras": "tsx prisma/seed-muestras.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

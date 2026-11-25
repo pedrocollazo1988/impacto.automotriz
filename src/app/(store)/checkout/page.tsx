@@ -9,6 +9,7 @@ import { textoEnvio, validarCheckout } from "@/lib/checkout-validation";
 import { usePreferences } from "@/components/site/Preferences";
 import { track } from "@/lib/analytics";
 import Turnstile from "@/components/Turnstile";
+import AuthForm from "@/components/AuthForm";
 
 // Los métodos los define el panel (nombre, icono, descripción, datos y
 // comisión). Aquí no hay una lista fija de pasarelas.
@@ -51,6 +52,7 @@ export default function Checkout() {
   const [cartOk, setCartOk] = useState(true);
   const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
   const [captcha, setCaptcha] = useState(""); const [captchaKey, setCaptchaKey] = useState(0);
+  const [session, setSession] = useState<"loading" | "in" | "out">("loading");
 
   useEffect(() => {
     const total = Math.max(0, subtotal - (coupon?.discountUsd ?? 0)) + fee;
@@ -62,7 +64,16 @@ export default function Checkout() {
         setPay((actual) => (lista.some((x) => x.key === actual) ? actual : (lista[0]?.key ?? "")));
       });
   }, [subtotal, coupon, fee]);
-  useEffect(() => { fetch("/api/account/session").then((r) => r.json()).then((m) => m && setC({ name: m.name ?? "", email: m.email ?? "", phone: m.phone ?? "" })); }, []);
+  useEffect(() => {
+    fetch("/api/account/session")
+      .then((r) => r.json())
+      .then((m) => {
+        if (!m) { setSession("out"); return; }
+        setC({ name: m.name ?? "", email: m.email ?? "", phone: m.phone ?? "" });
+        setSession("in");
+      })
+      .catch(() => setSession("out"));
+  }, []);
   useEffect(() => {
     if (!items.length) return;
     fetch("/api/cart/price", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items }) }).then((r) => r.json()).then((d) => { setSubtotal(d.subtotalUsd ?? 0); setCartOk(d.allOk ?? false); });
@@ -86,7 +97,11 @@ export default function Checkout() {
     setBusy(true); setErr("");
     const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items, customer: c, delivery, paymentMethod: pay, coupon: coupon?.code, turnstileToken: captcha }) });
     const j = await r.json(); setBusy(false);
-    if (!r.ok) { setCaptcha(""); setCaptchaKey((k) => k + 1); return setErr(j.error ?? t("checkout.createError")); }
+    if (!r.ok) {
+      setCaptcha(""); setCaptchaKey((k) => k + 1);
+      if (r.status === 401) { setSession("out"); return setErr("Inicia sesión para completar la compra."); }
+      return setErr(j.error ?? t("checkout.createError"));
+    }
     clear(); if (j.paymentUrl) window.location.href = j.paymentUrl; else router.push(`/pedido/${j.orderId}`);
   };
   if (!cartReady) return (
@@ -106,6 +121,32 @@ export default function Checkout() {
       <Link href="/catalogo" className="btn btn-primary mt-5">{t("checkout.viewCatalog")}</Link>
     </div></div>
   );
+
+  if (session === "loading") return (
+    <div className="container-x py-8" aria-busy="true">
+      <div className="h-9 w-56 animate-pulse rounded-lg bg-slate-100" />
+      <div className="card mx-auto mt-6 h-56 max-w-md animate-pulse bg-slate-50" />
+    </div>
+  );
+
+  if (session === "out") return (
+    <div className="container-x py-10">
+      <div className="mx-auto grid max-w-5xl items-start gap-8 lg:grid-cols-[1fr_420px]">
+        <div>
+          <span className="eyebrow">Compra segura</span>
+          <h1 className="mt-2 font-display text-3xl font-extrabold text-navy">Inicia sesión para comprar</h1>
+          <p className="mt-3 max-w-md text-slate-500">Solo las cuentas registradas pueden finalizar una compra. Así podemos asociar el pedido a tu historial, enviarte el seguimiento y proteger tus datos.</p>
+          <ul className="mt-6 space-y-3 text-sm text-slate-600">
+            {["Tu carrito se conserva mientras inicias sesión", "Puedes seguir el pedido desde Mi cuenta", "Recibirás el código de entrega en tu correo"].map((x) => (
+              <li key={x} className="flex items-center gap-2"><Icon name="check" size={16} className="text-[color:var(--color-ok)]" /> {x}</li>
+            ))}
+          </ul>
+          <Link href="/carrito" className="btn btn-ghost mt-6"><Icon name="cart" size={16} /> Volver al carrito</Link>
+        </div>
+        <AuthForm next="/checkout" />
+      </div>
+    </div>
+  );
   const ready = faltantes.length === 0;
 
   return (
@@ -123,7 +164,7 @@ export default function Checkout() {
               </label>
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-slate-600">{t("checkout.email")}</span>
-                <input className={`input ${intento && errores.email ? "border-red-400 ring-2 ring-red-100" : ""}`} type="email" autoComplete="email" placeholder="tu@correo.com" value={c.email} onChange={(e) => setC({ ...c, email: e.target.value })} aria-invalid={intento && !!errores.email} />
+                <input className={`input ${session === "in" ? "bg-slate-50 text-slate-500" : ""} ${intento && errores.email ? "border-red-400 ring-2 ring-red-100" : ""}`} type="email" autoComplete="email" placeholder="tu@correo.com" value={c.email} readOnly={session === "in"} onChange={(e) => setC({ ...c, email: e.target.value })} aria-invalid={intento && !!errores.email} />
                 {intento && errores.email && <span className="mt-1 block text-xs text-red-600">{errores.email}</span>}
               </label>
               <label className="block">

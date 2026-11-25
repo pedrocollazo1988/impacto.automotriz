@@ -49,6 +49,15 @@ describe("configuración de sesiones (APP_SECRET)", () => {
   });
 });
 
+describe("baja de productos", () => {
+  it("solo el ADMIN puede eliminar, aunque otros roles gestionen productos", async () => {
+    const { puedeEliminarProducto, ROLE_PERMS } = await import("@/lib/auth");
+    expect(puedeEliminarProducto({ role: "ADMIN" })).toBe(true);
+    expect(ROLE_PERMS.WAREHOUSE).toContain("products");
+    for (const role of ["MANAGER", "SALES", "WAREHOUSE"] as const) expect(puedeEliminarProducto({ role })).toBe(false);
+  });
+});
+
 describe("acceso a un pedido (IDOR)", () => {
   // El id del pedido viaja en la URL y en el correo, así que no puede ser la
   // única llave: sin token, cookie o sesión del dueño, la página da 404.

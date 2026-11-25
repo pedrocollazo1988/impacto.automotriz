@@ -3,10 +3,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Modal, inputCls } from "@/components/admin/ui";
 
-export default function OrderActions({ id, paid, status }: { id: string; paid: boolean; status: string }) {
+export default function OrderActions({ id, paid, status, items, puedeQuitar }: { id: string; paid: boolean; status: string; items: { id: number; name: string; qty: number }[]; puedeQuitar: boolean }) {
   const router = useRouter();
   const [pin, setPin] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [quitar, setQuitar] = useState(false);
+  const [itemId, setItemId] = useState(String(items[0]?.id ?? ""));
+  const [motivo, setMotivo] = useState("Producto no disponible");
   const [err, setErr] = useState("");
   const call = async (body: object) => {
     const r = await fetch("/api/admin/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...body }) });
@@ -20,6 +23,11 @@ export default function OrderActions({ id, paid, status }: { id: string; paid: b
       <button className="btn btn-ghost btn-xs" onClick={() => call({ action: "status", value: "PREPARING" })}>En preparación</button>
       <button className="btn btn-ghost btn-xs" onClick={() => call({ action: "status", value: "SHIPPED" })}>Enviado</button>
       <button className="btn btn-ghost btn-xs" onClick={() => { setPin(""); setErr(""); }}>Entregar (PIN)</button>
+      {puedeQuitar && items.length > 1 && (
+        <button className="btn btn-ghost btn-xs" onClick={() => { setItemId(String(items[0]?.id ?? "")); setMotivo("Producto no disponible"); setQuitar(true); }}>
+          Quitar producto
+        </button>
+      )}
       <button className="btn btn-danger btn-xs" onClick={() => setConfirmCancel(true)}>Cancelar</button>
       {err && <span className="text-xs text-red-600">{err}</span>}
 
@@ -30,6 +38,28 @@ export default function OrderActions({ id, paid, status }: { id: string; paid: b
         <div className="mt-4 flex justify-end gap-2">
           <button className="btn btn-ghost btn-sm" onClick={() => setPin(null)}>Cancelar</button>
           <button className="btn btn-primary btn-sm" disabled={!pin} onClick={() => call({ action: "deliver", pin }).then((ok) => ok && setPin(null))}>Entregar</button>
+        </div>
+      </Modal>
+
+      <Modal open={quitar} title="Retirar producto del pedido" onClose={() => setQuitar(false)}>
+        <p className="mb-2 text-sm text-slate-600">Se devolverá la cantidad al inventario y se recalculará el total del pedido.</p>
+        <label className="block text-xs font-semibold text-slate-600">Producto
+          <select className="input mt-1" value={itemId} onChange={(e) => setItemId(e.target.value)}>
+            {items.map((i) => <option key={i.id} value={i.id}>{i.qty}× {i.name}</option>)}
+          </select>
+        </label>
+        <label className="mt-2 block text-xs font-semibold text-slate-600">Motivo
+          <select className="input mt-1" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
+            <option>Producto no disponible</option>
+            <option>Producto dañado</option>
+            <option>Error en el pedido</option>
+            <option>Precio incorrecto</option>
+            <option>Otro</option>
+          </select>
+        </label>
+        <div className="mt-4 flex justify-end gap-2">
+          <button className="btn btn-ghost btn-sm" onClick={() => setQuitar(false)}>Cancelar</button>
+          <button className="btn btn-primary btn-sm" disabled={!itemId || motivo.length < 3} onClick={() => call({ action: "remove-item", itemId: Number(itemId), reason: motivo }).then((ok) => ok && setQuitar(false))}>Retirar</button>
         </div>
       </Modal>
 

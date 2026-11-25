@@ -1,14 +1,15 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit, handle, requireAdmin } from "@/lib/auth";
-import { encrypt, getTransport } from "@/lib/mailer";
+import { encrypt, getTransport, mailStatus } from "@/lib/mailer";
 
 export const GET = handle(async (req: Request) => {
   const u = await requireAdmin(req, "email");
   const s = await prisma.emailSettings.findUnique({ where: { id: 1 } });
-  if (!s) return Response.json(null);
+  const status = await mailStatus();
+  if (!s) return Response.json({ status });
   const { smtpPassEnc, ...safe } = s; // la contraseña nunca sale al navegador
-  return Response.json({ ...safe, hasPassword: !!smtpPassEnc });
+  return Response.json({ ...safe, hasPassword: !!smtpPassEnc, status });
 });
 
 const Body = z.object({
