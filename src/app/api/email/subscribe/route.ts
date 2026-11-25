@@ -9,7 +9,8 @@ import { requireTurnstile } from "@/lib/turnstile";
 // `website` es un honeypot anti-bots (debe ir vacío).
 const Body = z.object({
   email: z.string().email().max(160).transform((s) => s.toLowerCase()), name: z.string().max(80).optional(),
-  provinceId: z.number().int().optional(), consent: z.literal(true), website: z.string().max(0).optional(),
+  // El formulario público envía solo el correo: el envío del formulario es el consentimiento.
+  provinceId: z.number().int().optional(), consent: z.literal(true).default(true), website: z.string().max(0).optional(),
   tags: z.array(z.string().max(40)).max(5).optional(), source: z.string().max(30).optional(),
   turnstileToken: z.string().max(2048).optional(),
 });

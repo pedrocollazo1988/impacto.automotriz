@@ -60,8 +60,11 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
     }
   };
 
-  const anadir = (key: string) =>
-    setEstado((s) => ({ ...s, [key]: { ...s[key], items: [...s[key].items, { icono: "box", titulo: "", texto: "" }] } }));
+  const anadir = (key: string) => {
+    const campos = secciones.find((sec) => sec.key === key)?.camposItem ?? [];
+    const nuevo = Object.fromEntries(campos.map((c) => [c.key, c.tipo === "icono" ? "box" : ""])) as Item;
+    setEstado((s) => ({ ...s, [key]: { ...s[key], items: [...s[key].items, nuevo] } }));
+  };
 
   const guardar = async (sec: Seccion) => {
     setOcupado(sec.key);

@@ -45,6 +45,8 @@ export const ORDEN_WEB = [
   "politicas-devoluciones",
   "politicas-privacidad",
   "politicas-terminos",
+  "menu-principal",
+  "menu-empresa",
   "facturacion",
   "carrito-config",
 ] as const;

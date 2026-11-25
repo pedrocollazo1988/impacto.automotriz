@@ -8,7 +8,7 @@
 // Este módulo lo importan páginas de servidor y el editor del panel: no debe
 // tocar APIs de navegador.
 
-import { SITE, telefono } from "./site";
+import { NAV_EMPRESA, NAV_PRINCIPAL, SITE, telefono } from "./site";
 
 export type Campo = {
   key: string;
@@ -43,6 +43,30 @@ const tituloTexto: Campo[] = [
 const conIcono: Campo[] = [{ key: "icono", label: "Icono", tipo: "icono" }, ...tituloTexto];
 
 export const SECCIONES: Seccion[] = [
+  {
+    key: "menu-principal",
+    label: "Menú · principal",
+    descripcion: "Los enlaces del menú principal de la cabecera. Cambia la etiqueta o el enlace de cada uno, o añade nuevos.",
+    campos: [],
+    camposItem: [
+      { key: "titulo", label: "Etiqueta" },
+      { key: "href", label: "Enlace", tipo: "url" },
+    ],
+    maxItems: 12,
+    defecto: { items: NAV_PRINCIPAL.map(({ href, label }) => ({ titulo: label, href })) },
+  },
+  {
+    key: "menu-empresa",
+    label: "Menú · empresa",
+    descripcion: "Los enlaces de empresa de la franja superior y del pie: quiénes somos, novedades, testimonios y preguntas frecuentes.",
+    campos: [],
+    camposItem: [
+      { key: "titulo", label: "Etiqueta" },
+      { key: "href", label: "Enlace", tipo: "url" },
+    ],
+    maxItems: 12,
+    defecto: { items: NAV_EMPRESA.map(({ href, label }) => ({ titulo: label, href })) },
+  },
   {
     key: "portada-valor",
     label: "Portada · ventajas",

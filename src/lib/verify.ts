@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { prisma } from "./prisma";
 import { sendTransactional, type SendResult } from "./mailer";
+import { verificationEmail } from "./email-templates";
 
 export const sha256 = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
 
@@ -30,11 +31,7 @@ export async function sendVerificationPin(c: { id: string; email: string; name: 
   return sendTransactional(
     c.email,
     "Tu código de verificación",
-    `<p>Hola ${esc(c.name)},</p>
-     <p>Tu código para confirmar la cuenta es:</p>
-     <p style="font-size:34px;letter-spacing:10px;font-weight:700;margin:18px 0">${pin}</p>
-     <p>Vence en 10 minutos y solo se puede usar una vez. Si no creaste esta cuenta, ignora el mensaje.</p>
-     <p style="font-size:12px;color:#666">Por seguridad, nunca compartas este código. Impacto Automotriz no te lo pedirá por WhatsApp ni por teléfono.</p>`,
+    verificationEmail({ name: c.name, pin }),
   );
 }
 
