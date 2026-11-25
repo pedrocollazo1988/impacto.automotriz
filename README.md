@@ -36,7 +36,7 @@ git push -u origin main
   Si subes fotos/modelos, define `BLOB_READ_WRITE_TOKEN`: en Vercel el disco es de solo lectura y no persiste.
   **`APP_SECRET` es obligatoria**: firma la sesión de clientes y del panel. Sin ella, iniciar sesión parece funcionar pero la sesión no se valida y el usuario vuelve al formulario de acceso. Defínela en Vercel → Settings → Environment Variables (Production **y** Preview).
 - **Comprobar el entorno**: abre `GET /api/health`; devuelve `ok: true` y qué variables están definidas (sin mostrar sus valores). Si `APP_SECRET` sale en `false`, las cuentas no iniciarán sesión.
-- **CAPTCHA en formularios públicos**: define `NEXT_PUBLIC_TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY` de Cloudflare Turnstile. Sin ambas, los formularios no piden CAPTCHA; si solo defines una, las rutas protegidas responden con error de configuración para no dar una falsa sensación de seguridad. El registro además envía un PIN de 6 dígitos por correo (10 minutos, un solo uso).
+- **CAPTCHA**: el registro usa un captcha propio firmado con `APP_SECRET` (imagen SVG, validación en tiempo real, token de un solo uso y límites por IP/reto), así que no necesita claves externas. `NEXT_PUBLIC_TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY` de Cloudflare Turnstile son opcionales: si defines ambas, Turnstile sustituye al captcha propio en el registro y protege el resto de formularios públicos. Si solo defines una, las rutas protegidas responden con error de configuración para no dar una falsa sensación de seguridad. El registro además envía un PIN de 6 dígitos por correo (10 minutos, un solo uso).
 - **Servidor propio**: `npm run build && npm start` + `crontab`:
   `* * * * * curl -s -H "Authorization: Bearer $CRON_SECRET" https://tudominio.com/api/cron/campaigns`
 
@@ -56,6 +56,10 @@ git push -u origin main
 | Productos: formulario, variantes y **carga masiva Excel (.xlsx) o CSV** | ✔ |
 | Moderación de reseñas (`/admin/resenas`), cupones, reportes, comprobante imprimible | ✔ |
 | **Email marketing con doble confirmación**, segmentos, cola con límites, baja con un clic, correos transaccionales, aviso «ya hay existencias» | ✔ |
+| **Plantillas de correo con la marca** (verificación con PIN, bienvenida y confirmación de pedido) | ✔ |
+| **Blog de marcas** con guías, datos estructurados y boletín (`/blog`) | ✔ |
+| **Menús editables** desde el panel para cabecera y pie | ✔ |
+| **Idioma español/inglés** en portada, catálogo, blog, cabecera y pie, con preferencia persistente | ✔ |
 | PWA instalable; **GA4 solo tras aceptar cookies** | ✔ |
 | API de solo lectura para el agente de IA (`/api/agent/products`) | ✔ |
 | **Límite de intentos persistente** (PostgreSQL) en login, registro, recuperación y suscripción | ✔ |

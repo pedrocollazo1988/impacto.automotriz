@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { prisma } from "./prisma";
 import { sendTransactional, type SendResult } from "./mailer";
-import { verificationEmail } from "./email-templates";
+import { verificationEmail, welcomeEmail } from "./email-templates";
 
 export const sha256 = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
 
@@ -32,6 +32,14 @@ export async function sendVerificationPin(c: { id: string; email: string; name: 
     c.email,
     "Tu código de verificación",
     verificationEmail({ name: c.name, pin }),
+  );
+}
+
+export function sendWelcomeEmail(c: { email: string; name: string }): Promise<SendResult> {
+  return sendTransactional(
+    c.email,
+    "Bienvenido a Impacto Automotriz",
+    welcomeEmail({ name: c.name, email: c.email }),
   );
 }
 

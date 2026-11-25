@@ -4,6 +4,7 @@ import { useCart } from "@/components/CartProvider";
 import Icon from "@/components/brand/Icon";
 import { waHref } from "@/lib/site";
 import { usePreferences } from "@/components/site/Preferences";
+import BackToTop from "@/components/site/BackToTop";
 
 const base = "group relative grid h-10 w-10 place-items-center rounded-xl text-navy transition hover:bg-[color:var(--color-action)] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-action)] focus-visible:ring-offset-2";
 const etiqueta = "pointer-events-none absolute right-full mr-2 hidden whitespace-nowrap rounded-lg bg-[color:var(--color-navy)] px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-lg transition group-hover:opacity-100 lg:block";
@@ -24,10 +25,7 @@ export default function ActionRail() {
           <Icon name="whatsapp" size={19} />
           <span className={etiqueta}>{t("rail.whatsapp")}</span>
         </a>
-        <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label={t("rail.up")} className={base}>
-          <Icon name="chevronRight" size={19} className="-rotate-90" />
-          <span className={etiqueta}>{t("rail.up")}</span>
-        </button>
+        <BackToTop floating={false} label={t("rail.up")} className="!h-10 !w-10" />
         <span aria-hidden className="my-1 h-px w-6 bg-slate-200" />
         <Link href="/carrito" aria-label={count ? `${t("header.cart")}, ${count}` : t("header.cart")} className={base}>
           <Icon name="cart" size={19} />

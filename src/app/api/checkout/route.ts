@@ -9,6 +9,7 @@ import { createOnlinePayment } from "@/lib/payments";
 import { leerPasarelas } from "@/lib/payment-gateways";
 import { comision, esCobroAutomatico, estaOperativa, redirigeAlPagar, requiereContraEntrega } from "@/lib/pasarelas";
 import { sendTransactional } from "@/lib/mailer";
+import { orderConfirmationEmail } from "@/lib/email-templates";
 import { orderToken, rememberOrder } from "@/lib/order-access";
 import { requireTurnstile } from "@/lib/turnstile";
 
@@ -84,8 +85,14 @@ export const POST = handle(async (req: Request) => {
     paymentUrl = gw.config.url;
     await prisma.order.update({ where: { id: order.id }, data: { paymentRef: paymentUrl } });
   }
-  await sendTransactional(me.email, `Pedido #${order.number} recibido`,
-    `<p>Hola ${b.customer.name.replace(/[<>&]/g, "")}, recibimos tu pedido <b>#${order.number}</b> por <b>${totalUsd.toFixed(2)} USD</b>.</p><p>PIN de entrega: <b>${delivery.confirmationCode}</b> (dáselo a quien entrega para confirmar la recepción).</p><p>Seguimiento: ${process.env.PUBLIC_URL}/pedido/${order.id}?t=${orderToken(order.id)}</p>`);
+  await sendTransactional(me.email, `Pedido #${order.number} recibido`, orderConfirmationEmail({
+    name: b.customer.name || me.name,
+    orderNumber: order.number,
+    total: `${totalUsd.toFixed(2)} USD`,
+    items: cart.lines.map((l) => ({ name: l.name, qty: l.qty, price: `${l.totalUsd.toFixed(2)} USD` })),
+    trackingUrl: `${process.env.PUBLIC_URL}/pedido/${order.id}?t=${orderToken(order.id)}`,
+    deliveryPin: delivery.confirmationCode,
+  }));
   await rememberOrder(order.id);
   return Response.json({ orderId: order.id, paymentUrl });
 });

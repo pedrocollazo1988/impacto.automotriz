@@ -21,9 +21,9 @@ export default function CategoryMarquee({
   return (
     <nav
       aria-label="Categorías de productos"
-      className="border-y border-slate-200 bg-white print:hidden"
+      className="bg-white print:hidden"
     >
-      <div className="container-x flex items-center gap-2 py-1.5">
+      <div className="flex items-center gap-2 px-3 py-1.5">
         <Link
           href="/catalogo"
           className="flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-bold text-navy transition hover:bg-slate-100"

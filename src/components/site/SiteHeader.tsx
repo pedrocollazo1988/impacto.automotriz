@@ -5,17 +5,23 @@ import { usePathname } from "next/navigation";
 import Logo from "@/components/brand/Logo";
 import Icon from "@/components/brand/Icon";
 import { useCart } from "@/components/CartProvider";
-import { NAV_PRINCIPAL, NAV_EMPRESA, SITE, telefono, waHref } from "@/lib/site";
+import { NAV_PRINCIPAL, NAV_EMPRESA, SITE, telefono, waHref, type Enlace } from "@/lib/site";
 import { LanguageToggle, ThemeToggle, usePreferences } from "@/components/site/Preferences";
 
 const CLAVE_NAV: Record<string, string> = {
   "/catalogo": "nav.catalogo", "/ofertas": "nav.ofertas", "/marcas-y-modelos": "nav.marcas",
-  "/despiece": "nav.despiece", "/novedades": "nav.novedades", "/contacto": "nav.contacto",
+  "/despiece": "nav.despiece", "/blog": "nav.blog", "/blog#suscribirme": "nav.subscribe", "/novedades": "nav.novedades", "/contacto": "nav.contacto",
   "/nosotros": "nav.nosotros", "/testimonios": "nav.testimonios", "/preguntas-frecuentes": "nav.faq",
   "/renta": "nav.renta",
 };
 
-export default function SiteHeader() {
+export default function SiteHeader({
+  navPrincipal = NAV_PRINCIPAL,
+  navEmpresa = NAV_EMPRESA,
+}: {
+  navPrincipal?: Enlace[];
+  navEmpresa?: Enlace[];
+} = {}) {
   const [open, setOpen] = useState(false);
   const [oculto, setOculto] = useState(false);
   const ultimoY = useRef(0);
@@ -25,7 +31,7 @@ export default function SiteHeader() {
   const path = usePathname();
   // Un mismo destino no debe aparecer dos veces en el menú móvil.
   const navMovil = Array.from(new Map([
-    ...NAV_PRINCIPAL, ...NAV_EMPRESA,
+    ...navPrincipal, ...navEmpresa,
     { href: "/renta", label: "Renta y leasing" },
     { href: "/cuenta", label: "Mi cuenta" },
   ].map((l) => [l.href, l] as const)).values());
@@ -70,7 +76,7 @@ export default function SiteHeader() {
               </a>
             </p>
             <nav className="flex items-center gap-4">
-              {NAV_EMPRESA.filter((l) => l.href !== "/novedades").map((l) => (
+              {navEmpresa.filter((l) => l.href !== "/novedades").map((l) => (
                 <Link key={l.href} href={l.href} className="transition hover:text-white">{tr(l.href, l.label)}</Link>
               ))}
               <ThemeToggle />
@@ -130,7 +136,7 @@ export default function SiteHeader() {
       {/* Menú principal en escritorio */}
       <nav className="hidden border-b border-slate-200 bg-white lg:block">
         <div className="container-x flex items-center gap-1">
-          {NAV_PRINCIPAL.map((l) => {
+          {navPrincipal.map((l) => {
             const activo = path === l.href || (l.href !== "/" && path.startsWith(l.href));
             return (
               <Link

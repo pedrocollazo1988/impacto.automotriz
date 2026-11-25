@@ -4,6 +4,7 @@ import Link from "next/link";
 import Icon from "@/components/brand/Icon";
 import SubscribeForm from "@/components/site/SubscribeForm";
 import { BLOG_ARTICLES } from "@/lib/blog";
+import { getT } from "@/lib/i18n";
 
 const SITE_URL = process.env.PUBLIC_URL ?? "http://localhost:3000";
 
@@ -54,7 +55,8 @@ const formatearFecha = (iso: string) =>
     timeZone: "UTC",
   }).format(new Date(iso));
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const { t } = await getT();
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
@@ -84,13 +86,12 @@ export default function BlogPage() {
       <section className="relative overflow-hidden bg-[color:var(--color-navy-deep)] text-white">
         <div aria-hidden className="absolute inset-0 blueprint opacity-60" />
         <div className="container-x relative py-14 sm:py-16 lg:py-20">
-          <span className="eyebrow eyebrow-light">Blog · Marcas destacadas</span>
+          <span className="eyebrow eyebrow-light">{t("blog.eyebrow")}</span>
           <h1 className="mt-2 max-w-4xl font-display text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
-            Marcas que sostienen tu vehículo, explicadas sin humo
+            {t("blog.title")}
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/75 sm:text-lg">
-            Cuatro guías para decidir mejor: frenos Brembo, eléctricos y filtros Bosch, suspensión KYB y el
-            mantenimiento conjunto de Varta y Monroe. Qué mirar, cuándo cambiar y cómo evitar imitaciones.
+            {t("blog.intro")}
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             {BLOG_ARTICLES.map((a) => (
@@ -109,14 +110,13 @@ export default function BlogPage() {
       <section className="container-x py-10 sm:py-12">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <span className="eyebrow text-slate-500">Guías de compra</span>
+            <span className="eyebrow text-slate-500">{t("blog.guides")}</span>
             <h2 className="sec-title mt-1 font-display text-2xl font-extrabold text-navy sm:text-3xl">
-              Cuatro marcas, cuatro decisiones
+              {t("blog.guidesTitle")}
             </h2>
           </div>
           <p className="max-w-md text-sm leading-relaxed text-slate-500">
-            Consejos de compra y mantenimiento, sin datos inventados ni promesas de rendimiento. Cada guía
-            enlaza al catálogo filtrado por marca.
+            {t("blog.guidesIntro")}
           </p>
         </div>
 
@@ -141,7 +141,7 @@ export default function BlogPage() {
                 <h3 className="mt-2 font-display text-base font-bold leading-snug text-navy">{a.title}</h3>
                 <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-500">{a.excerpt}</p>
                 <span className="mt-auto inline-flex items-center gap-1 pt-3 text-sm font-semibold text-navy">
-                  Leer guía <Icon name="arrowRight" size={14} />
+                  {t("blog.read")} <Icon name="arrowRight" size={14} />
                 </span>
               </div>
             </a>
@@ -191,7 +191,7 @@ export default function BlogPage() {
                     </div>
 
                     <div className="mt-5 rounded-xl bg-slate-50 p-4">
-                      <h3 className="font-display text-sm font-bold text-navy">Lo esencial</h3>
+                      <h3 className="font-display text-sm font-bold text-navy">{t("blog.essential")}</h3>
                       <ul className="mt-2 space-y-2">
                         {a.highlights.map((punto) => (
                           <li key={punto} className="flex gap-2 text-sm leading-relaxed text-slate-600">
@@ -214,7 +214,7 @@ export default function BlogPage() {
                           href={`/catalogo?marca=${encodeURIComponent(b.slug)}`}
                           className={`btn ${j === 0 ? "btn-primary" : "btn-ghost"}`}
                         >
-                          Ver {b.name} en catálogo
+                          {t("blog.seeCatalog").replace("{brand}", b.name)}
                           <Icon name="arrowRight" size={15} />
                         </Link>
                       ))}
@@ -227,18 +227,17 @@ export default function BlogPage() {
         </div>
       </section>
 
-      <section className="container-x py-10 sm:py-14">
+      <section id="suscribirme" className="container-x scroll-mt-28 py-10 sm:py-14">
         <div className="relative overflow-hidden rounded-2xl bg-[color:var(--color-navy-deep)] px-5 py-8 text-white sm:px-8 sm:py-10 lg:px-12">
           <div aria-hidden className="absolute inset-0 blueprint opacity-60" />
           <div className="relative grid gap-6 lg:grid-cols-[1fr_minmax(0,28rem)] lg:items-center">
             <div>
-              <span className="eyebrow eyebrow-light">Boletín técnico</span>
+              <span className="eyebrow eyebrow-light">{t("blog.newsletterEyebrow")}</span>
               <h2 className="mt-2 font-display text-2xl font-extrabold leading-tight sm:text-3xl">
-                Recibe guías de compra y avisos de nuevas piezas
+                {t("blog.newsletterTitle")}
               </h2>
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
-                Una vez al mes: comparativas de marcas, señales de desgaste y novedades del catálogo. Sin spam
-                y con baja en un clic.
+                {t("blog.newsletterText")}
               </p>
             </div>
             <div className="rounded-2xl bg-white p-4 shadow-card sm:p-5">

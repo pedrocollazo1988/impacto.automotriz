@@ -25,6 +25,7 @@ export const NAV_PRINCIPAL: Enlace[] = [
   { href: "/ofertas", label: "Ofertas" },
   { href: "/marcas-y-modelos", label: "Marcas y modelos" },
   { href: "/despiece", label: "Despiece" },
+  { href: "/blog", label: "Blog" },
   { href: "/novedades", label: "Novedades" },
   { href: "/contacto", label: "Contacto" },
 ];
@@ -41,6 +42,8 @@ export const SERVICIOS: Enlace[] = [
 /** Enlaces de la franja superior y del pie. */
 export const NAV_EMPRESA: Enlace[] = [
   { href: "/nosotros", label: "Nosotros" },
+  { href: "/blog", label: "Blog" },
+  { href: "/blog#suscribirme", label: "Suscríbete" },
   { href: "/novedades", label: "Novedades" },
   { href: "/testimonios", label: "Testimonios" },
   { href: "/preguntas-frecuentes", label: "Preguntas frecuentes" },

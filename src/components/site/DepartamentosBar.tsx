@@ -1,32 +1,16 @@
-import Link from "next/link";
 import { getCategoriesCached } from "@/lib/catalog";
-import Icon from "@/components/brand/Icon";
+import CategoryMarquee from "./CategoryMarquee";
 
-// Franja de departamentos, como la de MCV: siempre visible bajo la cabecera
-// para entrar a una categoría en un clic desde cualquier página.
+// Franja de departamentos separada de la cabecera: acceso fijo a todo el
+// catálogo y marquesina de categorías, centrada en el ancho de la tienda.
 export default async function DepartamentosBar() {
   const categorias = await getCategoriesCached().catch(() => []);
   if (categorias.length === 0) return null;
 
   return (
-    <div className="border-b border-slate-200 bg-white print:hidden">
-      <div className="container-x flex items-center gap-1 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <Link
-          href="/catalogo"
-          className="flex min-h-12 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-bold text-navy transition hover:bg-slate-100 lg:min-h-0 lg:py-1.5"
-        >
-          <Icon name="grid" size={15} /> Todos los productos
-        </Link>
-        <span aria-hidden className="mx-1 h-4 w-px shrink-0 bg-slate-200" />
-        {categorias.map((c) => (
-          <Link
-            key={c.id}
-            href={`/catalogo?categoria=${c.slug}`}
-            className="flex min-h-12 shrink-0 items-center whitespace-nowrap rounded-lg px-2.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-navy lg:min-h-0 lg:py-1.5"
-          >
-            {c.name}
-          </Link>
-        ))}
+    <div className="container-x mt-3 mb-1 print:hidden">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_8px_24px_-18px_rgba(2,27,72,0.45)]">
+        <CategoryMarquee categories={categorias.map((c) => ({ slug: c.slug, name: c.name }))} />
       </div>
     </div>
   );
