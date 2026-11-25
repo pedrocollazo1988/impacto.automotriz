@@ -6,7 +6,7 @@ import Icon from "@/components/brand/Icon";
 import { Modal } from "@/components/admin/ui";
 import { filtrarProductos, ordenarProductos, type ClaveOrden, type Direccion, type FilaProducto } from "@/lib/admin-sort";
 
-type Props = { filas: FilaProducto[] };
+type Props = { filas: FilaProducto[]; puedeEliminar: boolean };
 
 const COLUMNAS: { clave: ClaveOrden; titulo: string; numerica?: boolean }[] = [
   { clave: "sku", titulo: "Código" },
@@ -25,13 +25,15 @@ function Flecha({ activa, arriba }: { activa: boolean; arriba: boolean }) {
   );
 }
 
-export default function TablaProductos({ filas }: Props) {
+export default function TablaProductos({ filas, puedeEliminar }: Props) {
   const router = useRouter();
   const [consulta, setConsulta] = useState("");
   const [orden, setOrden] = useState<{ clave: ClaveOrden; direccion: Direccion }>({ clave: "stock", direccion: "asc" });
   const [aBorrar, setABorrar] = useState<FilaProducto | null>(null);
   const [borrando, setBorrando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [motivo, setMotivo] = useState("Sin existencias");
+  const [detalle, setDetalle] = useState("");
   // Tras borrar, la fila desaparece al instante aunque `router.refresh()` tarde
   // en traer los datos nuevos (o los sirva de su caché).
   const [eliminados, setEliminados] = useState<Set<number>>(new Set());
@@ -52,7 +54,8 @@ export default function TablaProductos({ filas }: Props) {
     setBorrando(true);
     setError(null);
     try {
-      const r = await fetch(`/api/admin/products?id=${victima.id}`, { method: "DELETE" });
+      const qs = new URLSearchParams({ id: String(victima.id), motivo, detalle });
+      const r = await fetch(`/api/admin/products?${qs}`, { method: "DELETE" });
       if (!r.ok) {
         const cuerpo = await r.json().catch(() => ({}));
         throw new Error(cuerpo.error || `No se pudo eliminar (${r.status})`);
@@ -143,17 +146,23 @@ export default function TablaProductos({ filas }: Props) {
                       <Link className="btn btn-quiet btn-xs" href={`/admin/productos/${p.id}`}>
                         Editar
                       </Link>
-                      <button
-                        type="button"
-                        className="btn btn-danger btn-xs"
-                        onClick={() => {
-                          setError(null);
-                          setABorrar(p);
-                        }}
-                        aria-label={`Eliminar ${p.name}`}
-                      >
-                        <Icon name="trash" size={12} /> Eliminar
-                      </button>
+                      {puedeEliminar ? (
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-xs"
+                          onClick={() => {
+                            setError(null);
+                            setMotivo("Sin existencias");
+                            setDetalle("");
+                            setABorrar(p);
+                          }}
+                          aria-label={`Eliminar ${p.name}`}
+                        >
+                          <Icon name="trash" size={12} /> Eliminar
+                        </button>
+                      ) : (
+                        <span className="px-1 text-[11px] text-slate-400">Solo admin</span>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -170,6 +179,20 @@ export default function TablaProductos({ filas }: Props) {
         <p className="mt-2 text-xs text-slate-500">
           Los pedidos anteriores y sus datos se conservan, así que el historial de ventas no se pierde.
         </p>
+        <label className="mt-4 block text-xs font-semibold text-slate-600">
+          Motivo
+          <select className="input mt-1" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
+            <option>Sin existencias</option>
+            <option>Producto dañado</option>
+            <option>Descontinuado</option>
+            <option>Duplicado</option>
+            <option>Otro</option>
+          </select>
+        </label>
+        <label className="mt-2 block text-xs font-semibold text-slate-600">
+          Detalle (opcional)
+          <input className="input mt-1" value={detalle} onChange={(e) => setDetalle(e.target.value)} maxLength={300} placeholder="Ej.: el proveedor dejó de fabricarlo" />
+        </label>
         <div className="mt-4 flex justify-end gap-2">
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setABorrar(null)} disabled={borrando}>
             Cancelar

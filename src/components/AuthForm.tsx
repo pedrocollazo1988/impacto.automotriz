@@ -4,7 +4,8 @@ import Icon from "@/components/brand/Icon";
 import PasswordField from "@/components/PasswordField";
 import Turnstile from "@/components/Turnstile";
 
-export default function AuthForm({ google = false }: { google?: boolean }) {
+export default function AuthForm({ google = false, next }: { google?: boolean; next?: string }) {
+  const destino = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
   const [f, setF] = useState({ name: "", email: "", phone: "", password: "", marketing: false });
   const [acepto, setAcepto] = useState(false);
@@ -32,7 +33,13 @@ export default function AuthForm({ google = false }: { google?: boolean }) {
     const j = await r.json(); setBusy(false);
     if (!r.ok) { setTurnstileToken(""); setCaptchaKey((k) => k + 1); return setMsg(j.error ?? "Revisa los datos"); }
     if (mode === "forgot") { setMsgOk(true); return setMsg("Si el correo existe, te enviamos un enlace para restablecer la contraseña."); }
-    location.reload();
+    if (mode === "register" && j.emailSent === false) {
+      setMsgOk(false);
+      setMsg(j.emailError ?? "Tu cuenta se creó, pero no pudimos enviar el código de verificación. Revisa la configuración de correo.");
+      setTimeout(() => { location.href = destino ?? "/cuenta"; }, 2500);
+      return;
+    }
+    location.href = destino ?? location.pathname + location.search;
   };
   const titles = { login: "Iniciar sesión", register: "Crear cuenta", forgot: "Recuperar contraseña" } as const;
   return (

@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { prisma } from "./prisma";
-import { sendTransactional } from "./mailer";
+import { sendTransactional, type SendResult } from "./mailer";
 
 export const sha256 = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
 
@@ -16,7 +16,7 @@ export const pinHash = (customerId: string, pin: string) => {
   return crypto.createHmac("sha256", process.env.APP_SECRET).update(`verify-pin:${customerId}:${pin}`).digest("hex");
 };
 
-export async function sendVerificationPin(c: { id: string; email: string; name: string }) {
+export async function sendVerificationPin(c: { id: string; email: string; name: string }): Promise<SendResult> {
   const pin = String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
   await prisma.authToken.deleteMany({ where: { customerId: c.id, kind: "VERIFY_PIN", usedAt: null } });
   await prisma.authToken.create({
@@ -27,7 +27,7 @@ export async function sendVerificationPin(c: { id: string; email: string; name: 
       expiresAt: new Date(Date.now() + 10 * 60_000),
     },
   });
-  await sendTransactional(
+  return sendTransactional(
     c.email,
     "Tu código de verificación",
     `<p>Hola ${esc(c.name)},</p>
@@ -55,5 +55,5 @@ export async function verifyCustomerPin(customerId: string, pin: string) {
 export async function sendVerification(c: { id: string; email: string; name: string }) {
   const token = crypto.randomBytes(32).toString("hex");
   await prisma.authToken.create({ data: { customerId: c.id, kind: "VERIFY", tokenHash: sha256(token), expiresAt: new Date(Date.now() + 86_400_000) } });
-  await sendTransactional(c.email, "Confirma tu correo", `<p>Hola ${esc(c.name)}, confirma tu correo para activar tu cuenta y tus suscripciones:</p><p><a href="${process.env.PUBLIC_URL}/api/account/verify?token=${token}">Confirmar correo</a></p><p>El enlace vale 24 horas.</p>`);
+  return sendTransactional(c.email, "Confirma tu correo", `<p>Hola ${esc(c.name)}, confirma tu correo para activar tu cuenta y tus suscripciones:</p><p><a href="${process.env.PUBLIC_URL}/api/account/verify?token=${token}">Confirmar correo</a></p><p>El enlace vale 24 horas.</p>`);
 }

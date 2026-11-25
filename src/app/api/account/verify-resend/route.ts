@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { handle } from "@/lib/auth";
+import { handle, HttpError } from "@/lib/auth";
 import { limit, limitKey } from "@/lib/ratelimit";
 import { requireCustomer } from "@/lib/customer-auth";
 import { sendVerificationPin } from "@/lib/verify";
@@ -9,6 +9,9 @@ export const POST = handle(async (req: Request) => {
   const me = await requireCustomer();
   await limitKey(me.id, "verify-resend", 3, 10 * 60_000);
   const c = await prisma.customer.findUniqueOrThrow({ where: { id: me.id } });
-  if (!c.emailVerified) await sendVerificationPin(c);
+  if (!c.emailVerified) {
+    const r = await sendVerificationPin(c);
+    if (!r.ok) throw new HttpError(502, "No pudimos enviar el código. Revisa la configuración de correo e inténtalo de nuevo.");
+  }
   return Response.json({ ok: true });
 });

@@ -13,7 +13,7 @@ const STATUS: Record<string, { label: string; tone: "ok" | "warn" | "info" | "da
 };
 
 export default async function Pedidos() {
-  await requirePage("orders");
+  const u = await requirePage("orders");
   const orders = await prisma.order.findMany({ orderBy: { id: "desc" }, take: 50, include: { items: true, delivery: true } });
   return (
     <>
@@ -35,7 +35,7 @@ export default async function Pedidos() {
               </div>
               <p className="mt-1 text-slate-500">{o.items.map((i) => `${i.qty}× ${i.name}`).join(", ")}</p>
               <p className="text-slate-500">{o.delivery ? `${o.delivery.methodName} · ${o.delivery.address ?? "recogida"} · ${o.customerPhone}` : `Pago: ${o.paymentMethodName ?? o.paymentMethod}`}</p>
-              <OrderActions id={o.id} paid={o.paid} status={o.status} />
+              <OrderActions id={o.id} paid={o.paid} status={o.status} items={o.items.map((i) => ({ id: i.id, name: i.name, qty: i.qty }))} puedeQuitar={u.role === "ADMIN"} />
             </div>
           );
         })}</div>

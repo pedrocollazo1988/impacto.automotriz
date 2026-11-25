@@ -27,8 +27,84 @@ export const validUnsubToken = (email: string, t: string) => {
 const unsubUrl = (email: string) => `${process.env.PUBLIC_URL}/api/email/unsubscribe?e=${encodeURIComponent(email)}&t=${unsubToken(email)}`;
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
-export const getTransport = (s: EmailSettings) =>
-  nodemailer.createTransport({ host: s.smtpHost, port: s.smtpPort, secure: s.smtpSecure, auth: { user: s.smtpUser, pass: decrypt(s.smtpPassEnc) }, pool: true, maxConnections: 2 });
+export type MailConfig = {
+  fromName: string;
+  fromEmail: string;
+  replyTo?: string | null;
+  smtpHost: string;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUser: string;
+  smtpPass: string;
+  perMinute: number;
+  dailyLimit: number;
+  companyInfo: string;
+  source: "db" | "env";
+};
+export type SendResult = { ok: true } | { ok: false; error: string };
+
+const fromDb = (s: EmailSettings): MailConfig => ({
+  fromName: s.fromName, fromEmail: s.fromEmail, replyTo: s.replyTo,
+  smtpHost: s.smtpHost, smtpPort: s.smtpPort, smtpSecure: s.smtpSecure,
+  smtpUser: s.smtpUser, smtpPass: decrypt(s.smtpPassEnc),
+  perMinute: s.perMinute, dailyLimit: s.dailyLimit, companyInfo: s.companyInfo, source: "db",
+});
+
+// Alternativa para despliegues sin fila en EmailSettings. Permite configurar el
+// correo desde Vercel sin entrar al panel, que es lo que suele faltar cuando
+// "no llega ningún correo" tras un despliegue nuevo.
+const fromEnv = (): MailConfig | null => {
+  const host = process.env.SMTP_HOST?.trim();
+  const user = process.env.SMTP_USER?.trim();
+  const pass = process.env.SMTP_PASS;
+  const fromEmail = (process.env.MAIL_FROM_EMAIL ?? user)?.trim();
+  if (!host || !user || !pass || !fromEmail) return null;
+  return {
+    fromName: process.env.MAIL_FROM_NAME?.trim() || "Impacto Automotriz",
+    fromEmail,
+    replyTo: process.env.MAIL_REPLY_TO?.trim() || null,
+    smtpHost: host,
+    smtpPort: Number(process.env.SMTP_PORT ?? 587),
+    smtpSecure: String(process.env.SMTP_SECURE ?? "false").toLowerCase() === "true",
+    smtpUser: user,
+    smtpPass: pass,
+    perMinute: Number(process.env.MAIL_PER_MINUTE ?? 20),
+    dailyLimit: Number(process.env.MAIL_DAILY_LIMIT ?? 300),
+    companyInfo: process.env.MAIL_COMPANY_INFO?.trim() || "Impacto Automotriz S.U.R.L.",
+    source: "env",
+  };
+};
+
+export async function loadMailConfig(): Promise<MailConfig | null> {
+  const s = await prisma.emailSettings.findUnique({ where: { id: 1 } }).catch((e) => {
+    console.error("[correo] No se pudo leer EmailSettings:", e instanceof Error ? e.message : e);
+    return null;
+  });
+  if (s) {
+    try { return fromDb(s); }
+    catch (e) {
+      console.error("[correo] No se pudo descifrar la contraseña SMTP. ¿Cambió APP_SECRET?", e instanceof Error ? e.message : e);
+    }
+  }
+  return fromEnv();
+}
+
+export async function mailStatus() {
+  const c = await loadMailConfig();
+  return c
+    ? { configured: true, source: c.source, host: c.smtpHost, port: c.smtpPort, fromEmail: c.fromEmail }
+    : { configured: false, source: null, host: null, port: null, fromEmail: null };
+}
+
+const transportFor = (c: MailConfig) =>
+  nodemailer.createTransport({
+    host: c.smtpHost, port: c.smtpPort, secure: c.smtpSecure,
+    auth: { user: c.smtpUser, pass: c.smtpPass },
+    connectionTimeout: 10_000, greetingTimeout: 10_000, socketTimeout: 20_000,
+  });
+
+// Se mantiene para el panel, que guarda y verifica la configuración de la base.
+export const getTransport = (s: EmailSettings) => transportFor(fromDb(s));
 
 export type Segment = { provinceIds?: number[]; tags?: string[] };
 export const audienceWhere = (s?: Segment | null): Prisma.SubscriberWhereInput => ({
@@ -37,62 +113,77 @@ export const audienceWhere = (s?: Segment | null): Prisma.SubscriberWhereInput =
   ...(s?.tags?.length ? { tags: { hasSome: s.tags } } : {}),
 });
 
-function render(html: string, to: { email: string; name?: string | null }, s: EmailSettings) {
+function render(html: string, to: { email: string; name?: string | null }, c: MailConfig) {
   const body = html.replaceAll("{{nombre}}", esc(to.name ?? "cliente"));
-  return `${body}<hr style="margin-top:32px;border:0;border-top:1px solid #ddd"><p style="font:12px Arial;color:#777">${esc(s.companyInfo)} · Recibes este correo porque te suscribiste en nuestra tienda. <a href="${unsubUrl(to.email)}">Darme de baja</a></p>`;
+  return `${body}<hr style="margin-top:32px;border:0;border-top:1px solid #ddd"><p style="font:12px Arial;color:#777">${esc(c.companyInfo)} · Recibes este correo porque te suscribiste en nuestra tienda. <a href="${unsubUrl(to.email)}">Darme de baja</a></p>`;
 }
 
-async function sendOne(tr: ReturnType<typeof getTransport>, s: EmailSettings, to: { email: string; name?: string | null }, subject: string, html: string) {
-  await tr.sendMail({
-    from: `"${s.fromName}" <${s.fromEmail}>`, replyTo: s.replyTo ?? undefined, to: to.email, subject,
-    html: render(html, to, s),
-    headers: { "List-Unsubscribe": `<${unsubUrl(to.email)}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
-  });
+const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e)).slice(0, 300);
+
+async function deliver(c: MailConfig, to: { email: string; name?: string | null }, subject: string, html: string, footer: boolean): Promise<SendResult> {
+  try {
+    const tr = transportFor(c);
+    await tr.sendMail({
+      from: `"${c.fromName}" <${c.fromEmail}>`, replyTo: c.replyTo ?? undefined, to: to.email, subject,
+      html: footer ? render(html, to, c) : html,
+      ...(footer ? { headers: { "List-Unsubscribe": `<${unsubUrl(to.email)}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } } : {}),
+    });
+    return { ok: true };
+  } catch (e) {
+    console.error(`[correo] Falló el envío a ${to.email}:`, errorText(e));
+    return { ok: false, error: errorText(e) };
+  }
 }
 
 export async function sendTest(to: string, subject: string, html: string) {
-  const s = await prisma.emailSettings.findUnique({ where: { id: 1 } });
-  if (!s) throw new Error("Configura primero la cuenta de correo");
-  await sendOne(getTransport(s), s, { email: to, name: "Prueba" }, `[PRUEBA] ${subject}`, html);
+  const c = await loadMailConfig();
+  if (!c) throw new Error("Configura la cuenta de correo (o define SMTP_HOST, SMTP_USER, SMTP_PASS y MAIL_FROM_EMAIL)");
+  const r = await deliver(c, { email: to, name: "Prueba" }, `[PRUEBA] ${subject}`, html, false);
+  if (!r.ok) throw new Error(r.error);
 }
 
 // Se ejecuta cada minuto (cron). Envía por lotes respetando límite por minuto y diario,
 // para no ser marcado como spam por el proveedor del dominio y evitar timeouts del servidor.
 export async function processQueue() {
-  const s = await prisma.emailSettings.findUnique({ where: { id: 1 } });
-  if (!s) return { sent: 0, note: "Sin configuración de correo" };
+  const c = await loadMailConfig();
+  if (!c) return { sent: 0, note: "Sin configuración de correo" };
   const day = new Date(); day.setHours(0, 0, 0, 0);
   const today = await prisma.campaignSend.count({ where: { status: "SENT", sentAt: { gte: day } } });
-  let budget = Math.min(s.perMinute, s.dailyLimit - today);
+  let budget = Math.min(c.perMinute, c.dailyLimit - today);
   if (budget <= 0) return { sent: 0, note: "Límite diario alcanzado" };
-  const tr = getTransport(s);
   let sent = 0;
-  for (const c of await prisma.campaign.findMany({ where: { status: "SENDING" }, orderBy: { id: "asc" } })) {
+  for (const campaign of await prisma.campaign.findMany({ where: { status: "SENDING" }, orderBy: { id: "asc" } })) {
     if (budget <= 0) break;
-    const subs = await prisma.subscriber.findMany({ where: { ...audienceWhere(c.segment as Segment), sends: { none: { campaignId: c.id } } }, take: budget });
-    if (!subs.length) { await prisma.campaign.update({ where: { id: c.id }, data: { status: "SENT", sentAt: new Date() } }); continue; }
+    const subs = await prisma.subscriber.findMany({ where: { ...audienceWhere(campaign.segment as Segment), sends: { none: { campaignId: campaign.id } } }, take: budget });
+    if (!subs.length) { await prisma.campaign.update({ where: { id: campaign.id }, data: { status: "SENT", sentAt: new Date() } }); continue; }
     for (const sub of subs) {
-      try { await sendOne(tr, s, sub, c.subject, c.html); await prisma.campaignSend.create({ data: { campaignId: c.id, subscriberId: sub.id, status: "SENT" } }); sent++; }
-      catch (e) { await prisma.campaignSend.create({ data: { campaignId: c.id, subscriberId: sub.id, status: "FAILED", error: String(e).slice(0, 300) } }); }
+      const r = await deliver(c, sub, campaign.subject, campaign.html, true);
+      await prisma.campaignSend.create({ data: { campaignId: campaign.id, subscriberId: sub.id, status: r.ok ? "SENT" : "FAILED", error: r.ok ? undefined : r.error } });
+      if (r.ok) sent++;
       budget--;
     }
   }
   return { sent };
 }
 
-// Correos transaccionales (confirmación de pedido, cambio de estado, PIN de entrega...)
-export async function sendTransactional(to: string, subject: string, html: string) {
-  const s = await prisma.emailSettings.findUnique({ where: { id: 1 } });
-  if (!s) return;
-  await getTransport(s).sendMail({ from: `"${s.fromName}" <${s.fromEmail}>`, to, subject, html });
+// Correos transaccionales (confirmación de pedido, cambio de estado, PIN de entrega...).
+// Devuelve el resultado para que quien llama pueda avisar al usuario si el correo no salió.
+export async function sendTransactional(to: string, subject: string, html: string): Promise<SendResult> {
+  const c = await loadMailConfig();
+  if (!c) {
+    const error = "No hay configuración SMTP (panel de correo o variables SMTP_HOST/SMTP_USER/SMTP_PASS/MAIL_FROM_EMAIL)";
+    console.error(`[correo] ${error}; no se envió "${subject}" a ${to}`);
+    return { ok: false, error };
+  }
+  return deliver(c, { email: to }, subject, html, false);
 }
 
 // Aviso "ya hay existencias": llamar cuando el inventario de un producto pase de 0 a >0.
 export async function notifyBackInStock(productId: string, productName: string, productUrl: string) {
   const alerts = await prisma.stockAlert.findMany({ where: { productId, notifiedAt: null } });
   for (const a of alerts) {
-    await sendTransactional(a.email, `¡Ya hay existencias de ${productName}!`, `<p>El producto que esperabas ya está disponible: <a href="${productUrl}">${esc(productName)}</a>.</p>`);
-    await prisma.stockAlert.update({ where: { id: a.id }, data: { notifiedAt: new Date() } });
+    const r = await sendTransactional(a.email, `¡Ya hay existencias de ${productName}!`, `<p>El producto que esperabas ya está disponible: <a href="${productUrl}">${esc(productName)}</a>.</p>`);
+    if (r.ok) await prisma.stockAlert.update({ where: { id: a.id }, data: { notifiedAt: new Date() } });
   }
 }
 

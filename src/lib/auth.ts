@@ -21,6 +21,8 @@ export const ROLE_PERMS: Record<Role, Perm[]> = {
 };
 export type StaffSession = { id: string; name: string; email: string; role: Role };
 export const can = (u: StaffSession, p: Perm) => ROLE_PERMS[u.role].includes(p);
+/** La baja de un producto es irreversible desde la tienda: solo el ADMIN. */
+export const puedeEliminarProducto = (u: Pick<StaffSession, "role">) => u.role === "ADMIN";
 
 export const SESSION_COOKIE = "ia_admin";
 const sig = (v: string) => crypto.createHmac("sha256", process.env.APP_SECRET ?? "").update(`staff:${v}`).digest("hex");

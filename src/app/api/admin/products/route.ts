@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, handle, requireAdmin } from "@/lib/auth";
+import { audit, handle, requireAdmin, puedeEliminarProducto, HttpError } from "@/lib/auth";
 import { saveProduct } from "@/lib/catalog";
 import { MAX_FOTOGRAMAS_360, MAX_FOTOS, MAX_VIDEOS } from "@/lib/medios";
 import { VISTAS } from "@/lib/viewer";
@@ -36,8 +36,15 @@ export const POST = handle(async (req: Request) => {
 });
 export const DELETE = handle(async (req: Request) => {
   const u = await requireAdmin(req, "products");
-  const pid = Number(new URL(req.url).searchParams.get("id"));
-  await audit(u, "producto.desactivar", String(pid));
+  if (!puedeEliminarProducto(u)) throw new HttpError(403, "Solo el administrador puede eliminar productos.");
+  const url = new URL(req.url);
+  const pid = Number(url.searchParams.get("id"));
+  if (!Number.isInteger(pid) || pid <= 0) throw new HttpError(400, "Producto inválido");
+  const motivo = (url.searchParams.get("motivo") ?? "Sin motivo indicado").slice(0, 120);
+  const detalle = (url.searchParams.get("detalle") ?? "").slice(0, 300);
+  const p = await prisma.product.findUnique({ where: { id: pid }, select: { sku: true, name: true } });
+  if (!p) throw new HttpError(404, "Producto no encontrado");
   await prisma.product.update({ where: { id: pid }, data: { active: false } }); // baja lógica: conserva el historial
+  await audit(u, "producto.desactivar", `${p.sku} · ${p.name} · ${motivo}${detalle ? ` · ${detalle}` : ""}`);
   return Response.json({ ok: true });
 });
