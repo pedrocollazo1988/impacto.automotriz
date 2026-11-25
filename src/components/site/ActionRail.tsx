@@ -14,7 +14,7 @@ export default function ActionRail() {
   const count = items.reduce((n, i) => n + i.qty, 0);
 
   return (
-    <nav aria-label="Acciones rápidas" className="fixed right-2 top-1/2 z-40 -translate-y-1/2 sm:right-4 print:hidden">
+    <nav aria-label="Acciones rápidas" className="fixed right-2 top-1/2 z-40 hidden -translate-y-1/2 sm:right-4 sm:block print:hidden">
       <div className="flex flex-col items-center gap-0.5 rounded-2xl border border-slate-200/80 bg-white/90 p-1.5 shadow-[0_18px_50px_-18px_rgba(2,27,72,0.45)] backdrop-blur-md">
         <Link href="/preguntas-frecuentes" aria-label={t("rail.faq")} className={base}>
           <Icon name="info" size={19} />

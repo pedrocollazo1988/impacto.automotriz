@@ -54,6 +54,7 @@ export const getBrandsCached = unstable_cache(
 export const invalidarCacheCatalogo = () => {
   revalidateTag(CATEGORIAS_TAG);
   revalidateTag(MARCAS_TAG);
+  revalidateTag("producto");
 };
 
 export type ProductInput = {

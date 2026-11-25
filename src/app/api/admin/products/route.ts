@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit, handle, requireAdmin, puedeEliminarProducto, HttpError } from "@/lib/auth";
@@ -45,6 +46,7 @@ export const DELETE = handle(async (req: Request) => {
   const p = await prisma.product.findUnique({ where: { id: pid }, select: { sku: true, name: true } });
   if (!p) throw new HttpError(404, "Producto no encontrado");
   await prisma.product.update({ where: { id: pid }, data: { active: false } }); // baja lógica: conserva el historial
+  revalidateTag("producto");
   await audit(u, "producto.desactivar", `${p.sku} · ${p.name} · ${motivo}${detalle ? ` · ${detalle}` : ""}`);
   return Response.json({ ok: true });
 });

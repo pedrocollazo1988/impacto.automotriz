@@ -50,7 +50,7 @@ export default function PromoSlider({ items }: { items: Slide[] }) {
           touch.current = null;
         }}
       >
-        <div className="relative h-[230px] sm:h-[280px] lg:h-[310px]">
+        <div className="relative h-[250px] min-[360px]:h-[230px] sm:h-[280px] lg:h-[310px]">
           {items.map((s, idx) => (
             <div
               key={`${s.href}-${idx}`}
@@ -73,9 +73,9 @@ export default function PromoSlider({ items }: { items: Slide[] }) {
             <span className="eyebrow eyebrow-light inline-flex w-fit items-center gap-2">
               <Icon name={activo.icono || "tag"} size={14} /> {t("home.promoEyebrow")}
             </span>
-            <h2 className="mt-3 line-clamp-2 font-display text-2xl font-extrabold leading-tight sm:text-3xl lg:text-4xl">{activo.titulo}</h2>
-            {activo.texto && <p className="mt-2 line-clamp-2 max-w-xl text-sm text-white/80 sm:text-base">{activo.texto}</p>}
-            <div className="mt-5 flex flex-wrap items-center gap-2">
+            <h2 className="mt-3 line-clamp-3 font-display text-[22px] font-extrabold leading-tight min-[360px]:line-clamp-2 min-[360px]:text-2xl sm:text-3xl lg:text-4xl">{activo.titulo}</h2>
+            {activo.texto && <p className="mt-2 hidden line-clamp-2 max-w-xl text-sm text-white/80 min-[360px]:block sm:text-base">{activo.texto}</p>}
+            <div className="mt-4 flex flex-wrap items-center gap-2 min-[360px]:mt-5">
               <Link href={activo.href} className="btn btn-accent">
                 {t("home.promoSee")} <Icon name="arrowRight" size={17} />
               </Link>
@@ -87,12 +87,14 @@ export default function PromoSlider({ items }: { items: Slide[] }) {
 
           {n > 1 && (
             <>
-              <button type="button" onClick={() => mover(-1)} aria-label={t("home.promoPrev")} className="absolute left-3 top-1/2 z-20 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-white/25">
-                <Icon name="chevronLeft" size={20} />
-              </button>
-              <button type="button" onClick={() => mover(1)} aria-label={t("home.promoNext")} className="absolute right-3 top-1/2 z-20 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-white/25">
-                <Icon name="chevronRight" size={20} />
-              </button>
+              <div className="absolute right-3 top-3 z-20 hidden gap-1 sm:flex">
+                <button type="button" onClick={() => mover(-1)} aria-label={t("home.promoPrev")} className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-white/25">
+                  <Icon name="chevronLeft" size={18} />
+                </button>
+                <button type="button" onClick={() => mover(1)} aria-label={t("home.promoNext")} className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-white/25">
+                  <Icon name="chevronRight" size={18} />
+                </button>
+              </div>
               <div className="absolute bottom-4 right-5 z-20 flex gap-1.5">
                 {items.map((_, idx) => (
                   <button

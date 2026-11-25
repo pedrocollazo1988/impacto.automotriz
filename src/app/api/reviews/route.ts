@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { handle, HttpError } from "@/lib/auth";
@@ -12,5 +13,6 @@ export const POST = handle(async (req: Request) => {
   const bought = await prisma.orderItem.count({ where: { productId: b.productId, order: { customerId: c.id, status: { in: ["PAID", "PREPARING", "SHIPPED", "DELIVERED"] } } } });
   if (!bought) throw new HttpError(403, "Solo puedes valorar productos que compraste");
   await prisma.review.upsert({ where: { productId_customerId: { productId: b.productId, customerId: c.id } }, create: { productId: b.productId, rating: b.rating, comment: b.comment, customerId: c.id }, update: { rating: b.rating, comment: b.comment } });
+  revalidateTag("resenas");
   return Response.json({ ok: true });
 });

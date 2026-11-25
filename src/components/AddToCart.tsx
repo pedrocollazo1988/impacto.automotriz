@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { useCart } from "./CartProvider";
 import Icon from "@/components/brand/Icon";
 import Turnstile from "@/components/Turnstile";
 
 export type VariantOpt = { id: number; name: string; priceUsd: number | null; stock: number };
 
-export default function AddToCart({ productId, stock, basePriceUsd, variants = [] }: { productId: number; stock: number; basePriceUsd: number; variants?: VariantOpt[] }) {
+export default function AddToCart({ productId, stock, basePriceUsd, variants = [], authenticated = false }: { productId: number; stock: number; basePriceUsd: number; variants?: VariantOpt[]; authenticated?: boolean }) {
   const { items, add } = useCart();
   const [qty, setQty] = useState(1);
   const [done, setDone] = useState(false);
@@ -79,6 +80,12 @@ export default function AddToCart({ productId, stock, basePriceUsd, variants = [
           {done ? <><Icon name="check" size={18} /> Añadido</> : <><Icon name="cart" size={18} /> Añadir al carrito</>}
         </button>
       </div>
+      {!authenticated && (
+        <p className="flex items-start gap-2 rounded-lg bg-sky-50 px-3 py-2 text-xs text-sky-800">
+          <Icon name="info" size={14} className="mt-0.5 shrink-0" />
+          <span>Puedes añadir sin cuenta. Para completar la compra te pediremos <Link href="/checkout" className="font-semibold underline">iniciar sesión</Link>; tu carrito se conserva.</span>
+        </p>
+      )}
       <p className="flex items-center gap-2 text-xs text-slate-400"><Icon name="shield" size={14} /> Precio y existencias verificados en el servidor al confirmar el pedido.</p>
     </div>
   );

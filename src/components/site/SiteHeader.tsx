@@ -1,11 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/components/brand/Logo";
 import Icon from "@/components/brand/Icon";
 import { useCart } from "@/components/CartProvider";
-import { NAV_PRINCIPAL, NAV_EMPRESA, SITE, telefono } from "@/lib/site";
+import { NAV_PRINCIPAL, NAV_EMPRESA, SITE, telefono, waHref } from "@/lib/site";
 import { LanguageToggle, ThemeToggle, usePreferences } from "@/components/site/Preferences";
 
 const CLAVE_NAV: Record<string, string> = {
@@ -17,15 +17,43 @@ const CLAVE_NAV: Record<string, string> = {
 
 export default function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const [oculto, setOculto] = useState(false);
+  const ultimoY = useRef(0);
   const { t } = usePreferences();
   const tr = (href: string, label: string) => (CLAVE_NAV[href] ? t(CLAVE_NAV[href]) : label);
   const { count } = useCart();
   const path = usePathname();
+  // Un mismo destino no debe aparecer dos veces en el menú móvil.
+  const navMovil = Array.from(new Map([
+    ...NAV_PRINCIPAL, ...NAV_EMPRESA,
+    { href: "/renta", label: "Renta y leasing" },
+    { href: "/cuenta", label: "Mi cuenta" },
+  ].map((l) => [l.href, l] as const)).values());
 
   useEffect(() => setOpen(false), [path]);
 
+  // En móvil la cabecera se va al bajar y vuelve al subir. En escritorio se
+  // queda fija: allí no roba espacio y sirve de referencia constante.
+  useEffect(() => {
+    let pendiente = false;
+    const alDesplazar = () => {
+      if (pendiente) return;
+      pendiente = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const delta = y - ultimoY.current;
+        if (open || y < 80 || delta < -6) setOculto(false);
+        else if (delta > 6) setOculto(true);
+        ultimoY.current = y;
+        pendiente = false;
+      });
+    };
+    window.addEventListener("scroll", alDesplazar, { passive: true });
+    return () => window.removeEventListener("scroll", alDesplazar);
+  }, [open]);
+
   return (
-    <header className="sticky top-0 z-40 print:hidden">
+    <header className={`sticky top-0 z-40 will-change-transform transition-transform duration-300 print:hidden ${oculto ? "-translate-y-full lg:translate-y-0" : "translate-y-0"}`}>
       {/* Barra de utilidad fija: si se ocultaba al bajar, el header cambiaba
           de alto y el contenido daba un salto. */}
       <div className="hidden bg-[color:var(--color-navy-deep)] text-white/75 lg:block">
@@ -42,7 +70,7 @@ export default function SiteHeader() {
               </a>
             </p>
             <nav className="flex items-center gap-4">
-              {NAV_EMPRESA.map((l) => (
+              {NAV_EMPRESA.filter((l) => l.href !== "/novedades").map((l) => (
                 <Link key={l.href} href={l.href} className="transition hover:text-white">{tr(l.href, l.label)}</Link>
               ))}
               <ThemeToggle />
@@ -74,17 +102,17 @@ export default function SiteHeader() {
             <Link href="/comparar" aria-label={t("header.compare")} className="hidden h-12 w-12 place-items-center rounded-xl text-slate-700 lg:h-11 lg:w-11 transition hover:bg-slate-100 hover:text-navy sm:grid">
               <Icon name="compare" size={20} />
             </Link>
-            <Link href="/carrito" aria-label={t("header.cart")} title={t("header.cart")} className="relative grid h-12 w-12 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 hover:text-navy lg:h-11 lg:w-11">
+            <Link href="/carrito" aria-label={t("header.cart")} title={t("header.cart")} className="relative grid h-10 w-10 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 hover:text-navy sm:h-12 sm:w-12 lg:h-11 lg:w-11">
               <Icon name="cart" size={20} />
-              {count > 0 && <span className="absolute right-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[color:var(--color-action)] px-1 text-[11px] font-bold text-white ring-2 ring-white">{count}</span>}
+              {count > 0 && <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[color:var(--color-action)] px-1 text-[11px] font-bold text-white ring-2 ring-white sm:right-1 sm:top-1">{count}</span>}
             </Link>
-            <Link href="/cuenta#deseos" aria-label={t("header.wishlist")} title={t("header.wishlist")} className="grid h-12 w-12 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 hover:text-[color:var(--color-action)] lg:h-11 lg:w-11">
+            <Link href="/cuenta#deseos" aria-label={t("header.wishlist")} title={t("header.wishlist")} className="hidden h-12 w-12 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 hover:text-[color:var(--color-action)] sm:grid lg:h-11 lg:w-11">
               <Icon name="heart" size={20} />
             </Link>
-            <Link href="/cuenta" aria-label={t("header.account")} title={t("header.account")} className="grid h-12 w-12 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 hover:text-navy lg:h-11 lg:w-11">
+            <Link href="/cuenta" aria-label={t("header.account")} title={t("header.account")} className="grid h-10 w-10 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 hover:text-navy sm:h-12 sm:w-12 lg:h-11 lg:w-11">
               <Icon name="user" size={20} />
             </Link>
-            <button onClick={() => setOpen((v) => !v)} aria-label={t("header.menu")} aria-expanded={open} className="grid h-12 w-12 place-items-center rounded-xl text-navy transition hover:bg-slate-100 lg:hidden">
+            <button onClick={() => setOpen((v) => !v)} aria-label={t("header.menu")} aria-expanded={open} className="grid h-10 w-10 place-items-center rounded-xl text-navy transition hover:bg-slate-100 sm:h-12 sm:w-12 lg:hidden">
               <Icon name={open ? "close" : "menu"} size={22} />
             </button>
           </div>
@@ -132,11 +160,14 @@ export default function SiteHeader() {
           <div className="flex items-center gap-1"><ThemeToggle /><LanguageToggle /></div>
         </div>
         <nav className="container-x flex flex-col py-2">
-          {[...NAV_PRINCIPAL, ...NAV_EMPRESA, { href: "/renta", label: "Renta y leasing" }, { href: "/cuenta", label: "Mi cuenta" }].map((l) => (
+          {navMovil.map((l) => (
             <Link key={l.href} href={l.href} className="flex min-h-12 items-center justify-between rounded-lg px-2 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy">
               {tr(l.href, l.label)}<Icon name="chevronRight" size={16} className="text-slate-400" />
             </Link>
           ))}
+          <a href={waHref("Hola, quiero hacer una consulta sobre sus productos")} target="_blank" rel="noopener" className="mt-1 flex min-h-12 items-center gap-2 rounded-lg px-2 py-3 text-sm font-semibold text-emerald-700 hover:bg-emerald-50">
+            <Icon name="whatsapp" size={18} /> Consultar por WhatsApp
+          </a>
         </nav>
       </div>
     </header>

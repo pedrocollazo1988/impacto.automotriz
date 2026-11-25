@@ -20,6 +20,7 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [subiendo, setSubiendo] = useState<string | null>(null);
   const [confirmar, setConfirmar] = useState<Seccion | null>(null);
+  const [avanzado, setAvanzado] = useState(false);
 
   const cambiar = (key: string, campo: keyof Bloque, valor: unknown) =>
     setEstado((s) => ({ ...s, [key]: { ...s[key], [campo]: valor } }));
@@ -113,9 +114,16 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
     <div className="space-y-3">
       <div className="adm-panel flex items-start gap-3 px-4 py-3 text-sm text-slate-600">
         <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name="info" size={16} /></span>
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="font-semibold text-navy">Cómo editar el contenido</p>
-          <p className="mt-0.5 text-xs leading-relaxed">Los bloques están ordenados como aparecen en la web. Abre uno, cambia el texto y pulsa «Guardar». Si desmarcas «Visible en la web», la sección se oculta sin borrar lo escrito.</p>
+          <p className="mt-0.5 text-xs leading-relaxed">
+            {avanzado
+              ? "Los bloques están ordenados como aparecen en la web. Abre uno, cambia el texto y pulsa «Guardar». Si desmarcas «Visible en la web», la sección se oculta sin borrar lo escrito."
+              : "Elige una sección, cambia el texto y pulsa «Guardar». Los cambios se publican al instante. Los iconos y la configuración técnica están en la vista avanzada."}
+          </p>
+          <button type="button" onClick={() => setAvanzado((v) => !v)} className="btn btn-ghost btn-sm mt-2">
+            <Icon name={avanzado ? "eye" : "wrench"} size={14} /> {avanzado ? "Vista simple" : "Vista avanzada"}
+          </button>
         </div>
       </div>
       {aviso && (
@@ -125,6 +133,7 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
       )}
 
       {secciones.map((sec) => {
+        if (!avanzado && (sec.key === "facturacion" || sec.key === "carrito-config")) return null;
         const b = estado[sec.key];
         const activa = abierta === sec.key;
         const max = sec.maxItems ?? 30;
@@ -165,7 +174,9 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
               <div className="space-y-4 border-t border-slate-100 px-4 py-4">
                 {sec.campos.length > 0 && (
                   <div className="grid gap-3 sm:grid-cols-2">
-                    {sec.campos.map((c) => (
+                    {sec.campos.map((c) => {
+                      if (!avanzado && c.tipo === "icono") return null;
+                      return (
                       <div key={c.key} className={c.ancho ? "sm:col-span-2" : ""}>
                         <Field label={c.label}>
                           {c.tipo === "parrafo" ? (
@@ -190,7 +201,8 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
                           )}
                         </Field>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
@@ -215,7 +227,9 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
                           )}
                         </div>
                         <div className="grid gap-2 sm:grid-cols-2">
-                          {camposItem.map((c) => (
+                          {camposItem.map((c) => {
+                            if (!avanzado && c.tipo === "icono") return null;
+                            return (
                             <div key={c.key} className={c.ancho ? "sm:col-span-2" : ""}>
                               <Field label={c.label}>
                                 {c.tipo === "icono" ? (
@@ -259,7 +273,8 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
                                 )}
                               </Field>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -278,12 +293,14 @@ export default function ContenidoEditor({ secciones, valores, guardadas }: Props
                       checked={b.visible}
                       onChange={(e) => cambiar(sec.key, "visible", e.target.checked)}
                     />
-                    Visible en la web
+                    {avanzado ? "Visible en la web" : "Mostrar esta sección en la web"}
                   </label>
                   <div className="flex gap-2">
-                    <button type="button" className="btn btn-quiet btn-sm" onClick={() => setConfirmar(sec)} disabled={!guardado[sec.key]}>
-                      <Icon name="refresh" size={14} /> Texto original
-                    </button>
+                    {avanzado && (
+                      <button type="button" className="btn btn-quiet btn-sm" onClick={() => setConfirmar(sec)} disabled={!guardado[sec.key]}>
+                        <Icon name="refresh" size={14} /> Texto original
+                      </button>
+                    )}
                     <button type="button" className="btn btn-primary btn-sm" onClick={() => guardar(sec)} disabled={ocupado === sec.key}>
                       {ocupado === sec.key ? "Guardando…" : "Guardar"}
                     </button>

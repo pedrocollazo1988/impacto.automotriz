@@ -1,9 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
-import { cache } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { getProductPageCached, getProductReviewsCached, getRelatedProductsCached } from "@/lib/product-page";
 import AddToCart from "@/components/AddToCart";
 import ProductViewer from "@/components/ProductViewer";
 import ProductCard from "@/components/ProductCard";
@@ -19,38 +19,23 @@ import { waHref } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
-const get = cache(async (slug: string) => {
-  return prisma.product.findFirst({
-    where: { slug, active: true },
-    include: {
-      brand: true, category: true, fits: true,
-      variants: { where: { active: true }, orderBy: { id: "asc" } },
-      system: true,
-      compatWith: { include: { target: { select: { slug: true, name: true, sku: true } } } },
-      pins: {
-        take: 3,
-        include: { diagram: { include: { vehicle: { select: { slug: true, brand: true, model: true, version: true } }, system: { select: { slug: true, name: true } } } } },
-      },
-    },
-  });
-});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const p = await get((await params).slug);
+  const p = await getProductPageCached((await params).slug);
   return p ? { title: p.name, description: p.description.slice(0, 150), openGraph: { images: p.images.slice(0, 1) } } : {};
 }
 
 export default async function Producto({ params }: Props) {
-  const [p, me] = await Promise.all([get((await params).slug), getCustomer()]);
+  const [p, me] = await Promise.all([getProductPageCached((await params).slug), getCustomer()]);
   if (!p) notFound();
   prisma.product.update({ where: { id: p.id }, data: { views: { increment: 1 } } }).catch(() => {});
-  // Las cuatro consultas dependen solo del producto y de la sesión: se lanzan
-  // juntas para que la ficha no encadene cuatro viajes a la base de datos.
+  // Reseñas y relacionados se cachean aparte; la sesión solo decide si el
+  // cliente puede valorar o si ya tiene la pieza en deseos.
   const [reviews, inWish, bought, related] = await Promise.all([
-    prisma.review.findMany({ where: { productId: p.id, visible: true }, orderBy: { id: "desc" }, take: 20, include: { customer: { select: { name: true } } } }),
+    getProductReviewsCached(p.id),
     me ? prisma.wishlistItem.count({ where: { customerId: me.id, productId: p.id } }) : 0,
     me ? prisma.orderItem.count({ where: { productId: p.id, order: { customerId: me.id, status: { in: ["PAID", "PREPARING", "SHIPPED", "DELIVERED"] } } } }) : 0,
-    prisma.product.findMany({ where: { active: true, categoryId: p.categoryId, id: { not: p.id } }, take: 4, include: { brand: true, category: { select: { slug: true } } } }),
+    getRelatedProductsCached(p.categoryId, p.id),
   ]);
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
   // Los fotogramas pueden venir del panel (subidos) o de la secuencia estática de
@@ -120,7 +105,7 @@ export default async function Producto({ params }: Props) {
           )}
 
           <div className="card p-5">
-            <AddToCart productId={p.id} stock={p.stock} basePriceUsd={Number(p.priceUsd)} variants={p.variants.map((v) => ({ id: v.id, name: v.name, priceUsd: v.priceUsd != null ? Number(v.priceUsd) : null, stock: v.stock }))} />
+            <AddToCart productId={p.id} stock={p.stock} basePriceUsd={Number(p.priceUsd)} authenticated={!!me} variants={p.variants.map((v) => ({ id: v.id, name: v.name, priceUsd: v.priceUsd != null ? Number(v.priceUsd) : null, stock: v.stock }))} />
             <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
               <WishlistButton productId={p.id} initial={inWish > 0} />
               <CompareToggle productId={p.id} />

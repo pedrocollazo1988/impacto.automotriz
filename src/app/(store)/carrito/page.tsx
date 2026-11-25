@@ -14,6 +14,13 @@ export default function Carrito() {
   const tt = (key: string, vars: Record<string, string | number>) => Object.entries(vars).reduce((txt, [k, v]) => txt.replace(`{${k}}`, String(v)), t(key));
   const [data, setData] = useState<{ lines: Line[]; subtotalUsd: number; allOk: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<"loading" | "in" | "out">("loading");
+  useEffect(() => {
+    fetch("/api/account/session")
+      .then((r) => r.json())
+      .then((m) => setSession(m ? "in" : "out"))
+      .catch(() => setSession("out"));
+  }, []);
   useEffect(() => {
     if (!items.length) { setData(null); setLoading(false); return; }
     // Al cambiar cantidades se espera un instante: así cinco clics seguidos
@@ -60,6 +67,13 @@ export default function Carrito() {
         <p className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">{hasta ? tt("cart.ttlUntil", { h: ttlHoras, date: hasta }) : tt("cart.ttlSaved", { h: ttlHoras })}</p>
       </div>
       <p className="mt-2 text-xs text-slate-500">{lang === "es" && aviso ? aviso : t("cart.ttlNote")}</p>
+      {session === "out" && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+          <Icon name="info" size={16} className="shrink-0" />
+          <span className="min-w-0 flex-1">Estás comprando como invitado. Para confirmar el pedido necesitas una cuenta; tu carrito se conserva.</span>
+          <Link href="/checkout" className="btn btn-primary btn-sm">Iniciar sesión</Link>
+        </div>
+      )}
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-3">
           {loading && <p className="text-sm text-slate-400" aria-live="polite">{t("cart.updating")}</p>}
@@ -98,7 +112,7 @@ export default function Carrito() {
               <div className="flex justify-between border-t border-slate-100 pt-3 text-base"><dt className="font-semibold">{t("cart.estimatedTotal")}</dt><dd className="font-display font-extrabold text-navy">{data ? data.subtotalUsd.toFixed(2) : "0.00"} USD</dd></div>
             </dl>
             {data?.allOk ? (
-              <Link href="/checkout" className="btn btn-primary mt-5 w-full"><Icon name="check" size={18} /> {t("cart.checkout")}</Link>
+              <Link href="/checkout" className="btn btn-primary mt-5 w-full"><Icon name="check" size={18} /> {session === "out" ? "Inicia sesión para comprar" : t("cart.checkout")}</Link>
             ) : (
               <p className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">{t("cart.adjust")}</p>
             )}

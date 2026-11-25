@@ -3,7 +3,7 @@ import Link from "next/link";
 
 type Props = { variant?: "dark" | "light"; size?: "sm" | "md" | "lg"; href?: string | null; tagline?: boolean; animated?: boolean; className?: string };
 
-const SIZES = { sm: { mark: 34, name: "text-[13px] min-[400px]:text-base sm:text-lg", tag: "text-[9px]" }, md: { mark: 44, name: "text-xl sm:text-2xl", tag: "text-[10px]" }, lg: { mark: 72, name: "text-3xl sm:text-4xl", tag: "text-xs" } };
+const SIZES = { sm: { mark: 32, name: "text-[12px] min-[400px]:text-[15px] sm:text-lg", tag: "text-[9px]" }, md: { mark: 44, name: "text-xl sm:text-2xl", tag: "text-[10px]" }, lg: { mark: 72, name: "text-3xl sm:text-4xl", tag: "text-xs" } };
 
 // El PNG mide 260x165 (1.576:1). Declarar el tamaño CSS real hace que Next emita
 // un srcset 1x/2x ajustado en vez de servir 256 px para un símbolo de 54.
@@ -14,7 +14,7 @@ export default function Logo({ variant = "dark", size = "md", href = "/", taglin
   const light = variant === "light";
   const s = SIZES[size];
   const inner = (
-    <span className={`logo ${light ? "logo-light" : "logo-default"} group/logo inline-flex items-center gap-3 ${className}`}>
+    <span className={`logo ${light ? "logo-light" : "logo-default"} group/logo inline-flex items-center gap-2 sm:gap-3 ${className}`}>
       <span className="relative inline-flex shrink-0 items-center justify-center">
         {animated && <span aria-hidden className="absolute -inset-3 rounded-full bg-[conic-gradient(from_0deg,rgba(10,132,255,.55),transparent_35%,transparent_65%,rgba(255,176,32,.5))] blur-md opacity-70 animate-[spin_9s_linear_infinite]" />}
         <Image
