@@ -77,7 +77,10 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
   );
 
   return (
-    <div className="container-x py-8">
+    // min-h-svh: mientras el contenido llega por streaming (o si el filtro deja
+    // pocos productos), el pie queda siempre por debajo del pliegue y no cuenta
+    // como desplazamiento de diseño.
+    <div className="container-x min-h-svh py-8">
       {/* Cabecera */}
       <div className="mb-6">
         <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
@@ -152,6 +155,9 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
 
         {/* Resultados */}
         <section>
+          {/* Encabezado de la lista: los títulos de las tarjetas son h3 y sin un
+              h2 antes, la jerarquía salta de h1 a h3. */}
+          <h2 className="sr-only">{t("catalog.products")}</h2>
           {garage.length > 0 && (
             <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
               <span className="flex items-center gap-1.5 text-slate-500"><Icon name="car" size={16} /> {t("catalog.myGarage")}:</span>
@@ -165,7 +171,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
             </div>
           )}
           {products.length ? (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{products.map((p) => <ProductCard key={p.id} p={p} />)}</div>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{products.map((p, i) => <ProductCard key={p.id} p={p} priority={i < 4} />)}</div>
           ) : (
             <div className="card grid place-items-center p-12 text-center">
               <span className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-slate-400"><Icon name="search" size={26} /></span>
