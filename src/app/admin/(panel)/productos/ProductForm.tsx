@@ -41,6 +41,36 @@ async function subirArchivos(files: File[], directo: boolean): Promise<string[]>
 
 type TipoSubida = "fotos" | "videos" | "frames" | "modelo" | "modeloVideo" | "video360";
 
+const L = ({ t, children }: { t: string; children: React.ReactNode }) => (
+  <label className="block space-y-1"><span className="text-xs font-medium text-slate-600">{t}</span>{children}</label>
+);
+
+const BotonSubir = ({ tipo, accept, texto, deshabilitado, subiendo, onFiles }: {
+  tipo: "fotos" | "videos" | "frames"; accept: string; texto: string; deshabilitado?: boolean;
+  subiendo: TipoSubida | null; onFiles: (files: FileList | null) => void;
+}) => (
+  <label className={`btn btn-primary btn-sm ${subiendo === tipo || deshabilitado ? "opacity-60" : ""}`}>
+    <Icon name={subiendo === tipo ? "spinner" : "upload"} size={13} className={subiendo === tipo ? "animate-spin" : ""} />
+    {subiendo === tipo ? "Subiendo…" : texto}
+    <input type="file" accept={accept} multiple className="hidden" disabled={subiendo === tipo || deshabilitado}
+      onChange={(e) => { onFiles(e.target.files); e.currentTarget.value = ""; }} />
+  </label>
+);
+
+const Tarjeta = ({ url, i: k, total, alQuitar, alMover, etiqueta }: { url: string; i: number; total: number; alQuitar: () => void; alMover: (d: number) => void; etiqueta?: string }) => (
+  <li className="group relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+    <div className="relative aspect-square">
+      <Image src={url} alt="" fill sizes="160px" className="object-cover" unoptimized={url.endsWith(".svg")} />
+      {etiqueta && <span className="absolute left-1.5 top-1.5 rounded bg-navy/85 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">{etiqueta}</span>}
+    </div>
+    <div className="flex items-center justify-between gap-1 border-t border-slate-200 bg-white p-1.5">
+      <button type="button" onClick={() => alMover(-1)} disabled={k === 0} className="iconbtn" aria-label="Mover antes"><Icon name="chevronLeft" size={13} /></button>
+      <button type="button" onClick={() => alMover(1)} disabled={k === total - 1} className="iconbtn" aria-label="Mover después"><Icon name="chevronRight" size={13} /></button>
+      <button type="button" onClick={alQuitar} className="iconbtn text-red-600 hover:bg-red-50" aria-label="Quitar"><Icon name="trash" size={13} /></button>
+    </div>
+  </li>
+);
+
 export default function ProductForm({ initial = EMPTY, categories, brands, blob = false }: { initial?: PInit; categories: string[]; brands: string[]; blob?: boolean }) {
   const router = useRouter(); const [f, setF] = useState(initial); const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
   const [fotos, setFotos] = useState<string[]>(initial.images);
@@ -111,28 +141,6 @@ export default function ProductForm({ initial = EMPTY, categories, brands, blob 
   };
 
   const i = inputCls;
-  const L = ({ t, children }: { t: string; children: React.ReactNode }) => <label className="block space-y-1"><span className="text-xs font-medium text-slate-600">{t}</span>{children}</label>;
-  const BotonSubir = ({ tipo, accept, texto, deshabilitado }: { tipo: "fotos" | "videos" | "frames"; accept: string; texto: string; deshabilitado?: boolean }) => (
-    <label className={`btn btn-primary btn-sm ${subiendo === tipo || deshabilitado ? "opacity-60" : ""}`}>
-      <Icon name={subiendo === tipo ? "spinner" : "upload"} size={13} className={subiendo === tipo ? "animate-spin" : ""} />
-      {subiendo === tipo ? "Subiendo…" : texto}
-      <input type="file" accept={accept} multiple className="hidden" disabled={subiendo === tipo || deshabilitado}
-        onChange={(e) => { void subirVarios(tipo, e.target.files); e.currentTarget.value = ""; }} />
-    </label>
-  );
-  const Tarjeta = ({ url, i: k, total, alQuitar, alMover, etiqueta }: { url: string; i: number; total: number; alQuitar: () => void; alMover: (d: number) => void; etiqueta?: string }) => (
-    <li className="group relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-      <div className="relative aspect-square">
-        <Image src={url} alt="" fill sizes="160px" className="object-cover" unoptimized={url.endsWith(".svg")} />
-        {etiqueta && <span className="absolute left-1.5 top-1.5 rounded bg-navy/85 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">{etiqueta}</span>}
-      </div>
-      <div className="flex items-center justify-between gap-1 border-t border-slate-200 bg-white p-1.5">
-        <button type="button" onClick={() => alMover(-1)} disabled={k === 0} className="iconbtn" aria-label="Mover antes"><Icon name="chevronLeft" size={13} /></button>
-        <button type="button" onClick={() => alMover(1)} disabled={k === total - 1} className="iconbtn" aria-label="Mover después"><Icon name="chevronRight" size={13} /></button>
-        <button type="button" onClick={alQuitar} className="iconbtn text-red-600 hover:bg-red-50" aria-label="Quitar"><Icon name="trash" size={13} /></button>
-      </div>
-    </li>
-  );
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -153,7 +161,7 @@ export default function ProductForm({ initial = EMPTY, categories, brands, blob 
             <h3 className="flex items-center gap-2 text-sm font-semibold text-navy"><Icon name="image" size={15} /> Fotos del producto <span className="text-xs font-normal text-slate-400">{fotos.length}/{MAX_FOTOS}</span></h3>
             <p className="mt-0.5 text-xs text-slate-500">La primera es la principal en el catálogo. JPG, PNG o WebP hasta 5 MB.</p>
           </div>
-          <BotonSubir tipo="fotos" accept="image/jpeg,image/png,image/webp" texto="Subir fotos" deshabilitado={fotos.length >= MAX_FOTOS} />
+          <BotonSubir tipo="fotos" accept="image/jpeg,image/png,image/webp" texto="Subir fotos" deshabilitado={fotos.length >= MAX_FOTOS} subiendo={subiendo} onFiles={(files) => void subirVarios("fotos", files)} />
         </header>
         {fotos.length > 0 ? (
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -180,7 +188,7 @@ export default function ProductForm({ initial = EMPTY, categories, brands, blob 
             <h3 className="flex items-center gap-2 text-sm font-semibold text-navy"><Icon name="play" size={15} /> Vídeos <span className="text-xs font-normal text-slate-400">{videos.length}/{MAX_VIDEOS}</span></h3>
             <p className="mt-0.5 text-xs text-slate-500">MP4 o WebM hasta 40 MB. Salen como miniaturas junto a las fotos, con botón de reproducir.</p>
           </div>
-          <BotonSubir tipo="videos" accept="video/mp4,video/webm" texto="Subir vídeos" deshabilitado={videos.length >= MAX_VIDEOS} />
+          <BotonSubir tipo="videos" accept="video/mp4,video/webm" texto="Subir vídeos" deshabilitado={videos.length >= MAX_VIDEOS} subiendo={subiendo} onFiles={(files) => void subirVarios("videos", files)} />
         </header>
         {videos.length > 0 ? (
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -274,7 +282,7 @@ export default function ProductForm({ initial = EMPTY, categories, brands, blob 
               <input type="file" accept="video/mp4,video/webm" className="hidden" disabled={subiendo === "video360"}
                 onChange={(e) => { void subirUno("spin360Video", "video360", e.target.files?.[0]); e.currentTarget.value = ""; }} />
             </label>
-            <BotonSubir tipo="frames" accept="image/jpeg,image/png,image/webp" texto="Subir fotogramas" deshabilitado={frames360.length >= MAX_FOTOGRAMAS_360} />
+            <BotonSubir tipo="frames" accept="image/jpeg,image/png,image/webp" texto="Subir fotogramas" deshabilitado={frames360.length >= MAX_FOTOGRAMAS_360} subiendo={subiendo} onFiles={(files) => void subirVarios("frames", files)} />
           </div>
         </header>
         {f.spin360Video && (

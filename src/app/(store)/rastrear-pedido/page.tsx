@@ -19,7 +19,7 @@ export default function RastrearPedido() {
     e.preventDefault();
     setError(null);
     const n = numero.replace(/\D/g, "");
-    if (!n) return setError("Escribe el número de pedido, solo dígitos.");
+    if (!n) return setError("Escribe el número de pedido o el PIN de entrega, solo dígitos.");
     if (contacto.trim().length < 5) return setError("Escribe el correo o teléfono con el que hiciste el pedido.");
     if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !captcha) return setError("Completa la verificación anti-bots.");
 
@@ -28,7 +28,7 @@ export default function RastrearPedido() {
       const r = await fetch("/api/pedidos/rastrear", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ numero: Number(n), contacto: contacto.trim(), turnstileToken: captcha }),
+        body: JSON.stringify({ numero: n, contacto: contacto.trim(), turnstileToken: captcha }),
       });
       const d = await r.json().catch(() => ({}));
       if (r.ok && d.url) {
@@ -39,7 +39,7 @@ export default function RastrearPedido() {
       setError(
         r.status === 429
           ? "Demasiados intentos. Espera un minuto y vuelve a probar."
-          : d.error ?? "No encontramos un pedido con esos datos. Revisa el número y el contacto.",
+          : d.error ?? "No encontramos un pedido con esos datos. Revisa el número o PIN y el contacto.",
       );
     } catch {
       setError("No se pudo conectar. Comprueba tu conexión e inténtalo otra vez.");
@@ -54,12 +54,12 @@ export default function RastrearPedido() {
         <span className="eyebrow">Seguimiento</span>
         <h1 className="mt-1 font-display text-3xl font-extrabold text-navy sm:text-4xl">Rastrea tu pedido</h1>
         <p className="mt-3 text-slate-600">
-          Introduce el número de pedido y el correo o teléfono con el que compraste. Te mostramos por dónde va.
+          Introduce el número de pedido o el PIN de entrega y el correo o teléfono con el que compraste. Te mostramos por dónde va.
         </p>
 
         <form onSubmit={buscar} className="card mt-6 space-y-4 p-5 sm:p-6">
           <div>
-            <label htmlFor="num" className="mb-1.5 block text-sm font-semibold text-navy">Número de pedido</label>
+            <label htmlFor="num" className="mb-1.5 block text-sm font-semibold text-navy">Número de pedido o PIN de entrega</label>
             <div className="relative">
               <span aria-hidden className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">#</span>
               <input
@@ -68,12 +68,12 @@ export default function RastrearPedido() {
                 autoComplete="off"
                 value={numero}
                 onChange={(e) => setNumero(e.target.value)}
-                placeholder="1024"
+                placeholder="1024 o 482913"
                 className="input h-12 pl-9"
                 aria-describedby="num-ayuda"
               />
             </div>
-            <p id="num-ayuda" className="mt-1.5 text-xs text-slate-500">Está en el correo de confirmación y en el comprobante.</p>
+            <p id="num-ayuda" className="mt-1.5 text-xs text-slate-500">El número está en el correo de confirmación. El PIN de entrega tiene 6 dígitos y aparece en el detalle del pedido.</p>
           </div>
 
           <div>

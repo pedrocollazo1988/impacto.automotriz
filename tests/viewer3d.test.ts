@@ -9,11 +9,12 @@ const { capturado, prismaFalso } = vi.hoisted(() => {
   return {
     capturado,
     prismaFalso: {
-      category: { upsert: async () => ({ id: 1 }) },
+      category: { findMany: async () => [], upsert: async () => ({ id: 1 }) },
       brand: { upsert: async () => ({ id: 2 }) },
       product: { findUnique: async () => ({ id: 7 }), update: guardar, create: guardar },
       productFit: { deleteMany: async () => {}, createMany: async () => {} },
       productVariant: { upsert: async () => {}, updateMany: async () => {} },
+      productMovement: { create: async () => {} },
       $executeRawUnsafe: async () => 0,
     },
   };

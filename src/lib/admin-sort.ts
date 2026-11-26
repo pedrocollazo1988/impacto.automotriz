@@ -27,15 +27,20 @@ export function filtrarProductos(filas: FilaProducto[], consulta: string): FilaP
 
 export function ordenarProductos(filas: FilaProducto[], clave: ClaveOrden, direccion: Direccion): FilaProducto[] {
   const signo = direccion === "asc" ? 1 : -1;
-  return [...filas].sort((a, b) => {
-    const va = a[clave];
-    const vb = b[clave];
-    const r =
-      typeof va === "number" && typeof vb === "number"
-        ? va - vb
-        : normalizar(String(va)).localeCompare(normalizar(String(vb)), "es");
+  // La clave se normaliza una vez por fila, no dos veces por comparación:
+  // con catálogos grandes eso era O(n log n) pasadas de NFD por cada tecla.
+  const conClave = filas.map((f) => ({
+    f,
+    valor: f[clave],
+    texto: typeof f[clave] === "number" ? "" : normalizar(String(f[clave])),
+  }));
+  conClave.sort((a, b) => {
+    const r = typeof a.valor === "number" && typeof b.valor === "number"
+      ? a.valor - b.valor
+      : a.texto.localeCompare(b.texto, "es");
     // Desempate por id: sin él dos productos con el mismo valor cambian de
     // sitio entre renders y la tabla "baila" al ordenar.
-    return r === 0 ? a.id - b.id : r * signo;
+    return r === 0 ? a.f.id - b.f.id : r * signo;
   });
+  return conClave.map((x) => x.f);
 }

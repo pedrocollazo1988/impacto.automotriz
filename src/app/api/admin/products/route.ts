@@ -31,7 +31,7 @@ export const GET = handle(async (req: Request) => {
 export const POST = handle(async (req: Request) => {
   const u = await requireAdmin(req, "products");
   const { id, ...input } = ProductBody.parse(await req.json());
-  const row = (await saveProduct(input, id)).row;
+  const row = (await saveProduct(input, id, { actor: u.name, source: "admin" })).row;
   await audit(u, "producto.guardar", row.sku);
   return Response.json(row);
 });
@@ -43,9 +43,16 @@ export const DELETE = handle(async (req: Request) => {
   if (!Number.isInteger(pid) || pid <= 0) throw new HttpError(400, "Producto inválido");
   const motivo = (url.searchParams.get("motivo") ?? "Sin motivo indicado").slice(0, 120);
   const detalle = (url.searchParams.get("detalle") ?? "").slice(0, 300);
-  const p = await prisma.product.findUnique({ where: { id: pid }, select: { sku: true, name: true } });
+  const p = await prisma.product.findUnique({ where: { id: pid }, select: { sku: true, name: true, stock: true } });
   if (!p) throw new HttpError(404, "Producto no encontrado");
   await prisma.product.update({ where: { id: pid }, data: { active: false } }); // baja lógica: conserva el historial
+  await prisma.productMovement.create({
+    data: {
+      productId: pid, productName: p.name, sku: p.sku, kind: "BAJA", delta: 0,
+      stockBefore: p.stock, stockAfter: p.stock,
+      detail: `Baja lógica: ${motivo}${detalle ? ` · ${detalle}` : ""}`, actor: u.name, source: "admin",
+    },
+  });
   revalidateTag("producto");
   await audit(u, "producto.desactivar", `${p.sku} · ${p.name} · ${motivo}${detalle ? ` · ${detalle}` : ""}`);
   return Response.json({ ok: true });

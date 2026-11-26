@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { validNotification } from "@/lib/tropipay";
 import { porClave } from "@/lib/payment-gateways";
+import { sendTransactional } from "@/lib/mailer";
+import { orderStatusEmail } from "@/lib/email-templates";
+import { emailLang, emailT } from "@/lib/email-i18n";
+import { orderToken } from "@/lib/order-access";
 
 // Webhook de Tropipay: marca el pedido como pagado SOLO si la firma y el importe coinciden.
 export async function POST(req: Request) {
@@ -17,5 +21,10 @@ export async function POST(req: Request) {
   if (order.paid) return Response.json({ ok: true });
   if (Math.round(Number(order.totalUsd) * 100) !== Number(data.originalCurrencyAmount)) return new Response("Amount mismatch", { status: 422 });
   await prisma.order.update({ where: { id: order.id }, data: { paid: true, paidAt: new Date(), status: "PAID" } });
+  const lang = emailLang(order.lang);
+  await sendTransactional(order.customerEmail, emailT(lang, "status.subject", { number: order.number, status: emailT(lang, "status.PAID") }), orderStatusEmail({
+    name: order.customerName, orderNumber: order.number, status: "PAID",
+    trackingUrl: `${process.env.PUBLIC_URL}/pedido/${order.id}?t=${orderToken(order.id)}`, lang,
+  })).catch(() => null);
   return Response.json({ ok: true });
 }

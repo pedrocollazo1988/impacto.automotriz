@@ -5,6 +5,32 @@ import { MAX_FOTOGRAMAS_360, MAX_FOTOS, MAX_VIDEOS, recortarMedios } from "./med
 
 export const slugify = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 
+type CategoriaResumen = { slug: string; name: string; _count: { products: number } };
+
+// El panel envía el nombre visible, no el slug. Buscar solo por slug creaba una
+// categoría nueva cuando el nombre no lo reproducía («Sistema eléctrico» →
+// sistema-electrico frente a la histórica electrico) y repartía los productos
+// entre duplicados. Se busca por slug o por nombre normalizado y, si hay varios,
+// se prefiere la que ya concentra más productos.
+export function elegirCategoria<T extends CategoriaResumen>(cats: T[], nombre: string): T | undefined {
+  const clave = slugify(nombre);
+  return cats
+    .filter((c) => c.slug === clave || slugify(c.name) === clave)
+    .sort((a, b) => b._count.products - a._count.products)[0];
+}
+
+// Fusiona duplicados históricos por nombre: el filtro enseña una sola entrada y
+// se queda con la que tiene más productos, que es la que realmente se usa.
+export function agruparCategorias<T extends CategoriaResumen & { position: number }>(cats: T[]): T[] {
+  const porNombre = new Map<string, T>();
+  for (const c of cats) {
+    const clave = slugify(c.name);
+    const previa = porNombre.get(clave);
+    if (!previa || c._count.products > previa._count.products) porNombre.set(clave, c);
+  }
+  return [...porNombre.values()].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
+}
+
 // Búsqueda insensible a acentos (español: "bateria" debe encontrar "Batería").
 // Usa translate() de Postgres para plegar los acentos; no requiere la extensión unaccent.
 const ACCENTS = "áàäâãåéèëêíìïîóòöôõúùüûñçýÿ";
@@ -29,16 +55,20 @@ export async function searchProductIds(term: string): Promise<number[]> {
 const CATEGORIAS_TAG = "categorias";
 const MARCAS_TAG = "marcas";
 
-// Solo las visibles: una categoría oculta desde el panel desaparece de la
-// portada, del catálogo y de la barra de departamentos a la vez.
+// Una categoría con productos activos siempre se lista aunque el flag `visible`
+// se haya quedado apagado: si no, la tienda enseña productos que el comprador no
+// puede acotar desde el filtro. Las ocultas solo desaparecen si están vacías.
 export const getCategoriesCached = unstable_cache(
-  async () => prisma.category.findMany({
-    where: { visible: true },
-    orderBy: [{ position: "asc" }, { name: "asc" }],
-    // El contador de la portada y del filtro debe reflejar solo lo que se puede
-    // comprar; los productos archivados no cuentan.
-    include: { _count: { select: { products: { where: { active: true } } } } },
-  }),
+  async () => {
+    const filas = await prisma.category.findMany({
+      where: { OR: [{ visible: true }, { products: { some: { active: true } } }] },
+      orderBy: [{ position: "asc" }, { name: "asc" }],
+      // El contador de la portada y del filtro debe reflejar solo lo que se puede
+      // comprar; los productos archivados no cuentan.
+      include: { _count: { select: { products: { where: { active: true } } } } },
+    });
+    return agruparCategorias(filas);
+  },
   ["categorias-con-conteo"],
   { revalidate: 3600, tags: [CATEGORIAS_TAG] },
 );
@@ -67,8 +97,19 @@ export type ProductInput = {
 };
 
 // Alta o actualización (por id o, si no hay, por SKU). Crea categoría y marca si no existen.
-export async function saveProduct(i: ProductInput, id?: number) {
-  const category = await prisma.category.upsert({ where: { slug: slugify(i.categoryName) }, update: {}, create: { slug: slugify(i.categoryName), name: i.categoryName.trim() } });
+export type ProductMovementContext = { actor?: string; source?: string };
+
+export async function saveProduct(i: ProductInput, id?: number, ctx: ProductMovementContext = {}) {
+  const nombreCategoria = i.categoryName.trim();
+  const categorias = await prisma.category.findMany({
+    select: { id: true, slug: true, name: true, _count: { select: { products: true } } },
+  });
+  const elegida = elegirCategoria(categorias, nombreCategoria);
+  const category = elegida ?? await prisma.category.upsert({
+    where: { slug: slugify(nombreCategoria) },
+    update: {},
+    create: { slug: slugify(nombreCategoria), name: nombreCategoria },
+  });
   const brand = i.brandName?.trim() ? await prisma.brand.upsert({ where: { slug: slugify(i.brandName) }, update: {}, create: { slug: slugify(i.brandName), name: i.brandName.trim() } }) : null;
   const data = {
     sku: i.sku.trim(), name: i.name.trim(), description: i.description ?? "", priceUsd: i.priceUsd, compareAtUsd: i.compareAtUsd ?? null, stock: i.stock,
@@ -84,7 +125,10 @@ export async function saveProduct(i: ProductInput, id?: number) {
     specs: i.specs ?? undefined, featured: i.featured ?? false,
     active: i.active ?? true, categoryId: category.id, brandId: brand?.id ?? null,
   };
-  const existing = id ? { id } : await prisma.product.findUnique({ where: { sku: data.sku }, select: { id: true } });
+  const seleccion = { id: true, stock: true, sku: true, name: true, slug: true, priceUsd: true, active: true, categoryId: true, brandId: true } as const;
+  const existing = id
+    ? await prisma.product.findUnique({ where: { id }, select: seleccion })
+    : await prisma.product.findUnique({ where: { sku: data.sku }, select: seleccion });
   let row;
   if (existing) row = await prisma.product.update({ where: { id: existing.id }, data: { ...data, ...(i.slug ? { slug: slugify(i.slug) } : {}) } });
   else {
@@ -107,6 +151,41 @@ export async function saveProduct(i: ProductInput, id?: number) {
       await prisma.product.update({ where: { id: row.id }, data: { stock: sum } });
     }
   }
+
+  // Historial: una fila por alta, cambio de existencias o edición relevante.
+  const after = await prisma.product.findUnique({ where: { id: row.id }, select: seleccion });
+  const beforeStock = existing?.stock ?? 0;
+  if (after) {
+    const delta = after.stock - beforeStock;
+    const cambios: string[] = [];
+    if (!existing) cambios.push("Producto creado");
+    else {
+      if (existing.name !== after.name) cambios.push(`Nombre: ${existing.name} → ${after.name}`);
+      if (Number(existing.priceUsd) !== Number(after.priceUsd)) cambios.push(`Precio: ${Number(existing.priceUsd).toFixed(2)} → ${Number(after.priceUsd).toFixed(2)} USD`);
+      if (existing.active !== after.active) cambios.push(after.active ? "Producto reactivado" : "Producto desactivado");
+      if (existing.categoryId !== after.categoryId) cambios.push("Cambió la categoría");
+      if (existing.brandId !== after.brandId) cambios.push("Cambió la marca");
+      if (delta !== 0) cambios.push(`Existencias: ${beforeStock} → ${after.stock}`);
+    }
+    if (!existing || delta !== 0 || cambios.length) {
+      await prisma.productMovement.create({
+        data: {
+          productId: after.id, productName: after.name, sku: after.sku,
+          kind: !existing ? "ALTA" : delta !== 0 ? "AJUSTE" : "EDICION",
+          delta, stockBefore: beforeStock, stockAfter: after.stock,
+          detail: cambios.join(" · "), actor: ctx.actor ?? "", source: ctx.source ?? "admin",
+        },
+      });
+    }
+  }
+
+  // Si el producto pasa de agotado a disponible, avisa a quienes lo esperaban.
+  if (after && beforeStock <= 0 && after.stock > 0) {
+    const { notifyBackInStock } = await import("./mailer");
+    const base = (process.env.PUBLIC_URL ?? "https://impacto-automotriz.vercel.app").replace(/\/+$/, "");
+    await notifyBackInStock(String(after.id), after.name, `${base}/producto/${after.slug ?? after.id}`).catch(() => {});
+  }
+
   invalidarCacheCatalogo();
   return { row, created: !existing };
 }

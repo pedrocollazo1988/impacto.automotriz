@@ -5,7 +5,8 @@ import { PageHeader, EmptyState, Badge } from "@/components/admin/ui";
 export const dynamic = "force-dynamic";
 
 const STATUS: Record<string, { label: string; tone: "ok" | "warn" | "info" | "danger" | "mute" }> = {
-  PENDING: { label: "Pendiente", tone: "warn" },
+  PENDING_PAYMENT: { label: "Pendiente de pago", tone: "warn" },
+  PAID: { label: "Pagado", tone: "ok" },
   PREPARING: { label: "En preparación", tone: "info" },
   SHIPPED: { label: "Enviado", tone: "info" },
   DELIVERED: { label: "Entregado", tone: "ok" },
@@ -31,6 +32,9 @@ export default async function Pedidos() {
                   <b>{Number(o.totalUsd).toFixed(2)} USD</b>
                   <Badge tone={o.paid ? "ok" : "warn"}>{o.paid ? "Pagado" : "Sin pagar"}</Badge>
                   <Badge tone={st.tone}>{st.label}</Badge>
+                  <a href={`/admin/pedidos/${o.id}/prefactura`} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-xs">
+                    Prefactura
+                  </a>
                 </span>
               </div>
               <p className="mt-1 text-slate-500">{o.items.map((i) => `${i.qty}× ${i.name}`).join(", ")}</p>

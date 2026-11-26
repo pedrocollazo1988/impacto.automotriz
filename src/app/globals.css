@@ -340,6 +340,18 @@
 .dark .input, .dark .input-select { background: #0b1220; color: #e2e8f0; border-color: #334155; }
 .dark .btn-ghost { background: #101a2e; color: #e2e8f0; border-color: #334155; }
 .dark .btn-ghost:hover { background: #17233a; }
+/* Botones sólidos: conservan texto blanco sobre su color de marca. Sin esto,
+   las utilidades `.text-navy` del tema oscuro podían dejar texto oscuro sobre
+   un fondo oscuro y el botón desaparecía. */
+.dark .btn-primary { background: linear-gradient(180deg, #1e4f8a, #0a2c5e); color: #fff; }
+.dark .btn-primary:hover { background: linear-gradient(180deg, #2563a8, #123a75); }
+.dark .btn-accent { background: var(--color-action); color: #fff; }
+.dark .btn-accent:hover { background: var(--color-action-deep); }
+.dark .btn-danger { background: #3a1418; color: #fca5a5; border-color: #7f1d1d; }
+.dark .btn-danger:hover { background: #4a1a20; border-color: #b91c1c; }
+.dark .btn-quiet { color: #e2e8f0; }
+.dark button.bg-white, .dark a.bg-white { color: #e2e8f0; }
+.dark .btn-outline-light { color: #fff; }
 .dark .chip { background: #101a2e; color: #cbd5e1; border-color: #334155; }
 .dark .chip:hover { background: #17233a; color: #67e8f9; }
 .dark .badge { filter: brightness(0.95); }

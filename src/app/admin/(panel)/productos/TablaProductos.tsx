@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/brand/Icon";
@@ -28,6 +28,8 @@ function Flecha({ activa, arriba }: { activa: boolean; arriba: boolean }) {
 export default function TablaProductos({ filas, puedeEliminar }: Props) {
   const router = useRouter();
   const [consulta, setConsulta] = useState("");
+  // El input responde al instante; filtrar y ordenar se hace con el valor diferido.
+  const consultaDiferida = useDeferredValue(consulta);
   const [orden, setOrden] = useState<{ clave: ClaveOrden; direccion: Direccion }>({ clave: "stock", direccion: "asc" });
   const [aBorrar, setABorrar] = useState<FilaProducto | null>(null);
   const [borrando, setBorrando] = useState(false);
@@ -40,8 +42,8 @@ export default function TablaProductos({ filas, puedeEliminar }: Props) {
 
   const base = useMemo(() => filas.filter((f) => !eliminados.has(f.id)), [filas, eliminados]);
   const visibles = useMemo(
-    () => ordenarProductos(filtrarProductos(base, consulta), orden.clave, orden.direccion),
-    [base, consulta, orden],
+    () => ordenarProductos(filtrarProductos(base, consultaDiferida), orden.clave, orden.direccion),
+    [base, consultaDiferida, orden],
   );
 
   function alOrdenar(clave: ClaveOrden) {

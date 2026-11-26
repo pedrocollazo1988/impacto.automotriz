@@ -8,8 +8,13 @@ import StoreBars from "@/components/site/StoreBars";
 import StoreChrome from "@/components/site/StoreChrome";
 import SiteFooter from "@/components/site/SiteFooter";
 import ActionRail from "@/components/site/ActionRail";
+import { getMenuEmpresa, getMenuPrincipal } from "@/lib/menu-server";
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
+  const [menuPrincipal, menuEmpresa] = await Promise.all([
+    getMenuPrincipal().catch(() => []),
+    getMenuEmpresa().catch(() => []),
+  ]);
   const carrito = await leerSeccion("carrito-config").catch(() => null);
   const horas = Number(carrito?.items.find((i) => i.titulo?.toLowerCase().includes("horas"))?.texto) || 24;
   const aviso = carrito?.items.find((i) => i.titulo?.toLowerCase().includes("aviso"))?.texto ?? null;
@@ -18,7 +23,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
     <CartProvider ttlHoras={horas} aviso={aviso}>
       <PwaRegister />
       <Analytics />
-      <SiteHeader />
+      <SiteHeader navPrincipal={menuPrincipal} navEmpresa={menuEmpresa} />
       <StoreChrome bars={<StoreBars />}>
         <main className="min-h-[60vh]">{children}</main>
       </StoreChrome>

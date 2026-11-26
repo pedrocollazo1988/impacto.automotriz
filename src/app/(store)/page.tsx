@@ -7,15 +7,18 @@ import VehicleFinder from "@/components/site/VehicleFinder";
 import SectionHead from "@/components/site/SectionHead";
 import PasosCompra from "@/components/site/PasosCompra";
 import PromoSlider, { type Slide } from "@/components/site/PromoSlider";
+import HeroRotator from "@/components/site/HeroRotator";
 import StoreBars from "@/components/site/StoreBars";
 import Reveal from "@/components/site/Reveal";
 import { skusConGiro } from "@/lib/photo360";
 import { leerSeccion } from "@/lib/contenido-server";
+import { getT } from "@/lib/i18n";
 export const dynamic = "force-dynamic";
 
 const CAT_ICON: Record<string, string> = { frenos: "gauge", "sistema-electrico": "bolt", electrico: "bolt", suspension: "layers", "triciclos-electricos": "battery", motor: "wrench", accesorios: "box" };
 
 export default async function Home() {
+  const { t } = await getT();
   const hayGiro = skusConGiro().length > 0;
   const [valor, confianza, accesos, hero, slider, catHead, destHead, ofertasHead, novHead, marcasHead, pasos, cierre] = await Promise.all([
     leerSeccion("portada-valor"),
@@ -41,6 +44,7 @@ export default async function Home() {
 
   const featured = todos.filter((p) => p.featured).slice(0, 8);
   const latest = [...todos].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)).slice(0, 8);
+  const heroImages = [...new Set(todos.map((p) => p.images[0]).filter(Boolean))].slice(0, 6);
 
   // Filas por departamento, como las secciones de la tienda de MCV: cada una
   // con su encabezado y una tira de productos, de la categoría con más stock.
@@ -88,6 +92,12 @@ export default async function Home() {
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-[color:var(--color-navy-deep)] text-white">
+        {heroImages.length > 1 && (
+          <div className="absolute inset-0 opacity-25" aria-hidden>
+            <HeroRotator images={heroImages} intervalMs={5500} />
+          </div>
+        )}
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-[color:var(--color-navy-deep)] via-[color:var(--color-navy-deep)]/90 to-[color:var(--color-navy-deep)]/55" />
         <div className="absolute inset-0 blueprint opacity-70" aria-hidden />
         <div aria-hidden className="absolute -right-24 -top-24 h-[420px] w-[420px] rounded-full bg-[color:var(--color-action)]/25 blur-3xl" />
         <div aria-hidden className="absolute -bottom-32 left-1/3 h-[360px] w-[360px] rounded-full bg-[color:var(--color-action-hi)]/10 blur-3xl" />
@@ -103,7 +113,7 @@ export default async function Home() {
               ))}
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/75">
-              {hero.subtitle} {hayGiro ? "Los vehículos eléctricos se pueden girar 360°." : "Fotos reales de cada producto."}
+              {hero.subtitle} {hayGiro ? t("home.hero360") : t("home.heroPhotos")}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               {heroCtas.map((it, i) => (
@@ -128,7 +138,7 @@ export default async function Home() {
 
       {/* ── Franja de confianza: lo que el cliente necesita saber antes de comprar ── */}
       {confianza.visible && confianza.items.length > 0 && (
-        <section aria-label="Ventajas de comprar aquí" className="border-b border-slate-200 bg-white">
+        <section aria-label={t("home.advantages")} className="border-b border-slate-200 bg-white">
           <div className="container-x grid grid-cols-2 gap-x-6 gap-y-4 py-5 sm:grid-cols-4">
             {confianza.items.map((it) => (
               <div key={it.titulo} className="flex items-center gap-2.5">
@@ -148,7 +158,7 @@ export default async function Home() {
       {/* ── Accesos rápidos, como los botones de MCV ── */}
       {accesos.visible && accesos.items.length > 0 && (
         <section className="container-x mt-10">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {accesos.items.map((it) => (
               <Link key={it.href ?? it.titulo} href={it.href || "/catalogo"} className="card card-hover group flex items-start gap-3 p-4">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--color-navy)] text-white transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-[color:var(--color-action)] group-hover:text-white">
@@ -167,8 +177,8 @@ export default async function Home() {
       {/* ── Valor ── */}
       {valor.visible && valor.items.length > 0 && (
         <section className="container-x mt-4 relative z-10">
-          <h2 className="sr-only">{valor.title || "Por qué comprar en Impacto Automotriz"}</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <h2 className="sr-only">{valor.title || t("home.why")}</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {valor.items.map((it, i) => (
               <div key={it.titulo} className={`card p-5 animate-fade-up delay-${(i % 4) + 1}`}>
                 <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name={it.icono || "check"} size={22} /></span>
@@ -183,8 +193,8 @@ export default async function Home() {
       {/* ── Categorías ── */}
       {catHead.visible && categories.length > 0 && (
         <section className="container-x mt-16">
-          <SectionHead eyebrow={catHead.eyebrow} title={catHead.title} subtitle={catHead.subtitle} href="/catalogo" linkLabel="Ver catálogo" />
-          <Reveal className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <SectionHead eyebrow={catHead.eyebrow} title={catHead.title} subtitle={catHead.subtitle} href="/catalogo" linkLabel={t("home.seeCatalog")} />
+          <Reveal className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {categories.map((c) => (
               <Link key={c.id} href={`/catalogo?categoria=${c.slug}`} className="card card-hover group flex items-center gap-3 p-4">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[color:var(--color-navy)] to-[color:var(--color-action)] text-white transition group-hover:scale-105">
@@ -192,7 +202,7 @@ export default async function Home() {
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate font-display text-sm font-bold text-navy">{c.name}</span>
-                  <span className="block truncate font-mono text-[10px] uppercase tracking-wider text-slate-500">{c._count.products} productos</span>
+                  <span className="block truncate font-mono text-[10px] uppercase tracking-wider text-slate-500">{c._count.products} {t("home.products")}</span>
                   {c.description && <span className="block truncate text-[10px] text-slate-400">{c.description}</span>}
                 </span>
                 <Icon name="chevronRight" size={16} className="ml-auto shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[color:var(--color-action)]" />
@@ -204,14 +214,14 @@ export default async function Home() {
 
       {/* ── Departamentos, como las secciones de la tienda de MCV ── */}
       {departamentos.map((d) => (
-        <section key={d.id} className="container-x mt-14">
+        <section key={d.id} className="container-x mt-16">
           <div className="flex items-end justify-between gap-4 border-b border-slate-200 pb-3">
             <div>
               <h2 className="font-display text-xl font-extrabold text-navy sm:text-2xl">{d.name}</h2>
-              <p className="mt-0.5 font-mono text-[11px] uppercase tracking-wider text-slate-500">{d._count.products} productos</p>
+              <p className="mt-0.5 font-mono text-[11px] uppercase tracking-wider text-slate-500">{d._count.products} {t("home.products")}</p>
             </div>
             <Link href={`/catalogo?categoria=${d.slug}`} className="flex shrink-0 items-center gap-1 text-sm font-bold text-[color:var(--color-action)] transition hover:text-navy">
-              Ver todo <Icon name="arrowRight" size={15} />
+              {t("home.seeAll")} <Icon name="arrowRight" size={15} />
             </Link>
           </div>
           <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
@@ -223,7 +233,7 @@ export default async function Home() {
       {/* ── Destacados ── */}
       {destHead.visible && featured.length > 0 && (
         <section className="container-x mt-16">
-          <SectionHead eyebrow={destHead.eyebrow} title={destHead.title} subtitle={destHead.subtitle} href="/catalogo" linkLabel="Ver catálogo" />
+          <SectionHead eyebrow={destHead.eyebrow} title={destHead.title} subtitle={destHead.subtitle} href="/catalogo" linkLabel={t("home.seeCatalog")} />
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {featured.map((p) => <ProductCard key={p.id} p={p} />)}
           </div>

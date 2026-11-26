@@ -1,10 +1,12 @@
 import crypto from "node:crypto";
 import { prisma } from "./prisma";
 import { sendTransactional, type SendResult } from "./mailer";
+import { verificationEmail, verificationLinkEmail, welcomeEmail } from "./email-templates";
+import { emailT } from "./email-i18n";
+import type { Idioma } from "./i18n-dict";
 
 export const sha256 = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
 
-const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
 /**
  * El PIN se guarda como HMAC con APP_SECRET y el id del cliente. Una copia de
@@ -16,7 +18,7 @@ export const pinHash = (customerId: string, pin: string) => {
   return crypto.createHmac("sha256", process.env.APP_SECRET).update(`verify-pin:${customerId}:${pin}`).digest("hex");
 };
 
-export async function sendVerificationPin(c: { id: string; email: string; name: string }): Promise<SendResult> {
+export async function sendVerificationPin(c: { id: string; email: string; name: string }, lang: Idioma = "es"): Promise<SendResult> {
   const pin = String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
   await prisma.authToken.deleteMany({ where: { customerId: c.id, kind: "VERIFY_PIN", usedAt: null } });
   await prisma.authToken.create({
@@ -29,12 +31,16 @@ export async function sendVerificationPin(c: { id: string; email: string; name: 
   });
   return sendTransactional(
     c.email,
-    "Tu código de verificación",
-    `<p>Hola ${esc(c.name)},</p>
-     <p>Tu código para confirmar la cuenta es:</p>
-     <p style="font-size:34px;letter-spacing:10px;font-weight:700;margin:18px 0">${pin}</p>
-     <p>Vence en 10 minutos y solo se puede usar una vez. Si no creaste esta cuenta, ignora el mensaje.</p>
-     <p style="font-size:12px;color:#666">Por seguridad, nunca compartas este código. Impacto Automotriz no te lo pedirá por WhatsApp ni por teléfono.</p>`,
+    emailT(lang, "verification.subject"),
+    verificationEmail({ name: c.name, pin, lang }),
+  );
+}
+
+export function sendWelcomeEmail(c: { email: string; name: string }, lang: Idioma = "es"): Promise<SendResult> {
+  return sendTransactional(
+    c.email,
+    emailT(lang, "welcome.subject"),
+    welcomeEmail({ name: c.name, email: c.email, lang }),
   );
 }
 
@@ -52,8 +58,8 @@ export async function verifyCustomerPin(customerId: string, pin: string) {
 
 // Enlace de confirmación heredado. Se conserva para no invalidar correos ya
 // enviados; el registro nuevo usa el PIN.
-export async function sendVerification(c: { id: string; email: string; name: string }) {
+export async function sendVerification(c: { id: string; email: string; name: string }, lang: Idioma = "es") {
   const token = crypto.randomBytes(32).toString("hex");
   await prisma.authToken.create({ data: { customerId: c.id, kind: "VERIFY", tokenHash: sha256(token), expiresAt: new Date(Date.now() + 86_400_000) } });
-  return sendTransactional(c.email, "Confirma tu correo", `<p>Hola ${esc(c.name)}, confirma tu correo para activar tu cuenta y tus suscripciones:</p><p><a href="${process.env.PUBLIC_URL}/api/account/verify?token=${token}">Confirmar correo</a></p><p>El enlace vale 24 horas.</p>`);
+  return sendTransactional(c.email, emailT(lang, "verification.subject"), verificationLinkEmail({ name: c.name, url: `${process.env.PUBLIC_URL}/api/account/verify?token=${token}`, lang }));
 }
