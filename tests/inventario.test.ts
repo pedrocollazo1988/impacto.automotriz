@@ -11,7 +11,7 @@ const { estado, prismaFalso, notificar } = vi.hoisted(() => {
     estado,
     notificar: vi.fn(async () => {}),
     prismaFalso: {
-      category: { upsert: async () => ({ id: 1 }) },
+      category: { findMany: async () => [], upsert: async () => ({ id: 1 }) },
       brand: { upsert: async () => ({ id: 2 }) },
       product: {
         findUnique: vi.fn(async () => (estado.lecturas++ === 0 ? estado.antes : estado.despues)),

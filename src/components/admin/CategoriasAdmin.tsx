@@ -104,7 +104,7 @@ export default function CategoriasAdmin({ iniciales }: { iniciales: Categoria[] 
                   <td className="text-right font-mono text-sm">{c._count.products}</td>
                   <td className="text-right font-mono text-sm">{c.position}</td>
                   <td>
-                    <span className={`badge badge-${c.visible ? "ok" : "mute"}`}>{c.visible ? "Visible" : "Oculta"}</span>
+                    <span className={`badge badge-${c.visible || c._count.products > 0 ? "ok" : "mute"}`}>{c.visible || c._count.products > 0 ? "Visible" : "Oculta"}</span>
                   </td>
                   <td className="text-right">
                     <div className="flex justify-end gap-1">
@@ -146,6 +146,7 @@ export default function CategoriasAdmin({ iniciales }: { iniciales: Categoria[] 
               <input type="checkbox" checked={editando.visible} onChange={(e) => setEditando({ ...editando, visible: e.target.checked })} />
               Visible en la tienda
             </label>
+            <p className="text-[11px] text-slate-500">Una categoría con productos activos sigue apareciendo en el filtro del catálogo.</p>
             <div className="flex justify-end gap-2 pt-1">
               <button className="btn btn-ghost btn-sm" onClick={() => setEditando(null)}>Cancelar</button>
               <button className="btn btn-primary btn-sm" onClick={guardar} disabled={ocupado}>{ocupado ? "Guardando…" : "Guardar"}</button>

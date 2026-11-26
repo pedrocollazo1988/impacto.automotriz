@@ -5,6 +5,32 @@ import { MAX_FOTOGRAMAS_360, MAX_FOTOS, MAX_VIDEOS, recortarMedios } from "./med
 
 export const slugify = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 
+type CategoriaResumen = { slug: string; name: string; _count: { products: number } };
+
+// El panel envía el nombre visible, no el slug. Buscar solo por slug creaba una
+// categoría nueva cuando el nombre no lo reproducía («Sistema eléctrico» →
+// sistema-electrico frente a la histórica electrico) y repartía los productos
+// entre duplicados. Se busca por slug o por nombre normalizado y, si hay varios,
+// se prefiere la que ya concentra más productos.
+export function elegirCategoria<T extends CategoriaResumen>(cats: T[], nombre: string): T | undefined {
+  const clave = slugify(nombre);
+  return cats
+    .filter((c) => c.slug === clave || slugify(c.name) === clave)
+    .sort((a, b) => b._count.products - a._count.products)[0];
+}
+
+// Fusiona duplicados históricos por nombre: el filtro enseña una sola entrada y
+// se queda con la que tiene más productos, que es la que realmente se usa.
+export function agruparCategorias<T extends CategoriaResumen & { position: number }>(cats: T[]): T[] {
+  const porNombre = new Map<string, T>();
+  for (const c of cats) {
+    const clave = slugify(c.name);
+    const previa = porNombre.get(clave);
+    if (!previa || c._count.products > previa._count.products) porNombre.set(clave, c);
+  }
+  return [...porNombre.values()].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
+}
+
 // Búsqueda insensible a acentos (español: "bateria" debe encontrar "Batería").
 // Usa translate() de Postgres para plegar los acentos; no requiere la extensión unaccent.
 const ACCENTS = "áàäâãåéèëêíìïîóòöôõúùüûñçýÿ";
@@ -29,16 +55,20 @@ export async function searchProductIds(term: string): Promise<number[]> {
 const CATEGORIAS_TAG = "categorias";
 const MARCAS_TAG = "marcas";
 
-// Solo las visibles: una categoría oculta desde el panel desaparece de la
-// portada, del catálogo y de la barra de departamentos a la vez.
+// Una categoría con productos activos siempre se lista aunque el flag `visible`
+// se haya quedado apagado: si no, la tienda enseña productos que el comprador no
+// puede acotar desde el filtro. Las ocultas solo desaparecen si están vacías.
 export const getCategoriesCached = unstable_cache(
-  async () => prisma.category.findMany({
-    where: { visible: true },
-    orderBy: [{ position: "asc" }, { name: "asc" }],
-    // El contador de la portada y del filtro debe reflejar solo lo que se puede
-    // comprar; los productos archivados no cuentan.
-    include: { _count: { select: { products: { where: { active: true } } } } },
-  }),
+  async () => {
+    const filas = await prisma.category.findMany({
+      where: { OR: [{ visible: true }, { products: { some: { active: true } } }] },
+      orderBy: [{ position: "asc" }, { name: "asc" }],
+      // El contador de la portada y del filtro debe reflejar solo lo que se puede
+      // comprar; los productos archivados no cuentan.
+      include: { _count: { select: { products: { where: { active: true } } } } },
+    });
+    return agruparCategorias(filas);
+  },
   ["categorias-con-conteo"],
   { revalidate: 3600, tags: [CATEGORIAS_TAG] },
 );
@@ -70,7 +100,16 @@ export type ProductInput = {
 export type ProductMovementContext = { actor?: string; source?: string };
 
 export async function saveProduct(i: ProductInput, id?: number, ctx: ProductMovementContext = {}) {
-  const category = await prisma.category.upsert({ where: { slug: slugify(i.categoryName) }, update: {}, create: { slug: slugify(i.categoryName), name: i.categoryName.trim() } });
+  const nombreCategoria = i.categoryName.trim();
+  const categorias = await prisma.category.findMany({
+    select: { id: true, slug: true, name: true, _count: { select: { products: true } } },
+  });
+  const elegida = elegirCategoria(categorias, nombreCategoria);
+  const category = elegida ?? await prisma.category.upsert({
+    where: { slug: slugify(nombreCategoria) },
+    update: {},
+    create: { slug: slugify(nombreCategoria), name: nombreCategoria },
+  });
   const brand = i.brandName?.trim() ? await prisma.brand.upsert({ where: { slug: slugify(i.brandName) }, update: {}, create: { slug: slugify(i.brandName), name: i.brandName.trim() } }) : null;
   const data = {
     sku: i.sku.trim(), name: i.name.trim(), description: i.description ?? "", priceUsd: i.priceUsd, compareAtUsd: i.compareAtUsd ?? null, stock: i.stock,
