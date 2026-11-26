@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getBrandsCached, getCategoriesCached } from "@/lib/catalog";
 import ProductCard from "@/components/ProductCard";
+import FiltrosCatalogo from "@/components/catalogo/FiltrosCatalogo";
 import Icon from "@/components/brand/Icon";
 import { getCustomer } from "@/lib/customer-auth";
 import { searchProductIds } from "@/lib/catalog";
@@ -105,10 +106,9 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
       <div className="grid gap-6 lg:grid-cols-[250px_1fr]">
         {/* Filtros */}
         <aside className="lg:sticky lg:top-24 lg:self-start">
-          <details open={activeCount > 0} className="card p-4">
-            <summary className="mb-3 flex cursor-pointer items-center gap-2 font-display text-sm font-bold text-navy">
-              <Icon name="filter" size={16} /> {t("catalog.filters")} {activeCount > 0 && <span className="badge bg-[color:var(--color-action)] text-white">{activeCount}</span>}
-            </summary>
+          <FiltrosCatalogo abierto={activeCount > 0} resumen={<>
+            <Icon name="filter" size={16} /> {t("catalog.filters")} {activeCount > 0 && <span className="badge bg-[color:var(--color-action)] text-white">{activeCount}</span>}
+          </>}>
             <Filter title={t("catalog.category")}>
               <div className="space-y-1 text-sm">
                 {categories.map((c) => (
@@ -150,7 +150,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
               </div>
             </Filter>
             {activeCount > 0 && <Link href="/catalogo" className="btn btn-ghost mt-3 w-full"><Icon name="refresh" size={16} /> {t("catalog.clear")}</Link>}
-          </details>
+          </FiltrosCatalogo>
         </aside>
 
         {/* Resultados */}
