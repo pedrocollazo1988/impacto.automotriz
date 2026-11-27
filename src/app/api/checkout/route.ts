@@ -56,7 +56,7 @@ export const POST = handle(async (req: Request) => {
     // El pedido se crea primero para tener número y poder enlazar cada movimiento.
     const created = await tx.order.create({
       data: {
-        paymentMethod: gw.key, paymentMethodName: gw.name, customerName: b.customer.name || me.name, customerEmail: me.email, customerPhone: b.customer.phone || me.phone || "", customerId: me.id, lang,
+        paymentMethod: gw.key, paymentMethodName: gw.name, customerName: b.customer.name || me.name, customerEmail: me.email ?? "", customerPhone: b.customer.phone || me.phone || "", customerId: me.id, lang,
         subtotalUsd: cart.subtotalUsd, discountUsd: coupon.discountUsd, couponCode: coupon.code, shippingUsd: delivery.feeUsd, paymentFeeUsd: feeUsd, totalUsd,
         items: { create: lineas.map((l) => ({ productId: l.productId, variantId: l.variantId, name: l.name, unitUsd: l.unitUsd, qty: l.qty })) },
         delivery: { create: delivery },
@@ -101,7 +101,7 @@ export const POST = handle(async (req: Request) => {
     paymentUrl = gw.config.url;
     await prisma.order.update({ where: { id: order.id }, data: { paymentRef: paymentUrl } });
   }
-  await sendTransactional(me.email, emailT(lang, "order.subject", { number: order.number }), orderConfirmationEmail({
+  if (me.email) await sendTransactional(me.email, emailT(lang, "order.subject", { number: order.number }), orderConfirmationEmail({
     name: b.customer.name || me.name,
     orderNumber: order.number,
     total: `${totalUsd.toFixed(2)} USD`,
@@ -115,7 +115,7 @@ export const POST = handle(async (req: Request) => {
     await sendTransactional(adminEmail, emailT("es", "adminOrder.subject", { number: order.number }), adminOrderEmail({
       orderNumber: order.number,
       customerName: b.customer.name || me.name,
-      customerEmail: me.email,
+      customerEmail: me.email ?? "",
       total: `${totalUsd.toFixed(2)} USD`,
       items: lineas.map((l) => ({ name: l.name, qty: l.qty, price: `${l.totalUsd.toFixed(2)} USD` })),
       proformaUrl: `${process.env.PUBLIC_URL}/admin/pedidos/${order.id}/prefactura`,

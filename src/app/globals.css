@@ -133,6 +133,10 @@
   .input::placeholder { color: rgb(100 116 139 / 0.9); }
   .input:focus, .input-select:focus { outline: none; border-color: var(--color-action); box-shadow: 0 0 0 4px rgb(14 116 144 / 0.16); }
 
+  /* Campo de teléfono: el país es un botón propio y el número ocupa el resto. */
+  .phone-input input { flex: 1 1 auto; min-width: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: 0; }
+  .dark .phone-input input { border-left: 0; }
+
   .link-underline { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
 
   /* Encabezado de sección con barra de acento a la izquierda. */

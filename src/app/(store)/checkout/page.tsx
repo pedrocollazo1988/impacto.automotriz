@@ -53,6 +53,8 @@ export default function Checkout() {
   const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
   const [captcha, setCaptcha] = useState(""); const [captchaKey, setCaptchaKey] = useState(0);
   const [session, setSession] = useState<"loading" | "in" | "out">("loading");
+  // El correo se fija solo si la cuenta ya tiene uno: quien entra por SMS lo escribe aquí.
+  const [emailFijo, setEmailFijo] = useState(false);
 
   useEffect(() => {
     const total = Math.max(0, subtotal - (coupon?.discountUsd ?? 0)) + fee;
@@ -69,7 +71,8 @@ export default function Checkout() {
       .then((r) => r.json())
       .then((m) => {
         if (!m) { setSession("out"); return; }
-        setC({ name: m.name ?? "", email: m.email ?? "", phone: m.phone ?? "" });
+        setC({ name: m.name ?? "", email: m.email ?? "", phone: m.phoneE164 ?? m.phone ?? "" });
+        setEmailFijo(!!m.email);
         setSession("in");
       })
       .catch(() => setSession("out"));
@@ -164,7 +167,7 @@ export default function Checkout() {
               </label>
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-slate-600">{t("checkout.email")}</span>
-                <input className={`input ${session === "in" ? "bg-slate-50 text-slate-500" : ""} ${intento && errores.email ? "border-red-400 ring-2 ring-red-100" : ""}`} type="email" autoComplete="email" placeholder="tu@correo.com" value={c.email} readOnly={session === "in"} onChange={(e) => setC({ ...c, email: e.target.value })} aria-invalid={intento && !!errores.email} />
+                <input className={`input ${emailFijo ? "bg-slate-50 text-slate-500" : ""} ${intento && errores.email ? "border-red-400 ring-2 ring-red-100" : ""}`} type="email" autoComplete="email" placeholder="tu@correo.com" value={c.email} readOnly={emailFijo} onChange={(e) => setC({ ...c, email: e.target.value })} aria-invalid={intento && !!errores.email} />
                 {intento && errores.email && <span className="mt-1 block text-xs text-red-600">{errores.email}</span>}
               </label>
               <label className="block">

@@ -10,7 +10,7 @@ export const POST = handle(async (req: Request) => {
   const me = await requireCustomer();
   await limitKey(me.id, "verify-resend", 3, 10 * 60_000);
   const c = await prisma.customer.findUniqueOrThrow({ where: { id: me.id } });
-  if (!c.emailVerified) {
+  if (!c.emailVerified && c.email) {
     const r = await sendVerificationPin(c, await getLang());
     if (!r.ok) throw new HttpError(502, "No pudimos enviar el código. Revisa la configuración de correo e inténtalo de nuevo.");
   }
