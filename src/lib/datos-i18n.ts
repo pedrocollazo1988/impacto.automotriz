@@ -20,6 +20,7 @@ const limpio = (v: string | null | undefined) => (v ?? "").trim();
 
 type Producto = {
   slug: string;
+  sku?: string | null;
   name: string;
   nameEn?: string | null;
   description?: string | null;
