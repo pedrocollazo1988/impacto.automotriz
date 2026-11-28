@@ -2,7 +2,7 @@
 // duplicar nada. La usan el comando `npm run db:seed:despiece` y el boton del admin.
 import type { PrismaClient } from "@prisma/client";
 
-const SYSTEMS = [
+export const SYSTEMS = [
   { slug: "propulsion", name: "Propulsión", icon: "bolt", blurb: "Motor, diferencial y selector de fuerza.", sortOrder: 1 },
   { slug: "electronica", name: "Electrónica", icon: "battery", blurb: "Controlador, banco de baterías, cargador y convertidor.", sortOrder: 2 },
   { slug: "ruedas", name: "Transmisión y ruedas", icon: "gauge", blurb: "Neumático, cámara y rin metálico.", sortOrder: 3 },

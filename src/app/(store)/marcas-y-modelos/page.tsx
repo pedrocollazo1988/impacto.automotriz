@@ -6,6 +6,7 @@ import Icon from "@/components/brand/Icon";
 import VehicleFinder from "@/components/site/VehicleFinder";
 import { leerSeccion } from "@/lib/contenido-server";
 import { getT } from "@/lib/i18n";
+import { nombreMarca } from "@/lib/datos-i18n";
 
 export async function generateMetadata() {
   const { t } = await getT();
@@ -14,13 +15,13 @@ export async function generateMetadata() {
 export const dynamic = "force-dynamic";
 
 export default async function MarcasYModelos() {
-  const { t } = await getT();
+  const { t, lang } = await getT();
   const [marcas, productos, hero] = await Promise.all([
     getBrandsCached(),
     prisma.product.findMany({
       where: { active: true },
       orderBy: { id: "desc" },
-      include: { brand: true, category: { select: { slug: true, name: true } } },
+      include: { brand: true, category: { select: { slug: true, name: true, nameEn: true } } },
     }),
     leerSeccion("marcas-hero"),
   ]);
@@ -45,7 +46,7 @@ export default async function MarcasYModelos() {
         <div className="flex flex-wrap gap-2">
           {porMarca.map((m) => (
             <a key={m.id} href={`#marca-${m.slug}`} className="chip">
-              {m.name}<span className="font-mono text-[10px] text-slate-500">{m.items.length}</span>
+              {nombreMarca(m, lang)}<span className="font-mono text-[10px] text-slate-500">{m.items.length}</span>
             </a>
           ))}
         </div>
@@ -63,7 +64,7 @@ export default async function MarcasYModelos() {
           <section key={m.id} id={`marca-${m.slug}`} className="mt-12 scroll-mt-32">
             <div className="flex items-end justify-between gap-4 border-b border-slate-200 pb-3">
               <div>
-                <h2 className="font-display text-xl font-extrabold text-navy sm:text-2xl">{m.name}</h2>
+                <h2 className="font-display text-xl font-extrabold text-navy sm:text-2xl">{nombreMarca(m, lang)}</h2>
                 <p className="mt-0.5 font-mono text-[11px] uppercase tracking-wider text-slate-500">{t("brands.products").replace("{n}", String(m.items.length))}</p>
               </div>
               <Link href={`/catalogo?marca=${m.slug}`} className="flex shrink-0 items-center gap-1 text-sm font-bold text-[color:var(--color-action)] transition hover:text-navy">

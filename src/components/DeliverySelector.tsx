@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { usePreferences } from "@/components/site/Preferences";
+import { descripcionEntrega, nombreEntrega } from "@/lib/datos-i18n";
 
 type Opt = { id: number; name: string };
 type Quote = {
-  methodId: number; name: string; kind: string; description?: string | null; available: boolean; reason?: string;
+  methodId: number; code: string; name: string; nameEn?: string | null; kind: string; description?: string | null; descriptionEn?: string | null; available: boolean; reason?: string;
   feeUsd: number; etaMinDays: number; etaMaxDays: number; requiresAddress: boolean;
   slots: { id: number; label: string }[];
   pickupPoints: { id: number; name: string; address: string; hours: string | null }[];
@@ -18,7 +19,7 @@ export type DeliveryChoice = {
 // onChange recibe la elección (null si está incompleta) y el costo de envío a mostrar.
 // El costo final lo recalcula el servidor con buildOrderDelivery().
 export default function DeliverySelector({ subtotalUsd, onChange }: { subtotalUsd: number; onChange: (c: DeliveryChoice | null, feeUsd: number, methodName?: string) => void }) {
-  const { t } = usePreferences();
+  const { t, lang } = usePreferences();
   const [provs, setProvs] = useState<Opt[]>([]); const [muns, setMuns] = useState<Opt[]>([]); const [quotes, setQuotes] = useState<Quote[]>([]);
   const [prov, setProv] = useState(""); const [mun, setMun] = useState(""); const [methodId, setMethodId] = useState<number>();
   const [f, setF] = useState({ address: "", reference: "", recipientName: "", recipientPhone: "", recipientCi: "", isGift: false, slotId: "", scheduledDate: "", pickupPointId: "" });
@@ -47,9 +48,9 @@ export default function DeliverySelector({ subtotalUsd, onChange }: { subtotalUs
       municipalityId: Number(mun), methodId: q!.methodId, address: f.address || undefined, reference: f.reference || undefined,
       recipientName: f.recipientName, recipientPhone: f.recipientPhone, recipientCi: f.recipientCi || undefined, isGift: f.isGift,
       slotId: f.slotId ? Number(f.slotId) : undefined, scheduledDate: f.scheduledDate || undefined, pickupPointId: f.pickupPointId ? Number(f.pickupPointId) : undefined,
-    } : null, q?.feeUsd ?? 0, q?.name);
+    } : null, q?.feeUsd ?? 0, q ? nombreEntrega(q, lang) : undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, f, mun]);
+  }, [q, f, mun, lang]);
 
   const input = "input";
   return (
@@ -62,7 +63,7 @@ export default function DeliverySelector({ subtotalUsd, onChange }: { subtotalUs
       {quotes.map((x) => (
         <label key={x.methodId} className={`flex cursor-pointer gap-3 rounded-xl border p-3 ${x.available ? "border-slate-200 hover:border-slate-300" : "opacity-50"} ${methodId === x.methodId ? "border-[color:var(--color-action)] ring-2 ring-[color:var(--color-action)]/25 bg-[color:var(--color-action)]/5" : ""}`}>
           <input type="radio" name="m" disabled={!x.available} checked={methodId === x.methodId} onChange={() => setMethodId(x.methodId)} />
-          <span className="flex-1"><b>{x.name}</b><br /><small className="text-slate-500">{x.available ? `${x.etaMinDays}–${x.etaMaxDays} ${t("delivery.days")}` : x.reason}</small></span>
+          <span className="flex-1"><b>{nombreEntrega(x, lang)}</b><br /><small className="text-slate-500">{x.available ? `${x.etaMinDays}–${x.etaMaxDays} ${t("delivery.days")}` : x.reason}</small>{descripcionEntrega(x, lang) && <small className="mt-0.5 block text-slate-400">{descripcionEntrega(x, lang)}</small>}</span>
           {x.available && <b>{x.feeUsd === 0 ? t("delivery.free") : `${x.feeUsd.toFixed(2)} USD`}</b>}
         </label>
       ))}

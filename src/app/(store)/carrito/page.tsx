@@ -5,8 +5,9 @@ import Image from "next/image";
 import { useCart, type CartItem } from "@/components/CartProvider";
 import Icon from "@/components/brand/Icon";
 import { usePreferences } from "@/components/site/Preferences";
+import { nombreProducto } from "@/lib/datos-i18n";
 
-type Line = { productId: number; variantId: number | null; slug: string | null; name: string | null; image: string | null; unitUsd: number; qty: number; stock: number; disponible: boolean; ok: boolean; totalUsd: number };
+type Line = { productId: number; variantId: number | null; slug: string | null; name: string | null; nameEn?: string | null; image: string | null; unitUsd: number; qty: number; stock: number; disponible: boolean; ok: boolean; totalUsd: number };
 type Fila = { key: string; item: CartItem; line: Line | null };
 
 export default function Carrito() {
@@ -131,15 +132,16 @@ export default function Carrito() {
             );
             const qty = qtyDe(line);
             const ok = qty <= line.stock;
+            const nombre = nombreProducto({ slug: line.slug ?? "", name: line.name ?? "", nameEn: line.nameEn }, lang);
             return (
             <div key={key} className="card flex flex-wrap items-center gap-4 p-4">
               {line.image ? (
-                <Image src={line.image} alt={line.name ?? ""} width={56} height={56} sizes="56px" className="h-14 w-14 shrink-0 rounded-xl bg-slate-100 object-cover" unoptimized={line.image.endsWith(".svg")} />
+                <Image src={line.image} alt={nombre} width={56} height={56} sizes="56px" className="h-14 w-14 shrink-0 rounded-xl bg-slate-100 object-cover" unoptimized={line.image.endsWith(".svg")} />
               ) : (
                 <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400"><Icon name="box" size={22} /></span>
               )}
               <div className="min-w-0 flex-1">
-                <Link href={`/producto/${line.slug}`} className="font-semibold text-slate-800 hover:text-navy">{line.name}</Link>
+                <Link href={`/producto/${line.slug}`} className="font-semibold text-slate-800 hover:text-navy">{nombre}</Link>
                 <p className="mt-0.5 text-sm text-slate-500">{line.unitUsd.toFixed(2)} {t("cart.unit")}</p>
                 {!ok && <p className="mt-1 flex items-center gap-1 text-xs font-medium text-red-600"><Icon name="info" size={13} /> {tt("cart.onlyLeft", { n: line.stock })}</p>}
               </div>

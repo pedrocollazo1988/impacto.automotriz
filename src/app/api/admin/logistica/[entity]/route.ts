@@ -8,6 +8,8 @@ const CFG = {
   methods: { delegate: "deliveryMethod", schema: z.object({
     code: z.string().min(2).max(30), name: z.string().min(2), kind: z.enum(["HOME_DELIVERY", "STORE_PICKUP", "COURIER", "AGREED_POINT"]),
     description: z.string().nullish(), active: z.boolean().default(true), sortOrder: z.number().int().default(0),
+    // Inglés opcional: null hace que la tienda muestre el español.
+    nameEn: z.string().nullish(), descriptionEn: z.string().nullish(),
     baseFee: usd.default(0), freeFromUsd: usd.nullish(), etaMinDays: z.number().int().min(0).default(1),
     etaMaxDays: z.number().int().min(0).default(3), requiresAddress: z.boolean().default(true), cashOnDelivery: z.boolean().default(false) }) },
   "pickup-points": { delegate: "pickupPoint", schema: z.object({

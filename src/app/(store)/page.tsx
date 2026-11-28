@@ -13,12 +13,13 @@ import Reveal from "@/components/site/Reveal";
 import { skusConGiro } from "@/lib/photo360";
 import { leerSeccion } from "@/lib/contenido-server";
 import { getT } from "@/lib/i18n";
+import { descripcionCategoria, nombreCategoria, nombreMarca, nombreProducto } from "@/lib/datos-i18n";
 export const dynamic = "force-dynamic";
 
 const CAT_ICON: Record<string, string> = { frenos: "gauge", "sistema-electrico": "bolt", electrico: "bolt", suspension: "layers", "triciclos-electricos": "battery", motor: "wrench", accesorios: "box" };
 
 export default async function Home() {
-  const { t } = await getT();
+  const { t, lang } = await getT();
   const hayGiro = skusConGiro().length > 0;
   const [valor, confianza, accesos, hero, slider, catHead, destHead, ofertasHead, novHead, marcasHead, pasos, cierre] = await Promise.all([
     leerSeccion("portada-valor"),
@@ -35,8 +36,8 @@ export default async function Home() {
     leerSeccion("portada-cta"),
   ]);
   const [todos, offers, categories, brands, total] = await Promise.all([
-    prisma.product.findMany({ where: { active: true }, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true, name: true } } } }),
-    prisma.product.findMany({ where: { active: true, compareAtUsd: { not: null } }, take: 4, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true, name: true } } } }),
+    prisma.product.findMany({ where: { active: true }, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true, name: true, nameEn: true } } } }),
+    prisma.product.findMany({ where: { active: true, compareAtUsd: { not: null } }, take: 4, orderBy: { id: "desc" }, include: { brand: true, category: { select: { slug: true, name: true, nameEn: true } } } }),
     getCategoriesCached(),
     getBrandsCached(12),
     prisma.product.count({ where: { active: true } }),
@@ -74,8 +75,8 @@ export default async function Home() {
       const antes = p.compareAtUsd && Number(p.compareAtUsd) > precio ? `${t("home2.before").replace("{n}", Number(p.compareAtUsd).toFixed(2))}` : "";
       return {
         imagen: p.images[0],
-        titulo: p.name,
-        texto: `${antes}${precio.toFixed(2)} USD${p.brand?.name ? ` · ${p.brand.name}` : ""}`,
+        titulo: nombreProducto(p, lang),
+        texto: `${antes}${precio.toFixed(2)} USD${p.brand ? ` · ${nombreMarca(p.brand, lang)}` : ""}`,
         href: `/producto/${p.slug}`,
         icono: p.compareAtUsd ? "tag" : "star",
       };
@@ -201,9 +202,9 @@ export default async function Home() {
                   <Icon name={c.icon || CAT_ICON[c.slug] || "box"} size={22} />
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate font-display text-sm font-bold text-navy">{c.name}</span>
+                  <span className="block truncate font-display text-sm font-bold text-navy">{nombreCategoria(c, lang)}</span>
                   <span className="block truncate font-mono text-[10px] uppercase tracking-wider text-slate-500">{c._count.products} {t("home.products")}</span>
-                  {c.description && <span className="block truncate text-[10px] text-slate-400">{c.description}</span>}
+                  {descripcionCategoria(c, lang) && <span className="block truncate text-[10px] text-slate-400">{descripcionCategoria(c, lang)}</span>}
                 </span>
                 <Icon name="chevronRight" size={16} className="ml-auto shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[color:var(--color-action)]" />
               </Link>
@@ -217,7 +218,7 @@ export default async function Home() {
         <section key={d.id} className="container-x mt-16">
           <div className="flex items-end justify-between gap-4 border-b border-slate-200 pb-3">
             <div>
-              <h2 className="font-display text-xl font-extrabold text-navy sm:text-2xl">{d.name}</h2>
+              <h2 className="font-display text-xl font-extrabold text-navy sm:text-2xl">{nombreCategoria(d, lang)}</h2>
               <p className="mt-0.5 font-mono text-[11px] uppercase tracking-wider text-slate-500">{d._count.products} {t("home.products")}</p>
             </div>
             <Link href={`/catalogo?categoria=${d.slug}`} className="flex shrink-0 items-center gap-1 text-sm font-bold text-[color:var(--color-action)] transition hover:text-navy">
@@ -279,7 +280,7 @@ export default async function Home() {
             <div className="marquee gap-4">
               {marquee.concat(marquee).map((b, i) => (
                 <span key={`${b.id}-${i}`} className="grid h-16 w-40 shrink-0 place-items-center rounded-2xl border border-slate-200 bg-white font-display text-sm font-bold text-slate-500">
-                  {b.name}
+                  {nombreMarca(b, lang)}
                 </span>
               ))}
             </div>

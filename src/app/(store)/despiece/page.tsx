@@ -5,15 +5,16 @@ import Icon from "@/components/brand/Icon";
 import VehiclePicker from "@/components/despiece/VehiclePicker";
 import { leerSeccion } from "@/lib/contenido-server";
 import { getT } from "@/lib/i18n";
+import { enContenido } from "@/lib/contenido-en";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getT();
+  const { t, lang } = await getT();
   return { title: t("parts.meta"), description: t("parts.metaDesc") };
 }
 
 export default async function DespieceIndex() {
-  const { t } = await getT();
+  const { t, lang } = await getT();
   const [vehicles, hero] = await Promise.all([getVehiclesConLaminasCached(), leerSeccion("despiece-hero")]);
 
   if (vehicles.length === 0) {
@@ -46,7 +47,7 @@ export default async function DespieceIndex() {
                 <div>
                   <p className="font-mono text-[11px] uppercase tracking-widest text-slate-500">{v.brand}</p>
                   <h2 className="font-display text-2xl font-extrabold text-navy">{v.model}</h2>
-                  <p className="mt-0.5 text-xs text-slate-500">{v.version} · {v.voltage} · {v.power}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{enContenido(v.version, lang)} · {v.voltage} · {v.power}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-display text-2xl font-extrabold text-navy">{piezas}</p>
@@ -59,7 +60,7 @@ export default async function DespieceIndex() {
                   <li key={dg.id}>
                     <Link href={`/despiece/${v.slug}/${dg.system.slug}`} className="flex h-full flex-col gap-1 bg-white p-3 transition hover:bg-slate-50">
                       <Icon name={dg.system.icon} size={16} className="text-[color:var(--color-action)]" />
-                      <span className="text-xs font-bold leading-tight text-navy">{dg.system.name}</span>
+                      <span className="text-xs font-bold leading-tight text-navy">{enContenido(dg.system.name, lang)}</span>
                       <span className="font-mono text-[10px] text-slate-500">
                         {t("parts.piecesCount").replace("{n}", String(dg._count.pins))}
                       </span>

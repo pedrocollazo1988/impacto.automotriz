@@ -5,6 +5,7 @@ import Icon from "@/components/brand/Icon";
 import { useCart } from "@/components/CartProvider";
 import { useVehicle } from "@/components/VehicleProvider";
 import { usePreferences } from "@/components/site/Preferences";
+import { etiquetaPieza } from "@/lib/datos-i18n";
 import type { DespiecePin } from "@/lib/despiece";
 
 type Props = { vehicleSlug: string; image: string; pins: DespiecePin[] };
@@ -16,7 +17,7 @@ export default function DespieceViewer({ vehicleSlug, image, pins }: Props) {
   const [zoom, setZoom] = useState(false);
   const [origen, setOrigen] = useState({ x: 50, y: 50 });
   const itemRefs = useRef<Record<number, HTMLLIElement | null>>({});
-  const { t } = usePreferences();
+  const { t, lang } = usePreferences();
   const { items, add } = useCart();
   const { vehicle } = useVehicle();
   const compatible = vehicle?.slug === vehicleSlug;
@@ -83,7 +84,7 @@ export default function DespieceViewer({ vehicleSlug, image, pins }: Props) {
                       onClick={(e) => { e.stopPropagation(); seleccionar(p.id); }}
                       onMouseEnter={() => setActivo(p.id)}
                       style={{ left: `${p.x}%`, top: `${p.y}%` }}
-                      aria-label={t("parts.pinAria").replace("{n}", String(p.number)).replace("{name}", p.label ?? p.product.name)}
+                      aria-label={t("parts.pinAria").replace("{n}", String(p.number)).replace("{name}", etiquetaPieza({ ...p.product, label: p.label }, lang))}
                       aria-current={esActivo ? "true" : undefined}
                       className={`absolute grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full transition focus:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--color-action)]/40 ${
                         esActivo

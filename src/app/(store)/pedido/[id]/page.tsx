@@ -5,6 +5,7 @@ import { canViewOrder } from "@/lib/order-access";
 import { porClave } from "@/lib/payment-gateways";
 import { datosPublicos, esCobroAutomatico, redirigeAlPagar } from "@/lib/pasarelas";
 import { pagoTexto } from "@/lib/pagos-i18n";
+import { descripcionEntrega, instruccionesPago, nombreEntrega, nombrePago, nombreProducto } from "@/lib/datos-i18n";
 import { getT } from "@/lib/i18n";
 import Icon from "@/components/brand/Icon";
 import PayRetry from "./PayRetry";
@@ -20,14 +21,49 @@ const ICONS: Record<string, string> = { PENDING_PAYMENT: "card", PAID: "check", 
 const DELIVERY_KEY: Record<string, string> = { PENDING: "order.del.PENDING", READY: "order.del.READY", OUT_FOR_DELIVERY: "order.del.OUT_FOR_DELIVERY", DELIVERED: "ord.st.DELIVERED", FAILED: "order.del.FAILED" };
 
 export default async function Pedido({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ t?: string }> }) {
-  const o = await prisma.order.findUnique({ where: { id: (await params).id }, include: { items: true, delivery: true } });
+  const o = await prisma.order.findUnique({
+    where: { id: (await params).id },
+    include: {
+      items: { include: { product: { select: { slug: true, name: true, nameEn: true } } } },
+      delivery: true,
+    },
+  });
   if (!o || !(await canViewOrder(o, (await searchParams).t))) notFound();
   const { t, lang } = await getT();
   const tok = (await searchParams).t;
   const idx = STEPS.indexOf(o.status as (typeof STEPS)[number]);
   const canceled = o.status === "CANCELED";
   const gw = await porClave(o.paymentMethod);
-  const metodo = pagoTexto(o.paymentMethodName ?? gw?.name ?? o.paymentMethod, lang);
+  // Los textos ingleses no viajan en Pasarela ni en OrderDelivery: se leen aparte.
+  const [gwFila, entregaFila, variantes] = await Promise.all([
+    prisma.paymentGateway.findUnique({
+      where: { key: o.paymentMethod },
+      select: { key: true, name: true, nameEn: true, description: true, descriptionEn: true, instructions: true, instructionsEn: true },
+    }),
+    o.delivery ? prisma.deliveryMethod.findUnique({ where: { id: o.delivery.methodId } }) : null,
+    prisma.productVariant.findMany({
+      where: { id: { in: o.items.map((i) => i.variantId).filter((v): v is number => v != null) } },
+      select: { id: true, name: true },
+    }),
+  ]);
+  const pago = {
+    key: o.paymentMethod,
+    name: o.paymentMethodName ?? gwFila?.name ?? gw?.name ?? o.paymentMethod,
+    nameEn: gwFila?.nameEn ?? null,
+    description: gwFila?.description ?? gw?.description ?? "",
+    descriptionEn: gwFila?.descriptionEn ?? null,
+    instructions: gwFila?.instructions ?? gw?.instructions ?? "",
+    instructionsEn: gwFila?.instructionsEn ?? null,
+  };
+  const metodo = nombrePago(pago, lang);
+  const instrucciones = instruccionesPago(pago, lang);
+  const metodoEntrega = o.delivery ? (entregaFila ? nombreEntrega(entregaFila, lang) : o.delivery.methodName) : "";
+  const entregaDesc = entregaFila ? descripcionEntrega(entregaFila, lang) : "";
+  const nombreArticulo = (i: (typeof o.items)[number]) => {
+    const base = nombreProducto({ slug: i.product.slug, name: i.product.name, nameEn: i.product.nameEn }, lang);
+    const variante = variantes.find((v) => v.id === i.variantId)?.name;
+    return variante ? `${base} — ${variante}` : base;
+  };
   const detalles = gw ? datosPublicos(gw) : [];
   return (
     <div className="container-x py-8">
@@ -64,7 +100,7 @@ export default async function Pedido({ params, searchParams }: { params: Promise
           <h2 className="flex items-center gap-2 border-b border-slate-100 px-5 py-3 font-display text-sm font-bold text-navy"><Icon name="box" size={16} /> {t("order.articles")}</h2>
           <ul className="divide-y divide-slate-50">
             {o.items.map((i) => (
-              <li key={i.id} className="flex items-center justify-between px-5 py-3 text-sm"><span>{i.qty} × {i.name}</span><span className="font-semibold">{(Number(i.unitUsd) * i.qty).toFixed(2)} USD</span></li>
+              <li key={i.id} className="flex items-center justify-between px-5 py-3 text-sm"><span>{i.qty} × {nombreArticulo(i)}</span><span className="font-semibold">{(Number(i.unitUsd) * i.qty).toFixed(2)} USD</span></li>
             ))}
           </ul>
           <div className="ml-auto w-full max-w-xs space-y-1 px-5 py-4 text-sm">
@@ -78,7 +114,8 @@ export default async function Pedido({ params, searchParams }: { params: Promise
         {o.delivery && (
           <div className="card p-5 text-sm">
             <h2 className="flex items-center gap-2 font-display text-sm font-bold text-navy"><Icon name="truck" size={16} /> {t("order.delivery")}</h2>
-            <p className="mt-2 text-slate-600"><b>{o.delivery.methodName}</b></p>
+            <p className="mt-2 text-slate-600"><b>{metodoEntrega}</b></p>
+            {entregaDesc && <p className="text-slate-600">{entregaDesc}</p>}
             <p className="text-slate-600">{o.delivery.address ?? t("order.pickupInStore")}</p>
             <p className="text-slate-600">{t("order.receives")} {o.delivery.recipientName} · {o.delivery.recipientPhone}</p>
             <p className="mt-2 text-slate-600">{t("order.deliveryStatus")} <b>{DELIVERY_KEY[o.delivery.status] ? t(DELIVERY_KEY[o.delivery.status]) : o.delivery.status}</b></p>
@@ -93,7 +130,7 @@ export default async function Pedido({ params, searchParams }: { params: Promise
         {!o.paid && !canceled && gw && gw.kind === "manual" && (
           <div className="card border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
             <p className="flex items-center gap-2 font-semibold"><Icon name={gw.icon} size={16} /> {t("order.howToPay")} {metodo}</p>
-            {gw.instructions && <p className="mt-2 whitespace-pre-line leading-relaxed">{pagoTexto(gw.instructions, lang)}</p>}
+            {instrucciones && <p className="mt-2 whitespace-pre-line leading-relaxed">{instrucciones}</p>}
             {detalles.length > 0 && (
               <dl className="mt-3 grid gap-x-4 gap-y-1 sm:grid-cols-[auto_1fr]">
                 {detalles.map((d) => (

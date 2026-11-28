@@ -13,12 +13,16 @@ const Body = z.object({
   key: z.string().max(40).optional(),
   provider: z.string().max(20).optional(),
   name: z.string().min(2).max(60).optional(),
+  // Inglés opcional: null/"" hacen que la web muestre el español.
+  nameEn: z.string().max(60).nullish(),
   description: z.string().max(200).optional(),
+  descriptionEn: z.string().max(200).nullish(),
   icon: z.string().max(30).optional(),
   enabled: z.boolean().optional(),
   sandbox: z.boolean().optional(),
   sortOrder: z.number().int().min(0).max(99).optional(),
   instructions: z.string().max(4000).optional(),
+  instructionsEn: z.string().max(4000).nullish(),
   feePercent: z.number().min(0).max(30).optional(),
   minTotalUsd: z.number().min(0).nullish(),
   maxTotalUsd: z.number().min(0).nullish(),
@@ -27,7 +31,9 @@ const Body = z.object({
   revocar: z.boolean().optional(),
 });
 
-const publico = (p: Awaited<ReturnType<typeof leerPasarelas>>[number]) => {
+type Ingles = { nameEn: string | null; descriptionEn: string; instructionsEn: string };
+
+const publico = (p: Awaited<ReturnType<typeof leerPasarelas>>[number], en?: Ingles) => {
   const driver = driverDe(p);
   const config: Record<string, string> = {};
   for (const c of driver.campos) {
@@ -41,7 +47,9 @@ const publico = (p: Awaited<ReturnType<typeof leerPasarelas>>[number]) => {
     key: p.key,
     provider: p.provider,
     name: p.name,
+    nameEn: en?.nameEn ?? null,
     description: p.description,
+    descriptionEn: en?.descriptionEn ?? "",
     kind: p.kind,
     icon: p.icon,
     enabled: p.enabled,
@@ -49,6 +57,7 @@ const publico = (p: Awaited<ReturnType<typeof leerPasarelas>>[number]) => {
     sandbox: p.sandbox,
     sortOrder: p.sortOrder,
     instructions: p.instructions,
+    instructionsEn: en?.instructionsEn ?? "",
     feePercent: p.feePercent,
     minTotalUsd: p.minTotalUsd,
     maxTotalUsd: p.maxTotalUsd,
@@ -60,8 +69,14 @@ const publico = (p: Awaited<ReturnType<typeof leerPasarelas>>[number]) => {
 export const GET = handle(async (req: Request) => {
   await requireAdmin(req, "payments");
   const methods = await leerPasarelas();
+  // Las columnas inglesas no forman parte del modelo normalizado de pasarelas:
+  // se leen aparte para poder editarlas en el panel.
+  const ingles = new Map(
+    (await prisma.paymentGateway.findMany({ select: { id: true, nameEn: true, descriptionEn: true, instructionsEn: true } }))
+      .map((x) => [x.id, x] as const),
+  );
   return Response.json({
-    methods: methods.map(publico),
+    methods: methods.map((m) => publico(m, ingles.get(m.id))),
     drivers: driversDelPanel(),
     presets: PRESETS,
   });
@@ -106,12 +121,15 @@ export const POST = handle(async (req: Request) => {
       where: { id: actual.id },
       data: {
         name: b.name ?? actual.name,
+        nameEn: b.nameEn === undefined ? actual.nameEn : (b.nameEn?.trim() || null),
         description: b.description ?? actual.description,
+        descriptionEn: b.descriptionEn === undefined ? actual.descriptionEn : (b.descriptionEn?.trim() || ""),
         icon: b.icon ?? actual.icon,
         enabled: b.enabled ?? actual.enabled,
         sandbox: b.sandbox ?? actual.sandbox,
         sortOrder: b.sortOrder ?? actual.sortOrder,
         instructions: b.instructions ?? actual.instructions,
+        instructionsEn: b.instructionsEn === undefined ? actual.instructionsEn : (b.instructionsEn?.trim() || ""),
         feePercent: b.feePercent ?? actual.feePercent,
         minTotalUsd: b.minTotalUsd === undefined ? actual.minTotalUsd : b.minTotalUsd,
         maxTotalUsd: b.maxTotalUsd === undefined ? actual.maxTotalUsd : b.maxTotalUsd,
@@ -145,13 +163,16 @@ export const POST = handle(async (req: Request) => {
       key,
       provider,
       name: b.name.trim(),
+      nameEn: b.nameEn?.trim() || null,
       description: b.description ?? "",
+      descriptionEn: b.descriptionEn?.trim() || "",
       kind: driver.kind,
       icon: b.icon ?? driver.icono,
       enabled: b.enabled ?? true,
       sandbox: b.sandbox ?? true,
       sortOrder: b.sortOrder ?? 0,
       instructions: b.instructions ?? "",
+      instructionsEn: b.instructionsEn?.trim() || "",
       feePercent: b.feePercent ?? 0,
       minTotalUsd: b.minTotalUsd ?? null,
       maxTotalUsd: b.maxTotalUsd ?? null,

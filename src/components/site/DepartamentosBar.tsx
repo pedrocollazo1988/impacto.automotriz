@@ -36,7 +36,7 @@ export default async function DepartamentosBar() {
   return (
     <div className="border-b border-slate-200 bg-white print:hidden">
       <div className="container-x">
-        <CategoryMarquee categories={unicas.map((c) => ({ slug: c.slug, name: c.name }))} />
+        <CategoryMarquee categories={unicas.map((c) => ({ slug: c.slug, name: c.name, nameEn: c.nameEn }))} />
       </div>
     </div>
   );

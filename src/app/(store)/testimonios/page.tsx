@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import Icon from "@/components/brand/Icon";
 import { leerSeccion } from "@/lib/contenido-server";
 import { getT } from "@/lib/i18n";
+import { nombreProducto } from "@/lib/datos-i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getT();
@@ -22,13 +23,13 @@ function Estrellas({ n, aria }: { n: number; aria: string }) {
 }
 
 export default async function Testimonios() {
-  const { t } = await getT();
+  const { t, lang } = await getT();
   const [hero, vacio] = await Promise.all([leerSeccion("testimonios-hero"), leerSeccion("testimonios-vacio")]);
   const resenas = await prisma.review.findMany({
     where: { visible: true },
     orderBy: { createdAt: "desc" },
     take: 24,
-    include: { product: { select: { name: true, slug: true } } },
+    include: { product: { select: { slug: true, name: true, nameEn: true } } },
   });
 
   const media = resenas.length > 0 ? resenas.reduce((a, r) => a + r.rating, 0) / resenas.length : 0;
@@ -71,7 +72,7 @@ export default async function Testimonios() {
                 <Estrellas n={r.rating} aria={t("reviews2.stars").replace("{n}", String(r.rating))} />
                 <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-600">“{r.comment}”</p>
                 <Link href={`/producto/${r.product.slug}`} className="mt-4 border-t border-slate-100 pt-3 text-xs font-semibold text-navy transition hover:text-[color:var(--color-action)]">
-                  {r.product.name}
+                  {nombreProducto(r.product, lang)}
                 </Link>
               </article>
             ))}

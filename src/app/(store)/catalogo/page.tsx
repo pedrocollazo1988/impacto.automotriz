@@ -10,6 +10,7 @@ import { searchProductIds } from "@/lib/catalog";
 import { skusConGiro } from "@/lib/photo360";
 import { leerSeccion } from "@/lib/contenido-server";
 import { getT } from "@/lib/i18n";
+import { nombreCategoria, nombreMarca } from "@/lib/datos-i18n";
 
 const OPCIONES_OTROS = [
   ["disponible", "catalog.onlyAvailable"],
@@ -29,7 +30,7 @@ const ORDENES: [string, string][] = [["novedad", "catalog.sortNew"], ["precio", 
 
 export default async function Catalogo({ searchParams }: { searchParams: SP }) {
   const s = await searchParams;
-  const { t } = await getT();
+  const { t, lang } = await getT();
   const me = await getCustomer();
   const garage = me ? await prisma.garageVehicle.findMany({ where: { customerId: me.id } }) : [];
   const year = s.year ? Number(s.year) : undefined;
@@ -117,7 +118,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
                 {categories.map((c) => (
                   <Link key={c.id} href={link({ categoria: s.categoria === c.slug ? undefined : c.slug })}
                     className={`flex min-h-12 items-center justify-between rounded-lg px-2 py-1.5 transition lg:min-h-0 ${s.categoria === c.slug ? "bg-[color:var(--color-navy)] font-semibold text-white" : "hover:bg-slate-50"}`}>
-                    <span>{c.name}</span><span className={`font-mono text-[10px] ${s.categoria === c.slug ? "text-white/70" : "text-slate-500"}`}>{c._count.products}</span>
+                    <span>{nombreCategoria(c, lang)}</span><span className={`font-mono text-[10px] ${s.categoria === c.slug ? "text-white/70" : "text-slate-500"}`}>{c._count.products}</span>
                   </Link>
                 ))}
               </div>
@@ -125,7 +126,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
             <Filter title={t("catalog.brand")}>
               <div className="flex flex-wrap gap-1.5">
                 {brands.map((b) => (
-                  <Link key={b.id} href={link({ marca: s.marca === b.slug ? undefined : b.slug })} className={`chip min-h-12 lg:min-h-0 ${s.marca === b.slug ? "chip-active" : ""}`}>{b.name}</Link>
+                  <Link key={b.id} href={link({ marca: s.marca === b.slug ? undefined : b.slug })} className={`chip min-h-12 lg:min-h-0 ${s.marca === b.slug ? "chip-active" : ""}`}>{nombreMarca(b, lang)}</Link>
                 ))}
                 {brands.length === 0 && <p className="text-xs text-slate-500">{t("cat2.noBrands")}</p>}
               </div>

@@ -7,6 +7,8 @@ export type CartLineDisponible = LineaBase & {
   disponible: true;
   slug: string;
   name: string;
+  /** Nombre en inglés escrito en el panel; nulo = la web usa el español. */
+  nameEn: string | null;
   image: string | null;
   unitUsd: number;
   stock: number;
@@ -17,6 +19,7 @@ export type CartLineNoDisponible = LineaBase & {
   disponible: false;
   slug: null;
   name: null;
+  nameEn: null;
   image: null;
   unitUsd: 0;
   stock: 0;
@@ -41,9 +44,9 @@ export async function priceCart(items: CartInput[]) {
     const p = prods.find((x) => x.id === e.productId);
     const v = p && e.variantId ? p.variants.find((x) => x.id === e.variantId) : undefined;
     const sinProducto = !p || (p.variants.length > 0) !== !!v; // falta el producto o sobra/falta la variante
-    if (sinProducto) return { productId: e.productId, variantId: e.variantId, slug: null, name: null, image: null, unitUsd: 0, qty: e.qty, stock: 0, disponible: false, ok: false, totalUsd: 0 };
+    if (sinProducto) return { productId: e.productId, variantId: e.variantId, slug: null, name: null, nameEn: null, image: null, unitUsd: 0, qty: e.qty, stock: 0, disponible: false, ok: false, totalUsd: 0 };
     const unit = Number(v?.priceUsd ?? p.priceUsd); const stock = v ? Math.min(v.stock, p.stock) : p.stock;
-    return { productId: p.id, variantId: v?.id ?? null, slug: p.slug, name: v ? `${p.name} — ${v.name}` : p.name, image: v?.image ?? p.images[0] ?? null, unitUsd: unit, qty: e.qty, stock, disponible: true, ok: stock >= e.qty, totalUsd: r2(unit * e.qty) };
+    return { productId: p.id, variantId: v?.id ?? null, slug: p.slug, name: v ? `${p.name} — ${v.name}` : p.name, nameEn: v ? (p.nameEn ? `${p.nameEn} — ${v.name}` : null) : p.nameEn, image: v?.image ?? p.images[0] ?? null, unitUsd: unit, qty: e.qty, stock, disponible: true, ok: stock >= e.qty, totalUsd: r2(unit * e.qty) };
   });
   return { lines, subtotalUsd: r2(lines.reduce((s, l) => s + l.totalUsd, 0)), allOk: lines.length > 0 && lines.every((l) => l.disponible && l.ok) };
 }
