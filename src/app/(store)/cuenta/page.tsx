@@ -6,6 +6,8 @@ import AuthForm from "@/components/AuthForm";
 import TelegramLogin from "@/components/TelegramLogin";
 import { estadoTelegram } from "@/lib/telegram";
 import GarageManager from "@/components/GarageManager";
+import DireccionesCuenta from "@/components/cuenta/DireccionesCuenta";
+import { ordenarDirecciones } from "@/lib/direcciones";
 import PerfilCuenta from "@/components/cuenta/PerfilCuenta";
 import Avatar from "@/components/cuenta/Avatar";
 import ProductCard from "@/components/ProductCard";
@@ -49,11 +51,12 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
       </div>
     </div>
   );
-  const [orders, garage, wish, credencial] = await Promise.all([
+  const [orders, garage, wish, credencial, direcciones] = await Promise.all([
     prisma.order.findMany({ where: { customerId: me.id }, orderBy: { id: "desc" }, take: 20 }),
     prisma.garageVehicle.findMany({ where: { customerId: me.id } }),
     prisma.wishlistItem.findMany({ where: { customerId: me.id }, include: { product: { include: { category: { select: { slug: true } } } } } }),
     prisma.customer.findUnique({ where: { id: me.id }, select: { passwordHash: true } }),
+    prisma.address.findMany({ where: { customerId: me.id } }).then(ordenarDirecciones),
   ]);
   return (
     <div className="container-x py-8">
@@ -108,6 +111,11 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
       <section className="mt-8">
         <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="car" size={18} /> Mi garaje</h2>
         <div className="mt-4"><GarageManager vehicles={garage} /></div>
+      </section>
+
+      <section id="direcciones" className="mt-8 scroll-mt-28">
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="pin" size={18} /> Direcciones de entrega</h2>
+        <div className="mt-4"><DireccionesCuenta iniciales={direcciones} /></div>
       </section>
 
       <section id="deseos" className="mt-8 scroll-mt-28">

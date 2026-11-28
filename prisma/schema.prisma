@@ -409,6 +409,31 @@ model Customer {
   tokens            AuthToken[]
   otpCodes          OtpCode[]
   sessions          AuthSession[]
+  addresses         Address[]
+}
+
+// Libreta de direcciones del cliente. El pedido guarda su propia copia en
+// OrderDelivery, así que cambiar o borrar una dirección no altera pedidos ya
+// hechos. Los nombres de provincia y municipio se copian para no depender de la
+// tabla geográfica al pintar la lista.
+model Address {
+  id               Int        @id @default(autoincrement())
+  customerId       String
+  customer         Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label            String     @default("Casa")
+  recipientName    String
+  recipientPhone   String
+  provinceId       Int
+  provinceName     String
+  municipalityId   Int
+  municipalityName String
+  address          String
+  reference        String?
+  isDefault        Boolean    @default(false)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@index([customerId])
 }
 
 // Código de un solo uso (OTP) para SMS o correo. Solo se guarda el HMAC con
