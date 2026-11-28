@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { PARTS, SYSTEMS } from "@/lib/despiece-seed";
 import { etiquetaPiezaDeFabrica, productoDeFabrica, sistemaDeFabrica } from "@/lib/catalogo-en";
 import { enContenido } from "@/lib/contenido-en";
-import { etiquetaPieza, nombreCategoria, nombreMarca, nombreProducto } from "@/lib/datos-i18n";
+import { etiquetaPieza, nombreCategoria, nombreMarca, nombreProducto, resumenVehiculo, versionVehiculo } from "@/lib/datos-i18n";
 
 // El despiece es contenido de demostración sin campos en inglés en la base:
 // si una pieza nueva no entra en el diccionario, el visitante en inglés ve
@@ -98,5 +98,26 @@ describe("traducciones del catálogo real", () => {
   it("acepta el nombre acortado del producto de ejemplo", () => {
     expect(nombreProducto({ slug: "triciclo-electrico-cargo", name: "Triciclo eléctrico de carga" }, "en").toLowerCase())
       .toContain("tricycle");
+  });
+});
+
+describe("vehículo del despiece", () => {
+  it("traduce versión y resumen por slug", () => {
+    const v = { slug: "kvitova-dds-od", version: "Eléctrico", summary: "Triciclo eléctrico de carga con tolva." };
+    expect(versionVehiculo(v, "en")).toBe("Electric");
+    expect(resumenVehiculo(v, "en")).toMatch(/^Electric cargo tricycle/);
+    expect(versionVehiculo(v, "es")).toBe("Eléctrico");
+    expect(resumenVehiculo(v, "es")).toBe("Triciclo eléctrico de carga con tolva.");
+  });
+
+  it("usa la columna inglesa si el negocio la rellena", () => {
+    const v = { slug: "otro", version: "Eléctrico", versionEn: "Battery", summary: "x", summaryEn: "Custom" };
+    expect(versionVehiculo(v, "en")).toBe("Battery");
+    expect(resumenVehiculo(v, "en")).toBe("Custom");
+  });
+
+  it("traduce versiones conocidas de vehículos nuevos", () => {
+    expect(versionVehiculo({ slug: "nuevo", version: "Gasolina" }, "en")).toBe("Petrol");
+    expect(versionVehiculo({ slug: "nuevo", version: "Diésel" }, "en")).toBe("Diésel");
   });
 });

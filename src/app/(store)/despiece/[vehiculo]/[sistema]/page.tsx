@@ -6,7 +6,7 @@ import Icon from "@/components/brand/Icon";
 import DespieceViewer from "@/components/despiece/DespieceViewer";
 import { getT } from "@/lib/i18n";
 import { enContenido } from "@/lib/contenido-en";
-import { nombreProducto } from "@/lib/datos-i18n";
+import { nombreProducto, versionVehiculo } from "@/lib/datos-i18n";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ vehiculo: string; sistema: string }> };
@@ -73,7 +73,7 @@ export default async function LaminaDespiece({ params }: Props) {
           {enContenido(d.diagram.title, lang)}
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          {d.vehicle.brand} {d.vehicle.model} · {enContenido(d.vehicle.version, lang)}
+          {d.vehicle.brand} {d.vehicle.model} · {versionVehiculo(d.vehicle, lang)}
           {d.vehicle.voltage ? ` · ${d.vehicle.voltage}` : ""} — {t("parts.numberedPieces").replace("{n}", String(d.pins.length))}
         </p>
       </header>

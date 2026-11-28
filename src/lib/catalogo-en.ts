@@ -147,6 +147,30 @@ const REALES: Record<string, ProductoEn> = {
   "IMP-TRI-8002": { name: "Urban Electric Scooter 350 W", description: "Folding scooter with a 350 W motor, disc brake and rear suspension. Enough range for city trips and quick folding into the trunk.", specs: {"Motor": "350 W", "Battery": "36 V / 10 Ah", "Range": "35 km", "Top speed": "25 km/h", "Wheels": "8.5 inches", "Brakes": "Rear disc", "Max. weight": "120 kg"} },
 };
 
+/** Vehículos del despiece de ejemplo, por slug. */
+const VEHICULOS: Record<string, { version: string; summary: string }> = {
+  "kvitova-dds-od": {
+    version: "Electric",
+    summary:
+      "Electric cargo tricycle with a 1600 × 1100 mm tilting dump bed, 1200 W motor, 72 V battery bank and a two-speed reduction gearbox. It works both as a cargo unit and, with the folding benches fitted, as a passenger carrier.",
+  },
+};
+
+const VERSIONES: Record<string, string> = {
+  "Eléctrico": "Electric",
+  "Gasolina": "Petrol",
+  "Híbrido": "Hybrid",
+};
+
+/** Versión y resumen del vehículo en inglés, con el texto de la base como último recurso. */
+export function vehiculoDeFabrica(slug: string | null | undefined): { version: string; summary: string } | undefined {
+  return slug ? VEHICULOS[slug] : undefined;
+}
+
+export function versionDeFabrica(version: string): string | undefined {
+  return VERSIONES[version.trim()];
+}
+
 /** Traducción de fábrica de un producto, o nada si el español ya no es el original. */
 export function productoDeFabrica(p: { slug?: string | null; sku?: string | null; name: string }): ProductoEn | undefined {
   const real = p.sku ? REALES[p.sku.toUpperCase()] : undefined;

@@ -600,11 +600,13 @@ model Vehicle {
   brand     String
   model     String
   version   String           @default("Eléctrico")
+  versionEn String?
   year      Int?
   voltage   String?
   power     String?
   payload   String?
   summary   String           @default("")
+  summaryEn String?
   heroImage String?
   active    Boolean          @default(true)
   sortOrder Int              @default(0)

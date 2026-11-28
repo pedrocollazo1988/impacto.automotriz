@@ -47,6 +47,12 @@ export const prisma = base.$extends({
         return query(args);
       },
     },
+    vehicle: {
+      async $allOperations({ args, query }) {
+        await asegurarEsquema();
+        return query(args);
+      },
+    },
     order: {
       async $allOperations({ args, query }) {
         await asegurarEsquema();
