@@ -39,6 +39,9 @@ const COLUMNAS = [
   `ALTER TABLE "Customer" ADD COLUMN IF NOT EXISTS "preferredLanguage" TEXT`,
   `ALTER TABLE "Customer" ALTER COLUMN "email" DROP NOT NULL`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "Customer_phoneE164_key" ON "Customer"("phoneE164")`,
+  // Entrada con Telegram (gratis y sin restricción para Cuba).
+  `ALTER TABLE "Customer" ADD COLUMN IF NOT EXISTS "telegramId" TEXT`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "Customer_telegramId_key" ON "Customer"("telegramId")`,
 ];
 
 // Tablas nuevas. Se crean aquí por el mismo motivo: el despliegue no migra.

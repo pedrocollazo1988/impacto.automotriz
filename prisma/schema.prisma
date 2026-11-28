@@ -400,6 +400,7 @@ model Customer {
   avatarUrl         String?
   preferredLanguage String?
   googleId          String?         @unique
+  telegramId        String?         @unique
   createdAt         DateTime        @default(now())
   orders            Order[]
   wishlist          WishlistItem[]
