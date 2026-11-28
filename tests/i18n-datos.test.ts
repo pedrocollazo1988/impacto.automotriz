@@ -40,7 +40,7 @@ describe("respaldo al español", () => {
   });
 
   it("el nombre escrito en el panel manda sobre el de fábrica", () => {
-    const p = { sku: PARTS[0].sku, name: PARTS[0].name, nameEn: "Custom name" };
+    const p = { slug: "pieza-renombrada", name: PARTS[0].name, nameEn: "Custom name" };
     expect(nombreProducto(p, "en")).toBe("Custom name");
   });
 
