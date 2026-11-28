@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Icon from "@/components/brand/Icon";
 import { leerSeccion } from "@/lib/contenido-server";
+import { getT } from "@/lib/i18n";
 
 const CLAVES: Record<string, string> = {
   envios: "politicas-envios",
@@ -13,12 +14,14 @@ const CLAVES: Record<string, string> = {
 
 export function generateStaticParams() { return Object.keys(CLAVES).map((slug) => ({ slug })); }
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { t } = await getT();
   const clave = CLAVES[(await params).slug];
   const d = clave ? await leerSeccion(clave) : null;
-  return { title: d?.title ?? "Políticas" };
+  return { title: d?.title ?? t("policy.metaTitle") };
 }
 
 export default async function Politica({ params }: { params: Promise<{ slug: string }> }) {
+  const { t } = await getT();
   const clave = CLAVES[(await params).slug];
   if (!clave) notFound();
   const d = await leerSeccion(clave);
@@ -28,7 +31,7 @@ export default async function Politica({ params }: { params: Promise<{ slug: str
       <section className="relative overflow-hidden bg-[color:var(--color-navy-deep)] text-white">
         <div aria-hidden className="absolute inset-0 blueprint opacity-60" />
         <div className="container-x relative py-14">
-          <nav className="mb-3 flex items-center gap-1.5 text-xs text-white/50"><Link href="/" className="hover:text-white">Inicio</Link><Icon name="chevronRight" size={12} /><span>Políticas</span></nav>
+          <nav className="mb-3 flex items-center gap-1.5 text-xs text-white/50"><Link href="/" className="hover:text-white">{t("policy.home")}</Link><Icon name="chevronRight" size={12} /><span>{t("policy.breadcrumb")}</span></nav>
           <h1 className="font-display text-4xl font-extrabold">{d.title}</h1>
           <p className="mt-3 max-w-2xl text-white/75">{d.subtitle}</p>
         </div>
@@ -42,8 +45,8 @@ export default async function Politica({ params }: { params: Promise<{ slug: str
             </div>
           ))}
           <div className="card flex flex-wrap items-center justify-between gap-3 p-6">
-            <p className="text-sm text-slate-600">¿Tienes más preguntas sobre esta política?</p>
-            <Link href="/contacto" className="btn btn-primary">Contactar</Link>
+            <p className="text-sm text-slate-600">{t("policy.moreQuestions")}</p>
+            <Link href="/contacto" className="btn btn-primary">{t("policy.contact")}</Link>
           </div>
         </div>
       </section>

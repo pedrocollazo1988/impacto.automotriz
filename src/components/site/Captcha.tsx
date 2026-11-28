@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Icon from "@/components/brand/Icon";
+import { usePreferences } from "@/components/site/Preferences";
 
 type Estado = "cargando" | "listo" | "comprobando" | "ok" | "error";
 
@@ -16,7 +17,9 @@ type Props = {
 const LARGO = 4;
 const normalizar = (v: string) => v.replace(/[^a-z0-9]/gi, "").toUpperCase().slice(0, LARGO);
 
-export default function Captcha({ onChange, error, label = "Código de verificación" }: Props) {
+export default function Captcha({ onChange, error, label }: Props) {
+  const { t } = usePreferences();
+  const etiqueta = label ?? t("captcha.label");
   const [token, setToken] = useState("");
   const [svg, setSvg] = useState("");
   const [answer, setAnswer] = useState("");
@@ -29,6 +32,9 @@ export default function Captcha({ onChange, error, label = "Código de verificac
   const peticion = useRef(0);
   const focoPendiente = useRef(false);
   const onChangeRef = useRef(onChange);
+  // `t` cambia cuando el visitante cambia de idioma; los callbacks estables lo leen al vuelo.
+  const tRef = useRef(t);
+  tRef.current = t;
 
   const uid = useId();
   const inputId = `${uid}-input`;
@@ -50,7 +56,7 @@ export default function Captcha({ onChange, error, label = "Código de verificac
       const j = (await r.json().catch(() => null)) as { token?: unknown; svg?: unknown; error?: unknown } | null;
       if (id !== carga.current) return;
       if (!r.ok || typeof j?.token !== "string" || typeof j?.svg !== "string") {
-        throw new Error(typeof j?.error === "string" ? j.error : "No se pudo cargar el código de verificación.");
+        throw new Error(typeof j?.error === "string" ? j.error : tRef.current("captcha.loadError"));
       }
       setToken(j.token);
       setSvg(j.svg);
@@ -58,7 +64,7 @@ export default function Captcha({ onChange, error, label = "Código de verificac
     } catch (e) {
       if (id !== carga.current) return;
       setEstado("error");
-      setMensaje(e instanceof Error ? e.message : "No se pudo cargar el código de verificación.");
+      setMensaje(e instanceof Error ? e.message : tRef.current("captcha.loadError"));
     }
   }, []);
 
@@ -90,7 +96,7 @@ export default function Captcha({ onChange, error, label = "Código de verificac
       ultimaComprobada.current = clave;
       const id = ++peticion.current;
       setEstado("comprobando");
-      setMensaje("Comprobando el código…");
+      setMensaje(tRef.current("captcha.checking"));
       try {
         const r = await fetch("/api/captcha/verify", {
           method: "POST",
@@ -99,22 +105,22 @@ export default function Captcha({ onChange, error, label = "Código de verificac
           cache: "no-store",
         });
         if (id !== peticion.current) return;
-        if (!r.ok) throw new Error("respuesta no válida");
+        if (!r.ok) throw new Error("invalid-response");
         const j = (await r.json().catch(() => null)) as { ok?: unknown } | null;
         if (id !== peticion.current) return;
-        if (!j) throw new Error("respuesta no válida");
+        if (!j) throw new Error("invalid-response");
         if (j.ok === true) {
           setEstado("ok");
-          setMensaje("Código correcto.");
+          setMensaje(tRef.current("captcha.ok"));
         } else {
           setEstado("error");
-          setMensaje("El código no coincide. Revisa los caracteres o pide otro.");
+          setMensaje(tRef.current("captcha.mismatch"));
         }
       } catch {
         if (id !== peticion.current) return;
         ultimaComprobada.current = ""; // permite reintentar el mismo código
         setEstado("error");
-        setMensaje("No se pudo comprobar el código. Inténtalo de nuevo.");
+        setMensaje(tRef.current("captcha.verifyError"));
       }
     },
     [token],
@@ -145,16 +151,16 @@ export default function Captcha({ onChange, error, label = "Código de verificac
     <div className="w-full">
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <label htmlFor={inputId} className="text-sm font-semibold text-slate-700">
-          {label}
+          {etiqueta}
         </label>
         <button
           type="button"
           onClick={() => void refrescar()}
           disabled={estado === "cargando"}
           className="btn btn-ghost btn-xs disabled:opacity-50"
-          aria-label="Generar otro código de verificación"
+          aria-label={t("captcha.regen")}
         >
-          <Icon name="refresh" size={14} /> Otro código
+          <Icon name="refresh" size={14} /> {t("captcha.other")}
         </button>
       </div>
 
@@ -167,7 +173,7 @@ export default function Captcha({ onChange, error, label = "Código de verificac
             <div className="h-full w-full" dangerouslySetInnerHTML={{ __html: svg }} />
           ) : (
             <span className="flex h-full items-center justify-center text-xs text-slate-400">
-              {estado === "cargando" ? "Cargando…" : "Sin código"}
+              {estado === "cargando" ? t("captcha.loading") : t("captcha.none")}
             </span>
           )}
         </div>
@@ -199,7 +205,7 @@ export default function Captcha({ onChange, error, label = "Código de verificac
       </div>
 
       <p id={ayudaId} className="mt-1.5 text-xs text-slate-500">
-        Escribe los 4 caracteres de la imagen. No se usan 0, O, 1 ni I.
+        {t("captcha.help")}
       </p>
       <p
         id={estadoId}

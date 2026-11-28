@@ -46,7 +46,7 @@ export default function ActionRail() {
 
   return (
     <nav
-      aria-label="Acciones rápidas"
+      aria-label={t("chrome.quickActions")}
       aria-hidden={!visible}
       inert={!visible}
       className={`fixed right-2 top-1/2 z-40 hidden -translate-y-1/2 transition-all duration-300 ease-out motion-reduce:transition-none sm:right-4 sm:block print:hidden ${
@@ -58,7 +58,7 @@ export default function ActionRail() {
           <Icon name="info" size={19} />
           <span className={etiqueta}>{t("rail.faq")}</span>
         </Link>
-        <a href={waHref("Hola, quiero hacer una consulta sobre sus productos")} target="_blank" rel="noopener" aria-label={t("rail.whatsapp")} className={base}>
+        <a href={waHref(t("chrome.waMessage"))} target="_blank" rel="noopener" aria-label={t("rail.whatsapp")} className={base}>
           <Icon name="whatsapp" size={19} />
           <span className={etiqueta}>{t("rail.whatsapp")}</span>
         </a>

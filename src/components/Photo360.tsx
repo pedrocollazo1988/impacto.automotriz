@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Icon from "@/components/brand/Icon";
 import { envolver, iniciarArrastre, pasosDeArrastre, type EstadoArrastre } from "@/lib/arrastre";
+import { usePreferences } from "@/components/site/Preferences";
 
 // Giro 360 con dos fuentes posibles:
 //  - una secuencia de fotos (una toma por fotograma), y
@@ -12,6 +13,9 @@ import { envolver, iniciarArrastre, pasosDeArrastre, type EstadoArrastre } from 
 // Sin secuencia se muestra la foto principal: girar una sola foto plana la deja
 // de canto a los 90°.
 export default function Photo360({ src, frames, video, alt }: { src?: string; frames: string[]; video?: string | null; alt: string }) {
+  const { t } = usePreferences();
+  const txt = (key: string, vars: Record<string, string | number>) =>
+    Object.entries(vars).reduce((s, [k, v]) => s.replace(`{${k}}`, String(v)), t(key));
   const total = frames.length;
   const [indice, setIndice] = useState(0);
   const [arrastrando, setArrastrando] = useState(false);
@@ -48,8 +52,8 @@ export default function Photo360({ src, frames, video, alt }: { src?: string; fr
 
   useEffect(() => {
     if (!auto || arrastrando || total < 2) return;
-    const t = setInterval(() => avanzar(1), 110);
-    return () => clearInterval(t);
+    const timer = setInterval(() => avanzar(1), 110);
+    return () => clearInterval(timer);
   }, [auto, arrastrando, total, avanzar]);
 
   // Quitar el atributo autoPlay no detiene un vídeo que ya está en marcha: sin
@@ -75,9 +79,9 @@ export default function Photo360({ src, frames, video, alt }: { src?: string; fr
         onPointerLeave={soltar}
       >
         <video ref={videoRef} src={video} className="h-full w-full object-contain" muted loop playsInline preload="metadata"
-          autoPlay={auto} aria-label={`Giro 360 de ${alt}`} />
+          autoPlay={auto} aria-label={txt("v360.aria", { name: alt })} />
         <span className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-navy/85 px-3 py-1.5 text-xs font-medium text-white shadow">
-          <Icon name="refresh" size={12} /> Arrastra para girar 360°
+          <Icon name="refresh" size={12} /> {t("v360.drag")}
         </span>
       </div>
     );
@@ -89,7 +93,7 @@ export default function Photo360({ src, frames, video, alt }: { src?: string; fr
         {src ? (
           <Image src={src} alt={alt} fill sizes="(max-width:768px) 100vw, 45vw" className="object-cover" priority unoptimized={src.endsWith(".svg")} />
         ) : (
-          <div className="grid h-full place-items-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm text-slate-400">Sin foto todavía</div>
+          <div className="grid h-full place-items-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm text-slate-400">{t("v360.noPhoto")}</div>
         )}
       </div>
     );
@@ -111,7 +115,7 @@ export default function Photo360({ src, frames, video, alt }: { src?: string; fr
           style={{ opacity: k === indice ? 1 : 0 }} aria-hidden={k !== indice} />
       ))}
       <span className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-navy/85 px-3 py-1.5 text-xs font-medium text-white shadow">
-        <Icon name="cube" size={12} /> Arrastra para girar 360°
+        <Icon name="cube" size={12} /> {t("v360.drag")}
       </span>
     </div>
   );

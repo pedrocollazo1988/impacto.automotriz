@@ -4,6 +4,7 @@ import { prisma } from "./prisma";
 import { HttpError } from "./auth";
 import { SITE } from "./site";
 import { calcularTarifaEntrega } from "./shipping-fee";
+import { textoMensaje, type IdiomaMensaje } from "./mensajes";
 
 const num = (v: unknown) => (v == null ? null : Number(v));
 
@@ -19,7 +20,7 @@ const PUNTO_TIENDA = {
 // Calcula qué métodos de entrega están disponibles para un municipio y a qué precio.
 // Prioridad: regla del municipio > regla de la provincia > tarifa base del método.
 // Una regla con available=false bloquea expresamente esa zona.
-export async function quoteDelivery(municipalityId: number, subtotalUsd: number) {
+export async function quoteDelivery(municipalityId: number, subtotalUsd: number, idioma: IdiomaMensaje = "es") {
   const mun = await prisma.municipality.findUnique({ where: { id: municipalityId } });
   if (!mun) return [];
   const [methods, points] = await Promise.all([
@@ -48,9 +49,9 @@ export async function quoteDelivery(municipalityId: number, subtotalUsd: number)
       return { ...base, pickupPoints: pp, available: true, feeUsd: Number(m.baseFee), reason: undefined };
     }
     const rule = m.rules.find((r) => r.municipalityId === mun.id) ?? m.rules.find((r) => r.municipalityId === null);
-    if (rule && !rule.available) return { ...base, available: false, feeUsd: 0, reason: "No disponible en este municipio" };
+    if (rule && !rule.available) return { ...base, available: false, feeUsd: 0, reason: textoMensaje("msg.envio.noDisponible", idioma) };
     const min = num(rule?.minOrderUsd);
-    if (min != null && subtotalUsd < min) return { ...base, available: false, feeUsd: 0, reason: `Pedido mínimo: ${min} USD` };
+    if (min != null && subtotalUsd < min) return { ...base, available: false, feeUsd: 0, reason: textoMensaje("msg.envio.pedidoMinimo", idioma).replace("{min}", String(min)) };
     const fee = calcularTarifaEntrega({
       baseFee: m.baseFee,
       ruleFee: rule?.feeUsd,
@@ -73,18 +74,18 @@ export const deliveryInput = z.object({
 
 // USAR EN EL CHECKOUT (servidor): revalida todo y recalcula el costo; nunca confiar en el navegador.
 // `subtotalUsd` debe calcularse en el servidor a partir del carrito.
-export async function buildOrderDelivery(input: z.infer<typeof deliveryInput>, subtotalUsd: number) {
-  const q = (await quoteDelivery(input.municipalityId, subtotalUsd)).find((x) => x.methodId === input.methodId);
-  if (!q || !q.available) throw new HttpError(422, q?.reason ?? "Método de entrega no disponible");
-  if (q.requiresAddress && !input.address) throw new HttpError(422, "Falta la dirección de entrega");
-  if (q.kind === "STORE_PICKUP" && q.pickupPoints.length > 0 && !q.pickupPoints.some((p) => p.id === input.pickupPointId)) throw new HttpError(422, "Elige un punto de recogida");
+export async function buildOrderDelivery(input: z.infer<typeof deliveryInput>, subtotalUsd: number, idioma: IdiomaMensaje = "es") {
+  const q = (await quoteDelivery(input.municipalityId, subtotalUsd, idioma)).find((x) => x.methodId === input.methodId);
+  if (!q || !q.available) throw new HttpError(422, q?.reason ?? textoMensaje("msg.envio.metodoNoDisponible", idioma));
+  if (q.requiresAddress && !input.address) throw new HttpError(422, textoMensaje("msg.envio.faltaDireccion", idioma));
+  if (q.kind === "STORE_PICKUP" && q.pickupPoints.length > 0 && !q.pickupPoints.some((p) => p.id === input.pickupPointId)) throw new HttpError(422, textoMensaje("msg.envio.eligePunto", idioma));
   let scheduledDate: Date | undefined;
   if (input.slotId) {
     const slot = q.slots.find((s) => s.id === input.slotId);
-    if (!slot || !input.scheduledDate) throw new HttpError(422, "Franja horaria inválida");
+    if (!slot || !input.scheduledDate) throw new HttpError(422, textoMensaje("msg.envio.franjaInvalida", idioma));
     scheduledDate = new Date(`${input.scheduledDate}T00:00:00Z`);
     const used = await prisma.orderDelivery.count({ where: { slotId: slot.id, scheduledDate, status: { not: "FAILED" } } });
-    if (used >= slot.maxOrders) throw new HttpError(409, "Esa franja ya está completa");
+    if (used >= slot.maxOrders) throw new HttpError(409, textoMensaje("msg.envio.franjaCompleta", idioma));
   }
   const mun = await prisma.municipality.findUniqueOrThrow({ where: { id: input.municipalityId } });
   return {

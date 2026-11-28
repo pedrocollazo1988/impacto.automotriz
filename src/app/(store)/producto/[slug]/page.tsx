@@ -16,6 +16,7 @@ import { fotos360 } from "@/lib/photo360";
 import { tieneVista360 } from "@/lib/vista360";
 import { esVista, type Vista } from "@/lib/viewer";
 import { waHref } from "@/lib/site";
+import { getT } from "@/lib/i18n";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -28,6 +29,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Producto({ params }: Props) {
   const [p, me] = await Promise.all([getProductPageCached((await params).slug), getCustomer()]);
   if (!p) notFound();
+  const { t } = await getT();
+  const txt = (key: string, vars: Record<string, string | number>) =>
+    Object.entries(vars).reduce((s, [k, v]) => s.replace(`{${k}}`, String(v)), t(key));
+
   prisma.product.update({ where: { id: p.id }, data: { views: { increment: 1 } } }).catch(() => {});
   // Reseñas y relacionados se cachean aparte; la sesión solo decide si el
   // cliente puede valorar o si ya tiene la pieza en deseos.
@@ -58,8 +63,8 @@ export default async function Producto({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />
 
       <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
-        <Link href="/" className="inline-flex min-h-12 items-center hover:text-navy lg:min-h-0">Inicio</Link><Icon name="chevronRight" size={12} />
-        <Link href="/catalogo" className="hover:text-navy">Catálogo</Link><Icon name="chevronRight" size={12} />
+        <Link href="/" className="inline-flex min-h-12 items-center hover:text-navy lg:min-h-0">{t("nav.home")}</Link><Icon name="chevronRight" size={12} />
+        <Link href="/catalogo" className="hover:text-navy">{t("nav.catalogo")}</Link><Icon name="chevronRight" size={12} />
         <Link href={`/catalogo?categoria=${p.category.slug}`} className="hover:text-navy">{p.category.name}</Link><Icon name="chevronRight" size={12} />
         <span className="text-slate-500">{p.name}</span>
       </nav>
@@ -78,7 +83,7 @@ export default async function Producto({ params }: Props) {
           />
           {p.sku === "TE-4001" && (
             <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-              Imagen ilustrativa de un triciclo de carga equivalente. Las medidas y el equipamiento de la ficha son los del DDS-OD.
+              {t("pdp.te4001Note")}
             </p>
           )}
         </div>
@@ -88,16 +93,16 @@ export default async function Producto({ params }: Props) {
             <Link href={`/catalogo?categoria=${p.category.slug}`} className="badge bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]">{p.category.name}</Link>
             {p.brand && <span className="badge bg-slate-100 text-slate-600">{p.brand.name}</span>}
             {off > 0 && <span className="badge bg-[color:var(--color-action-hi)] text-[color:var(--color-navy-deep)]">-{off}%</span>}
-            {p.featured && <span className="badge bg-[color:var(--color-navy)] text-white">Destacado</span>}
+            {p.featured && <span className="badge bg-[color:var(--color-navy)] text-white">{t("pdp.featured")}</span>}
           </div>
 
           <h1 className="font-display text-3xl font-extrabold leading-tight text-navy">{p.name}</h1>
 
           <div className="flex flex-wrap items-center gap-3 text-sm">
             {reviews.length > 0 ? (
-              <span className="flex items-center gap-1.5"><span className="text-amber-500">{"★".repeat(Math.round(avg))}<span className="text-slate-300">{"★".repeat(5 - Math.round(avg))}</span></span><b>{avg.toFixed(1)}</b><span className="text-slate-400">({reviews.length} valoraciones)</span></span>
-            ) : <span className="text-slate-400">Sé el primero en valorarlo</span>}
-            <span className="font-mono text-xs text-slate-400">Código {p.sku}</span>
+              <span className="flex items-center gap-1.5"><span className="text-amber-500">{"★".repeat(Math.round(avg))}<span className="text-slate-300">{"★".repeat(5 - Math.round(avg))}</span></span><b>{avg.toFixed(1)}</b><span className="text-slate-400">{txt("pdp.reviewsCount", { n: reviews.length })}</span></span>
+            ) : <span className="text-slate-400">{t("pdp.beFirst")}</span>}
+            <span className="font-mono text-xs text-slate-400">{txt("pdp.sku", { sku: p.sku })}</span>
           </div>
 
           {p.compareAtUsd && Number(p.compareAtUsd) > Number(p.priceUsd) && p.variants.length === 0 && (
@@ -109,31 +114,31 @@ export default async function Producto({ params }: Props) {
             <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
               <WishlistButton productId={p.id} initial={inWish > 0} />
               <CompareToggle productId={p.id} />
-              <a className="btn btn-ghost !text-emerald-700" target="_blank" rel="noopener" href={waHref(`Hola, consulta sobre: ${p.name} (${p.sku})`)}><Icon name="whatsapp" size={18} /> Consultar</a>
+              <a className="btn btn-ghost !text-emerald-700" target="_blank" rel="noopener" href={waHref(txt("pdp.waMessage", { name: p.name, sku: p.sku }))}><Icon name="whatsapp" size={18} /> {t("pdp.ask")}</a>
             </div>
           </div>
 
           <p className="leading-relaxed text-slate-600">{p.description}</p>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            {[["truck", "Entrega en toda Cuba"], ["shield", "Garantía del vendedor"], ["card", "Pago en línea seguro"]].map(([ic, t]) => (
-              <div key={t} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-3 text-xs font-medium text-slate-600"><Icon name={ic} size={18} className="shrink-0 text-[color:var(--color-action-deep)]" />{t}</div>
+            {[["truck", t("pdp.trustDelivery")], ["shield", t("pdp.trustWarranty")], ["card", t("pdp.trustPayment")]].map(([ic, texto]) => (
+              <div key={texto} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-3 text-xs font-medium text-slate-600"><Icon name={ic} size={18} className="shrink-0 text-[color:var(--color-action-deep)]" />{texto}</div>
             ))}
           </div>
 
           {p.fits.length > 0 && (
             <div className="card p-4">
-              <h3 className="flex items-center gap-2 font-display text-sm font-bold text-navy"><Icon name="car" size={16} /> Compatible con</h3>
+              <h3 className="flex items-center gap-2 font-display text-sm font-bold text-navy"><Icon name="car" size={16} /> {t("pdp.fitsTitle")}</h3>
               <ul className="mt-2 flex flex-wrap gap-2 text-sm">
                 {p.fits.map((f) => <li key={f.id} className="chip">{f.make} {f.model} <span className="font-mono text-[10px] text-slate-400">{f.yearFrom}–{f.yearTo}</span></li>)}
               </ul>
-              <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-400"><Icon name="info" size={13} /> Compatibilidad según los datos del vendedor; confirma antes de comprar.</p>
+              <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-400"><Icon name="info" size={13} /> {t("pdp.fitsNote")}</p>
             </div>
           )}
 
           {p.pins.length > 0 && (
             <div className="card p-4">
-              <h3 className="flex items-center gap-2 font-display text-sm font-bold text-navy"><Icon name="layers" size={16} /> Dónde va esta pieza</h3>
+              <h3 className="flex items-center gap-2 font-display text-sm font-bold text-navy"><Icon name="layers" size={16} /> {t("pdp.pinsTitle")}</h3>
               <ul className="mt-2 space-y-1.5 text-sm">
                 {p.pins.map((pin) => (
                   <li key={pin.id}>
@@ -148,13 +153,13 @@ export default async function Producto({ params }: Props) {
                   </li>
                 ))}
               </ul>
-              <p className="mt-2 text-xs text-slate-400">Abre el diagrama con la pieza ya marcada para confirmar que es la tuya.</p>
+              <p className="mt-2 text-xs text-slate-400">{t("pdp.pinsNote")}</p>
             </div>
           )}
 
           {p.compatWith.length > 0 && (
             <div className="card p-4">
-              <h3 className="flex items-center gap-2 font-display text-sm font-bold text-navy"><Icon name="check" size={16} /> Compatibilidad cruzada</h3>
+              <h3 className="flex items-center gap-2 font-display text-sm font-bold text-navy"><Icon name="check" size={16} /> {t("pdp.crossTitle")}</h3>
               <ul className="mt-2 space-y-1.5 text-sm">
                 {p.compatWith.map((c) => (
                   <li key={c.id}>
@@ -169,15 +174,15 @@ export default async function Producto({ params }: Props) {
 
           {p.connectorImage && (
             <div className="card overflow-hidden">
-              <h3 className="flex items-center gap-2 border-b border-slate-100 px-4 py-3 font-display text-sm font-bold text-navy"><Icon name="bolt" size={16} /> Conectores y pines</h3>
-              <Image src={p.connectorImage} alt={`Conectores de ${p.name}`} width={800} height={800} sizes="(max-width:1024px) 100vw, 40vw" className="h-auto w-full bg-slate-50 object-contain" unoptimized={!p.connectorImage.startsWith("/") || p.connectorImage.endsWith(".svg")} />
-              <p className="px-4 py-2 text-xs text-slate-500">Compara colores de cable y forma del enchufe con tu unidad antes de pedir.</p>
+              <h3 className="flex items-center gap-2 border-b border-slate-100 px-4 py-3 font-display text-sm font-bold text-navy"><Icon name="bolt" size={16} /> {t("pdp.connectorsTitle")}</h3>
+              <Image src={p.connectorImage} alt={txt("pdp.connectorsAlt", { name: p.name })} width={800} height={800} sizes="(max-width:1024px) 100vw, 40vw" className="h-auto w-full bg-slate-50 object-contain" unoptimized={!p.connectorImage.startsWith("/") || p.connectorImage.endsWith(".svg")} />
+              <p className="px-4 py-2 text-xs text-slate-500">{t("pdp.connectorsNote")}</p>
             </div>
           )}
 
           {specs.length > 0 && (
             <div className="card overflow-hidden">
-              <h3 className="flex items-center gap-2 border-b border-slate-100 px-4 py-3 font-display text-sm font-bold text-navy"><Icon name="ruler" size={16} /> Especificaciones técnicas</h3>
+              <h3 className="flex items-center gap-2 border-b border-slate-100 px-4 py-3 font-display text-sm font-bold text-navy"><Icon name="ruler" size={16} /> {t("pdp.specsTitle")}</h3>
               <table className="w-full text-sm"><tbody>{specs.map(([k, v]) => <tr key={k} className="border-b border-slate-50 last:border-0"><td className="px-4 py-2 font-medium text-slate-500">{k}</td><td className="px-4 py-2 text-slate-700">{v}</td></tr>)}</tbody></table>
             </div>
           )}
@@ -186,7 +191,7 @@ export default async function Producto({ params }: Props) {
 
       <section className="mt-12">
         <div className="flex items-center gap-3">
-          <h2 className="font-display text-xl font-extrabold text-navy">Valoraciones</h2>
+          <h2 className="font-display text-xl font-extrabold text-navy">{t("pdp.reviewsTitle")}</h2>
           {reviews.length > 0 && <span className="badge bg-amber-100 text-amber-700">{avg.toFixed(1)} ★ · {reviews.length}</span>}
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -196,14 +201,14 @@ export default async function Producto({ params }: Props) {
               <p className="mt-2 text-slate-600">{r.comment}</p>
             </div>
           ))}
-          {reviews.length === 0 && <p className="text-sm text-slate-500">Aún no hay valoraciones.</p>}
+          {reviews.length === 0 && <p className="text-sm text-slate-500">{t("pdp.noReviews")}</p>}
         </div>
         {bought > 0 && <div className="mt-4"><ReviewForm productId={p.id} /></div>}
       </section>
 
       {related.length > 0 && (
         <section className="mt-12">
-          <h2 className="font-display text-xl font-extrabold text-navy">Productos relacionados</h2>
+          <h2 className="font-display text-xl font-extrabold text-navy">{t("pdp.relatedTitle")}</h2>
           <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">{related.map((r) => <ProductCard key={r.id} p={r} />)}</div>
         </section>
       )}

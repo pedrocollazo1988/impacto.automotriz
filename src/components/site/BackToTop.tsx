@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Icon from "@/components/brand/Icon";
+import { usePreferences } from "@/components/site/Preferences";
 
 export type BackToTopProps = {
   /** Distancia de scroll a partir de la cual aparece. */
@@ -14,10 +15,11 @@ export type BackToTopProps = {
 
 export default function BackToTop({
   threshold = 500,
-  label = "Volver arriba",
+  label,
   floating = true,
   className = "",
 }: BackToTopProps) {
+  const { t } = usePreferences();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -56,7 +58,7 @@ export default function BackToTop({
     <button
       type="button"
       onClick={handleClick}
-      aria-label={label}
+      aria-label={label ?? t("chrome.backToTop")}
       aria-hidden={!visible}
       tabIndex={visible ? 0 : -1}
       className={`grid place-items-center rounded-full border border-slate-200 bg-white/95 text-navy shadow-[0_12px_30px_-12px_rgba(2,27,72,0.55)] backdrop-blur transition-all duration-300 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-action)] ${

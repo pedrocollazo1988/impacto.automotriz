@@ -5,54 +5,48 @@ import Icon from "@/components/brand/Icon";
 import SubscribeForm from "@/components/site/SubscribeForm";
 import { BLOG_ARTICLES, type BlogArticle } from "@/lib/blog";
 import { leerSeccion } from "@/lib/contenido-server";
+import { enContenido } from "@/lib/contenido-en";
 import { buscarSeccion, type Item } from "@/lib/contenido";
 import { getT } from "@/lib/i18n";
 
 const SITE_URL = process.env.PUBLIC_URL ?? "http://localhost:3000";
 
-export const metadata: Metadata = {
-  title: "Blog de marcas destacadas",
-  description:
-    "Guías de compra de Brembo, Bosch, KYB, Varta y Monroe: cómo elegir frenos, alternadores, filtros, amortiguadores y baterías con criterio, compatibilidad y garantía.",
-  keywords: [
-    "blog de autopartes",
-    "Brembo pastillas de freno",
-    "Bosch alternador",
-    "KYB amortiguadores",
-    "Varta batería",
-    "Monroe suspensión",
-    "consejos de compra de repuestos",
-  ],
-  alternates: { canonical: "/blog" },
-  openGraph: {
-    type: "website",
-    title: "Blog de marcas destacadas · Impacto Automotriz",
-    description:
-      "Cuatro guías prácticas para comprar frenos, componentes eléctricos y suspensión sin caer en imitaciones ni piezas incompatibles.",
-    url: "/blog",
-    images: [
-      {
-        url: "/products/brake-pad.webp",
-        width: 1200,
-        height: 800,
-        alt: "Pastillas de freno Brembo",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Blog de marcas destacadas · Impacto Automotriz",
-    description:
-      "Brembo, Bosch, KYB, Varta y Monroe: guías de compra, señales de desgaste y consejos de instalación.",
-    images: ["/products/brake-pad.webp"],
-  },
-  robots: { index: true, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  const ogTitle = t("blog2.metaOgTitle");
+  return {
+    title: t("blog2.metaTitle"),
+    description: t("blog2.metaDesc"),
+    keywords: t("blog2.keywords").split(",").map((k) => k.trim()),
+    alternates: { canonical: "/blog" },
+    openGraph: {
+      type: "website",
+      title: ogTitle,
+      description: t("blog2.metaOgDesc"),
+      url: "/blog",
+      images: [
+        {
+          url: "/products/brake-pad.webp",
+          width: 1200,
+          height: 800,
+          alt: t("blog2.metaImageAlt"),
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: ogTitle,
+      description: t("blog2.metaTwitterDesc"),
+      images: ["/products/brake-pad.webp"],
+    },
+    robots: { index: true, follow: true },
+  };
+}
 
-const formatearFecha = (iso: string) => {
+const formatearFecha = (iso: string, idioma: "es" | "en") => {
   const fecha = new Date(iso);
   if (!iso || Number.isNaN(fecha.getTime())) return iso;
-  return new Intl.DateTimeFormat("es-ES", {
+  return new Intl.DateTimeFormat(idioma === "en" ? "en-US" : "es-ES", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -80,7 +74,7 @@ const separar = (texto: string | undefined, separador: RegExp) =>
 
 /** Convierte los elementos guardados en el panel en artículos, cayendo en la guía
  *  de fábrica (por slug) para lo que el editor no tenga. */
-function articulosDesdeItems(items: Item[]): BlogArticle[] {
+function articulosDesdeItems(items: Item[], lang: string): BlogArticle[] {
   const fabrica = new Map(BLOG_ARTICLES.map((a) => [a.slug, a]));
   const usados = new Set<string>();
   return items.map((it, i) => {
@@ -97,15 +91,15 @@ function articulosDesdeItems(items: Item[]): BlogArticle[] {
     const puntos = separar(it.puntos, /\r?\n/);
     return {
       slug,
-      title: it.titulo?.trim() || base?.title || "",
-      excerpt: it.texto?.trim() || base?.excerpt || "",
+      title: enContenido(it.titulo?.trim() || base?.title || "", lang),
+      excerpt: enContenido(it.texto?.trim() || base?.excerpt || "", lang),
       date: it.fecha?.trim() || base?.date || "",
       brand: marca,
       image: it.imagen || base?.image || "/products/brake-pad.webp",
-      imageAlt: base?.imageAlt || it.titulo?.trim() || marca,
+      imageAlt: enContenido(base?.imageAlt || it.titulo?.trim() || marca, lang),
       readingTime: Number.isFinite(minutos) && minutos > 0 ? minutos : base?.readingTime ?? 0,
-      paragraphs: parrafos.length ? parrafos : base?.paragraphs ?? [],
-      highlights: puntos.length ? puntos : base?.highlights ?? [],
+      paragraphs: (parrafos.length ? parrafos : base?.paragraphs ?? []).map((x) => enContenido(x, lang)),
+      highlights: (puntos.length ? puntos : base?.highlights ?? []).map((x) => enContenido(x, lang)),
       brandLinks: base?.brandLinks.length && !marcaEditada
         ? base.brandLinks
         : marca
@@ -121,14 +115,14 @@ const textoEditable = (valor: string, fabrica: string | undefined, traducido: st
   valor && valor !== fabrica ? valor : traducido || valor;
 
 export default async function BlogPage() {
-  const { t } = await getT();
+  const { lang, t } = await getT();
   const [hero, guiasHead, boletin, guias] = await Promise.all([
     leerSeccion("blog-hero"),
     leerSeccion("blog-guias"),
     leerSeccion("blog-boletin"),
     leerSeccion("blog-articulos"),
   ]);
-  const articulos = articulosDesdeItems(guias.items);
+  const articulos = articulosDesdeItems(guias.items, lang);
   const articulosVisibles = guias.visible ? articulos : [];
   const heroFab = buscarSeccion("blog-hero")?.defecto;
   const guiasFab = buscarSeccion("blog-guias")?.defecto;
@@ -145,10 +139,9 @@ export default async function BlogPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
-    name: "Blog de marcas destacadas · Impacto Automotriz",
+    name: t("blog2.metaOgTitle"),
     url: `${SITE_URL}/blog`,
-    description:
-      "Guías de compra de Brembo, Bosch, KYB, Varta y Monroe para mantener el vehículo con piezas compatibles y fiables.",
+    description: t("blog2.ldDesc"),
     blogPost: articulosVisibles.map((a) => ({
       "@type": "BlogPosting",
       headline: a.title,
@@ -271,11 +264,11 @@ export default async function BlogPage() {
                       <span className="badge bg-slate-100 text-slate-700">{a.brand}</span>
                       {a.date && (
                         <time dateTime={a.date} className="text-xs text-slate-500">
-                          {formatearFecha(a.date)}
+                          {formatearFecha(a.date, lang)}
                         </time>
                       )}
                       {a.readingTime > 0 && (
-                        <span className="text-xs text-slate-500">· {a.readingTime} min de lectura</span>
+                        <span className="text-xs text-slate-500">· {t("blog2.minRead").replace("{n}", String(a.readingTime))}</span>
                       )}
                     </div>
 

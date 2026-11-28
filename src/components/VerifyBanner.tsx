@@ -2,8 +2,10 @@
 import { useState } from "react";
 import Icon from "@/components/brand/Icon";
 import Turnstile from "@/components/Turnstile";
+import { usePreferences } from "@/components/site/Preferences";
 
 export default function VerifyBanner() {
+  const { t } = usePreferences();
   const [pin, setPin] = useState("");
   const [token, setToken] = useState("");
   const [captchaKey, setCaptchaKey] = useState(0);
@@ -13,8 +15,8 @@ export default function VerifyBanner() {
 
   const verificar = async () => {
     setError(""); setMsg("");
-    if (!/^\d{6}$/.test(pin)) return setError("Escribe el código de 6 dígitos.");
-    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !token) return setError("Completa la verificación anti-bots.");
+    if (!/^\d{6}$/.test(pin)) return setError(t("verify.errLen"));
+    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !token) return setError(t("verify.errCaptcha"));
     setBusy(true);
     const r = await fetch("/api/account/verify-pin", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -22,15 +24,15 @@ export default function VerifyBanner() {
     });
     const j = await r.json().catch(() => ({}));
     setBusy(false);
-    if (r.ok) { setMsg("¡Correo confirmado!"); setTimeout(() => location.reload(), 700); return; }
+    if (r.ok) { setMsg(t("verify.ok")); setTimeout(() => location.reload(), 700); return; }
     setPin(""); setToken(""); setCaptchaKey((k) => k + 1);
-    setError(j.error ?? "Código incorrecto o vencido.");
+    setError(j.error ?? t("verify.errCode"));
   };
 
   const reenviar = async () => {
     setError(""); setMsg("");
     const r = await fetch("/api/account/verify-resend", { method: "POST" });
-    setMsg(r.ok ? "Te enviamos un código nuevo. Revisa también el correo no deseado." : "Espera unos minutos antes de pedir otro código.");
+    setMsg(r.ok ? t("verify.resent") : t("verify.wait"));
   };
 
   return (
@@ -38,8 +40,8 @@ export default function VerifyBanner() {
       <div className="flex items-start gap-3">
         <Icon name="mail" size={18} />
         <div className="min-w-0 flex-1">
-          <p className="font-semibold">Confirma tu correo con el código de 6 dígitos.</p>
-          <p className="mt-0.5 text-xs text-amber-800">Lo enviamos a tu correo al crear la cuenta. Vence en 10 minutos y no se puede reutilizar.</p>
+          <p className="font-semibold">{t("verify.title")}</p>
+          <p className="mt-0.5 text-xs text-amber-800">{t("verify.body")}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <input
               value={pin}
@@ -47,14 +49,14 @@ export default function VerifyBanner() {
               inputMode="numeric"
               autoComplete="one-time-code"
               maxLength={6}
-              aria-label="Código de verificación"
+              aria-label={t("verify.codeAria")}
               placeholder="000000"
               className="h-10 w-32 rounded-lg border border-amber-300 bg-white px-3 text-center font-mono text-lg tracking-[0.35em] text-slate-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
             />
             <button type="button" disabled={busy} onClick={verificar} className="btn btn-primary h-10 disabled:opacity-50">
-              {busy ? "Comprobando…" : "Confirmar"}
+              {busy ? t("verify.checking") : t("verify.confirm")}
             </button>
-            <button type="button" onClick={reenviar} className="btn btn-ghost h-10 border-amber-300 px-3 text-xs text-amber-800">Reenviar código</button>
+            <button type="button" onClick={reenviar} className="btn btn-ghost h-10 border-amber-300 px-3 text-xs text-amber-800">{t("verify.resend")}</button>
           </div>
           <Turnstile key={captchaKey} onToken={setToken} className="mt-2" />
           {error && <p role="alert" className="mt-2 text-xs font-medium text-red-700">{error}</p>}

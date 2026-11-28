@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePreferences } from "@/components/site/Preferences";
 
 type Props = { variant?: "dark" | "light"; size?: "sm" | "md" | "lg"; href?: string | null; tagline?: boolean; animated?: boolean; className?: string };
 
@@ -11,6 +14,7 @@ const anchoMarca = (alto: number) => Math.round(alto * 1.576);
 
 // Marca: símbolo + logotipo tipográfico. `animated` añade un halo giratorio (para el hero).
 export default function Logo({ variant = "dark", size = "md", href = "/", tagline = true, animated = false, className = "" }: Props) {
+  const { t } = usePreferences();
   const light = variant === "light";
   const s = SIZES[size];
   const inner = (
@@ -33,12 +37,12 @@ export default function Logo({ variant = "dark", size = "md", href = "/", taglin
         </span>
         {tagline && (
           <span className={`logo-tagline mt-1 font-mono uppercase tracking-[0.28em] ${s.tag} ${light ? "text-white/55" : "text-slate-500"}`}>
-            Piezas · Accesorios · Eléctrico
+            {t("chrome.tagline")}
           </span>
         )}
       </span>
     </span>
   );
   // Sin aria-label: el nombre accesible sale del texto visible (WCAG 2.5.3).
-  return href ? <Link href={href} className="flex min-h-12 min-w-0 shrink items-center lg:min-h-0"><span className="sr-only">Home — </span>{inner}</Link> : inner;
+  return href ? <Link href={href} className="flex min-h-12 min-w-0 shrink items-center lg:min-h-0"><span className="sr-only">{t("chrome.home")}</span>{inner}</Link> : inner;
 }

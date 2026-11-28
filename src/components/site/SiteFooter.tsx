@@ -10,6 +10,7 @@ const CLAVE_MENU: Record<string, string> = {
   "/despiece": "nav.despiece", "/blog": "nav.blog", "/novedades": "nav.novedades",
   "/contacto": "nav.contacto", "/nosotros": "nav.nosotros", "/testimonios": "nav.testimonios",
   "/preguntas-frecuentes": "nav.faq", "/renta": "nav.renta",
+  "/blog#suscribirme": "nav.subscribe", "/cuenta": "header.account",
 };
 
 const TIENDA: [string, string][] = [
@@ -88,7 +89,7 @@ export default async function SiteFooter() {
         <div>
           <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-white/50">{t("footer.services")}</h2>
           <ul className="mt-4 space-y-2.5 text-sm">
-            {SERVICIOS.map((s) => <li key={`${s.href}-${s.label}`}><Link href={s.href} className="text-white/70 transition hover:text-[color:var(--color-action-hi)]">{s.label}</Link></li>)}
+            {SERVICIOS.map((s) => <li key={`${s.href}-${s.clave}`}><Link href={s.href} className="text-white/70 transition hover:text-[color:var(--color-action-hi)]">{t(s.clave)}</Link></li>)}
           </ul>
         </div>
 

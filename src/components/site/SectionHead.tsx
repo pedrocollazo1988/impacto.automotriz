@@ -1,12 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import Icon from "@/components/brand/Icon";
+import { usePreferences } from "@/components/site/Preferences";
 
 export default function SectionHead({
   eyebrow,
   title,
   subtitle,
   href,
-  linkLabel = "Ver todo",
+  linkLabel,
 }: {
   eyebrow?: string;
   title: string;
@@ -14,6 +17,7 @@ export default function SectionHead({
   href?: string;
   linkLabel?: string;
 }) {
+  const { t } = usePreferences();
   return (
     <div className="sec-head">
       <div>
@@ -23,7 +27,7 @@ export default function SectionHead({
       </div>
       {href && (
         <Link href={href} className="btn btn-ghost hidden sm:inline-flex">
-          {linkLabel} <Icon name="arrowRight" size={16} />
+          {linkLabel ?? t("head.linkLabel")} <Icon name="arrowRight" size={16} />
         </Link>
       )}
     </div>

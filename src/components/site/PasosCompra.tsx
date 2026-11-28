@@ -2,15 +2,20 @@
 
 import { useEffect, useRef } from "react";
 import Icon from "@/components/brand/Icon";
+import { usePreferences } from "@/components/site/Preferences";
 
-const PASOS: [string, string, string][] = [
-  ["search", "Busca tu pieza", "Por el catálogo completo o filtrando por marca, modelo y año de tu vehículo."],
-  ["check", "Confirma la compatibilidad", "Cada ficha indica para qué vehículos sirve. Si dudas, te lo revisamos por WhatsApp."],
-  ["card", "Paga en línea", "Tropipay, QvaPay, transferencia o efectivo al recibir. Recibes tu comprobante al instante."],
-  ["truck", "Recíbela en tu provincia", "Domicilio, mensajería o recogida en tienda, con la tarifa de tu municipio."],
+const CLAVES_PASOS: [string, string, string][] = [
+  ["search", "steps.1.title", "steps.1.text"],
+  ["check", "steps.2.title", "steps.2.text"],
+  ["card", "steps.3.title", "steps.3.text"],
+  ["truck", "steps.4.title", "steps.4.text"],
 ];
 
-export default function PasosCompra({ eyebrow = "Sin sorpresas", title = "Así compras tu pieza", pasos = PASOS }: { eyebrow?: string; title?: string; pasos?: [string, string, string][] }) {
+export default function PasosCompra({ eyebrow, title, pasos }: { eyebrow?: string; title?: string; pasos?: [string, string, string][] }) {
+  const { t } = usePreferences();
+  const eyebrowTexto = eyebrow ?? t("steps.eyebrow");
+  const titulo = title ?? t("steps.title");
+  const lista = pasos ?? CLAVES_PASOS.map(([ic, claveTitulo, claveTexto]) => [ic, t(claveTitulo), t(claveTexto)] as [string, string, string]);
   const linea = useRef<SVGPathElement>(null);
 
   useEffect(() => {
@@ -39,8 +44,8 @@ export default function PasosCompra({ eyebrow = "Sin sorpresas", title = "Así c
       <div className="card relative overflow-hidden p-6 sm:p-8">
         <div aria-hidden className="absolute inset-0 blueprint-dark" />
         <div className="relative">
-          <span className="eyebrow">{eyebrow}</span>
-          <h2 className="sec-title mt-1 font-display text-2xl font-extrabold text-navy sm:text-3xl">{title}</h2>
+          <span className="eyebrow">{eyebrowTexto}</span>
+          <h2 className="sec-title mt-1 font-display text-2xl font-extrabold text-navy sm:text-3xl">{titulo}</h2>
 
           <div className="relative mt-8">
             {/* Línea de progreso: se dibuja al entrar en pantalla y conecta
@@ -70,8 +75,8 @@ export default function PasosCompra({ eyebrow = "Sin sorpresas", title = "Así c
             </svg>
 
             <ol className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {pasos.map(([ic, titulo, texto], i) => (
-                <li key={titulo} className="group relative">
+              {lista.map(([ic, tituloPaso, texto], i) => (
+                <li key={tituloPaso} className="group relative">
                   <div className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-[0_10px_28px_-22px_rgba(2,27,72,0.55)] transition duration-300 group-hover:-translate-y-0.5 group-hover:border-[color:var(--color-action)]/35 group-hover:shadow-[0_18px_36px_-20px_rgba(2,27,72,0.55)]">
                     <div className="flex items-center gap-2.5">
                       <span className="paso-num" aria-hidden>{i + 1}</span>
@@ -79,7 +84,7 @@ export default function PasosCompra({ eyebrow = "Sin sorpresas", title = "Así c
                         <Icon name={ic} size={17} />
                       </span>
                     </div>
-                    <h3 className="mt-3 font-display text-sm font-bold text-navy">{titulo}</h3>
+                    <h3 className="mt-3 font-display text-sm font-bold text-navy">{tituloPaso}</h3>
                     <p className="mt-1 text-xs leading-relaxed text-slate-600">{texto}</p>
                   </div>
                 </li>

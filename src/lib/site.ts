@@ -32,12 +32,12 @@ export const NAV_PRINCIPAL: Enlace[] = [
 ];
 
 /** Servicios, como la columna "Nuestros servicios" de MCV. */
-export const SERVICIOS: Enlace[] = [
-  { href: "/renta", label: "Renta y leasing", descripcion: "Flotas y vehículos eléctricos por temporada, con mantenimiento incluido." },
-  { href: "/transportacion-de-carga", label: "Transportación de carga", descripcion: "Traslado de mercancía, piezas y equipos con seguimiento." },
-  { href: "/servicios", label: "Postventa", descripcion: "Mantenimiento, diagnóstico y reparación con repuestos originales." },
-  { href: "/catalogo", label: "Recambio vehicular", descripcion: "Partes, piezas y accesorios con compatibilidad por vehículo." },
-  { href: "/servicios", label: "Asesoría técnica", descripcion: "Te decimos qué pieza necesitas antes de comprarla." },
+export const SERVICIOS: (Enlace & { clave: string })[] = [
+  { href: "/renta", clave: "footer.svcRent", label: "Renta y leasing", descripcion: "Flotas y vehículos eléctricos por temporada, con mantenimiento incluido." },
+  { href: "/transportacion-de-carga", clave: "footer.svcFreight", label: "Transportación de carga", descripcion: "Traslado de mercancía, piezas y equipos con seguimiento." },
+  { href: "/servicios", clave: "footer.svcAfterSales", label: "Postventa", descripcion: "Mantenimiento, diagnóstico y reparación con repuestos originales." },
+  { href: "/catalogo", clave: "footer.svcParts", label: "Recambio vehicular", descripcion: "Partes, piezas y accesorios con compatibilidad por vehículo." },
+  { href: "/servicios", clave: "footer.svcAdvice", label: "Asesoría técnica", descripcion: "Te decimos qué pieza necesitas antes de comprarla." },
 ];
 
 /** Enlaces de la franja superior y del pie. */

@@ -1,5 +1,6 @@
 import { prisma, asegurarEsquema } from "@/lib/prisma";
 import { comandoStart, enviarMensaje, nonceCaducado } from "@/lib/telegram";
+import { mensaje as mensajeTexto } from "@/lib/mensajes";
 
 type TelegramUpdate = {
   message?: {
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
   await asegurarEsquema();
   const fila = await prisma.telegramLogin.findUnique({ where: { nonce } });
   if (!fila || fila.estado !== "pendiente" || (await nonceCaducado(fila.creadoEn))) {
-    await enviarMensaje(chatId, "Ese enlace ya no sirve. Vuelve a la web de Impacto Automotriz y pide uno nuevo.");
+    await enviarMensaje(chatId, await mensajeTexto("msg.telegram.enlaceCaducado"));
     return Response.json({ ok: true });
   }
 
@@ -46,6 +47,6 @@ export async function POST(req: Request) {
       confirmadoEn: new Date(),
     },
   });
-  await enviarMensaje(chatId, "Listo. Vuelve a la web de Impacto Automotriz: ya estás dentro.");
+  await enviarMensaje(chatId, await mensajeTexto("msg.telegram.listo"));
   return Response.json({ ok: true });
 }

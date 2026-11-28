@@ -71,7 +71,7 @@ export default async function Home() {
     .slice(0, 6)
     .map((p) => {
       const precio = Number(p.priceUsd);
-      const antes = p.compareAtUsd && Number(p.compareAtUsd) > precio ? `Antes ${Number(p.compareAtUsd).toFixed(2)} USD · ` : "";
+      const antes = p.compareAtUsd && Number(p.compareAtUsd) > precio ? `${t("home2.before").replace("{n}", Number(p.compareAtUsd).toFixed(2))}` : "";
       return {
         imagen: p.images[0],
         titulo: p.name,

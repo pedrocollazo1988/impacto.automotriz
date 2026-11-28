@@ -1,21 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
-const TEXTOS = {
-  es: {
-    enlace: "¿No se abre en el móvil? Entra con el bot",
-    esperando: "Abre Telegram, pulsa Iniciar y vuelve aquí. Esperando…",
-    error: "No se pudo completar. Inténtalo otra vez.",
-    listo: "Listo. Entrando…",
-  },
-  en: {
-    enlace: "Not opening on your phone? Sign in with the bot",
-    esperando: "Open Telegram, tap Start and come back here. Waiting…",
-    error: "Could not complete. Please try again.",
-    listo: "Done. Signing you in…",
-  },
-};
+import { usePreferences } from "@/components/site/Preferences";
 
 /**
  * Dos caminos para entrar con Telegram:
@@ -24,11 +10,11 @@ const TEXTOS = {
  *    bot confirma el enlace y esta página lo detecta preguntando cada pocos
  *    segundos.
  */
-export default function TelegramLogin({ usuario, lang = "es" }: { usuario: string; lang?: "es" | "en" }) {
+export default function TelegramLogin({ usuario }: { usuario: string }) {
+  const { t, lang } = usePreferences();
   const caja = useRef<HTMLDivElement>(null);
   const vivo = useRef(true);
   const [fase, setFase] = useState<"inicio" | "esperando" | "listo" | "error">("inicio");
-  const t = TEXTOS[lang] ?? TEXTOS.es;
 
   useEffect(() => {
     vivo.current = true;
@@ -85,11 +71,11 @@ export default function TelegramLogin({ usuario, lang = "es" }: { usuario: strin
     <div className="flex flex-col items-center gap-2">
       <div ref={caja} className="flex justify-center" />
       <button type="button" onClick={porEnlace} disabled={fase === "esperando" || fase === "listo"} className="text-xs font-semibold text-slate-500 hover:text-navy disabled:opacity-60">
-        {t.enlace}
+        {t("tg.mobileLink")}
       </button>
-      {fase === "esperando" && <p role="status" className="text-xs text-slate-500">{t.esperando}</p>}
-      {fase === "listo" && <p role="status" className="text-xs text-[color:var(--color-ok)]">{t.listo}</p>}
-      {fase === "error" && <p role="alert" className="text-xs text-red-600">{t.error}</p>}
+      {fase === "esperando" && <p role="status" className="text-xs text-slate-500">{t("tg.waiting")}</p>}
+      {fase === "listo" && <p role="status" className="text-xs text-[color:var(--color-ok)]">{t("tg.done")}</p>}
+      {fase === "error" && <p role="alert" className="text-xs text-red-600">{t("tg.error")}</p>}
     </div>
   );
 }

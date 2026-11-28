@@ -11,14 +11,15 @@ export type CheckoutErrors = Partial<Record<"cart" | "name" | "email" | "phone" 
 
 const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
+// Devuelve claves de traducción: la vista las resuelve con t().
 export function validarCheckout(d: CheckoutDraft): CheckoutErrors {
   const errores: CheckoutErrors = {};
-  if (!d.cartOk) errores.cart = "Ajusta el carrito: hay productos por encima del stock disponible.";
-  if (d.name.trim().length < 2) errores.name = "Escribe tu nombre completo.";
-  if (!CORREO.test(d.email.trim())) errores.email = "Escribe un correo válido, por ejemplo nombre@correo.com.";
-  if (d.phone.trim().length < 6) errores.phone = "Escribe un teléfono con al menos 6 dígitos.";
-  if (!d.hasDelivery) errores.delivery = "Completa la entrega: provincia, municipio, método y datos de quien recibe.";
-  if (!d.hasPayment) errores.payment = "Elige un método de pago.";
+  if (!d.cartOk) errores.cart = "checkout2.errCart";
+  if (d.name.trim().length < 2) errores.name = "checkout2.errName";
+  if (!CORREO.test(d.email.trim())) errores.email = "checkout2.errEmail";
+  if (d.phone.trim().length < 6) errores.phone = "checkout2.errPhone";
+  if (!d.hasDelivery) errores.delivery = "checkout2.errDelivery";
+  if (!d.hasPayment) errores.payment = "checkout2.errPayment";
   return errores;
 }
 

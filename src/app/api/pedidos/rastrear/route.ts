@@ -3,6 +3,8 @@ import { handle, HttpError } from "@/lib/auth";
 import { limit } from "@/lib/ratelimit";
 import { orderToken } from "@/lib/order-access";
 import { requireTurnstile } from "@/lib/turnstile";
+import { idiomaDeCookie, type Idioma } from "@/lib/i18n";
+import { textoMensaje } from "@/lib/mensajes";
 
 export const dynamic = "force-dynamic";
 
@@ -22,13 +24,15 @@ export const POST = handle(async (req: Request) => {
   // Sin límite, esto sirve para recorrer los números de pedido uno a uno.
   await limit(req, "rastreo", 10);
 
+  // Sin cookie de idioma (o fuera de una petición) se responde en español.
+  const idioma: Idioma = (await idiomaDeCookie().catch(() => null)) ?? "es";
   const body = await req.json().catch(() => null);
-  await requireTurnstile(req, typeof body?.turnstileToken === "string" ? body.turnstileToken : undefined);
+  await requireTurnstile(req, typeof body?.turnstileToken === "string" ? body.turnstileToken : undefined, idioma);
   const raw = String(body?.numero ?? "").replace(/\D/g, "");
   const numero = Number(raw);
   const contacto = typeof body?.contacto === "string" ? body.contacto : "";
   if (!Number.isInteger(numero) || numero <= 0 || contacto.length < 5) {
-    throw new HttpError(400, "Escribe el número de pedido o el PIN de entrega, y el contacto con el que compraste.");
+    throw new HttpError(400, textoMensaje("msg.rastreo.datos", idioma));
   }
 
   // Se admite el número de pedido o el PIN de entrega. El PIN solo no basta:
@@ -45,7 +49,7 @@ export const POST = handle(async (req: Request) => {
 
   // Un mismo mensaje para "no existe" y "no coincide": distinguirlos permitiría
   // averiguar qué números de pedido existen.
-  const noEncontrado = new HttpError(404, "No encontramos un pedido con esos datos. Revisa el número o PIN y el contacto.");
+  const noEncontrado = new HttpError(404, textoMensaje("msg.rastreo.noEncontrado", idioma));
   const pedido = pedidos.find((p) => {
     const porEmail = igual(p.customerEmail, contacto);
     const tel = soloDigitos(p.customerPhone);

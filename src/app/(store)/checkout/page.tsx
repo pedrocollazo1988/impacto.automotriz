@@ -28,20 +28,10 @@ type Metodo = {
   url: string | null;
 };
 
-const ERROR_EN: Record<string, string> = {
-  "Ajusta el carrito: hay productos por encima del stock disponible.": "Adjust the cart: some products exceed available stock.",
-  "Escribe tu nombre completo.": "Enter your full name.",
-  "Escribe un correo válido, por ejemplo nombre@correo.com.": "Enter a valid email, for example name@email.com.",
-  "Escribe un teléfono con al menos 6 dígitos.": "Enter a phone with at least 6 digits.",
-  "Completa la entrega: provincia, municipio, método y datos de quien recibe.": "Complete delivery: province, municipality, method and recipient details.",
-  "Elige un método de pago.": "Choose a payment method.",
-};
-
 export default function Checkout() {
   const { items, clear, ready: cartReady } = useCart();
   const { t, lang } = usePreferences();
   const tt = (key: string, vars: Record<string, string | number>) => Object.entries(vars).reduce((txt, [k, v]) => txt.replace(`{${k}}`, String(v)), t(key));
-  const msg = (texto: string) => (lang === "en" ? ERROR_EN[texto] ?? texto : texto);
   const router = useRouter();
   const [subtotal, setSubtotal] = useState(0); const [fee, setFee] = useState(0); const [delivery, setDelivery] = useState<DeliveryChoice | null>(null);
   const [deliveryName, setDeliveryName] = useState("");
@@ -105,7 +95,7 @@ export default function Checkout() {
     const j = await r.json(); setBusy(false);
     if (!r.ok) {
       setCaptcha(""); setCaptchaKey((k) => k + 1);
-      if (r.status === 401) { setSession("out"); return setErr("Inicia sesión para completar la compra."); }
+      if (r.status === 401) { setSession("out"); return setErr(t("checkout2.signInToBuy")); }
       return setErr(j.error ?? t("checkout.createError"));
     }
     clear(); if (j.paymentUrl) window.location.href = j.paymentUrl; else router.push(`/pedido/${j.orderId}`);
@@ -139,15 +129,15 @@ export default function Checkout() {
     <div className="container-x py-10">
       <div className="mx-auto grid max-w-5xl items-start gap-8 lg:grid-cols-[1fr_420px]">
         <div>
-          <span className="eyebrow">Compra segura</span>
-          <h1 className="mt-2 font-display text-3xl font-extrabold text-navy">Inicia sesión para comprar</h1>
-          <p className="mt-3 max-w-md text-slate-500">Solo las cuentas registradas pueden finalizar una compra. Así podemos asociar el pedido a tu historial, enviarte el seguimiento y proteger tus datos.</p>
+          <span className="eyebrow">{t("checkout2.secureEyebrow")}</span>
+          <h1 className="mt-2 font-display text-3xl font-extrabold text-navy">{t("checkout2.signInTitle")}</h1>
+          <p className="mt-3 max-w-md text-slate-500">{t("checkout2.signInHint")}</p>
           <ul className="mt-6 space-y-3 text-sm text-slate-600">
-            {["Tu carrito se conserva mientras inicias sesión", "Puedes seguir el pedido desde Mi cuenta", "Recibirás el código de entrega en tu correo"].map((x) => (
-              <li key={x} className="flex items-center gap-2"><Icon name="check" size={16} className="text-[color:var(--color-ok)]" /> {x}</li>
+            {["checkout2.signInPoint1", "checkout2.signInPoint2", "checkout2.signInPoint3"].map((k) => (
+              <li key={k} className="flex items-center gap-2"><Icon name="check" size={16} className="text-[color:var(--color-ok)]" /> {t(k)}</li>
             ))}
           </ul>
-          <Link href="/carrito" className="btn btn-ghost mt-6"><Icon name="cart" size={16} /> Volver al carrito</Link>
+          <Link href="/carrito" className="btn btn-ghost mt-6"><Icon name="cart" size={16} /> {t("checkout2.backToCart")}</Link>
         </div>
         <AuthForm next="/checkout" />
       </div>
@@ -171,18 +161,18 @@ export default function Checkout() {
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="block sm:col-span-2">
                 <span className="mb-1 block text-xs font-semibold text-slate-600">{t("checkout.name")}</span>
-                <input className={`input ${intento && errores.name ? "border-red-400 ring-2 ring-red-100" : ""}`} autoComplete="name" placeholder="Nombre y apellidos" value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} aria-invalid={intento && !!errores.name} />
-                {intento && errores.name && <span className="mt-1 block text-xs text-red-600">{errores.name}</span>}
+                <input className={`input ${intento && errores.name ? "border-red-400 ring-2 ring-red-100" : ""}`} autoComplete="name" placeholder={t("checkout2.namePlaceholder")} value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} aria-invalid={intento && !!errores.name} />
+                {intento && errores.name && <span className="mt-1 block text-xs text-red-600">{t(errores.name)}</span>}
               </label>
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-slate-600">{t("checkout.email")}</span>
-                <input className={`input ${emailFijo ? "bg-slate-50 text-slate-500" : ""} ${intento && errores.email ? "border-red-400 ring-2 ring-red-100" : ""}`} type="email" autoComplete="email" placeholder="tu@correo.com" value={c.email} readOnly={emailFijo} onChange={(e) => setC({ ...c, email: e.target.value })} aria-invalid={intento && !!errores.email} />
-                {intento && errores.email && <span className="mt-1 block text-xs text-red-600">{errores.email}</span>}
+                <input className={`input ${emailFijo ? "bg-slate-50 text-slate-500" : ""} ${intento && errores.email ? "border-red-400 ring-2 ring-red-100" : ""}`} type="email" autoComplete="email" placeholder={t("checkout2.emailPlaceholder")} value={c.email} readOnly={emailFijo} onChange={(e) => setC({ ...c, email: e.target.value })} aria-invalid={intento && !!errores.email} />
+                {intento && errores.email && <span className="mt-1 block text-xs text-red-600">{t(errores.email)}</span>}
               </label>
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-slate-600">{t("checkout.phone")}</span>
                 <input className={`input ${intento && errores.phone ? "border-red-400 ring-2 ring-red-100" : ""}`} type="tel" autoComplete="tel" placeholder="+53 5 000 0000" value={c.phone} onChange={(e) => setC({ ...c, phone: e.target.value })} aria-invalid={intento && !!errores.phone} />
-                {intento && errores.phone && <span className="mt-1 block text-xs text-red-600">{errores.phone}</span>}
+                {intento && errores.phone && <span className="mt-1 block text-xs text-red-600">{t(errores.phone)}</span>}
               </label>
             </div>
           </section>
@@ -191,7 +181,7 @@ export default function Checkout() {
             <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><span className="grid h-6 w-6 place-items-center rounded-full bg-[color:var(--color-navy)] text-xs text-white">2</span> {t("checkout.stepDelivery")}</h2>
             <p className="mt-1 text-xs text-slate-500">{t("checkout.deliveryHint")}</p>
             <div className="mt-4"><DeliverySelector subtotalUsd={base} onChange={(d, f, n) => { setDelivery(d); setFee(f); setDeliveryName(n ?? ""); }} /></div>
-            {intento && errores.delivery && <p role="alert" className="mt-2 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700"><Icon name="info" size={14} className="mt-0.5 shrink-0" />{errores.delivery}</p>}
+            {intento && errores.delivery && <p role="alert" className="mt-2 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700"><Icon name="info" size={14} className="mt-0.5 shrink-0" />{t(errores.delivery)}</p>}
           </section>
 
           <section className="card p-5">
@@ -224,7 +214,7 @@ export default function Checkout() {
                 </label>
               ))}
             </div>
-            {intento && errores.payment && <p role="alert" className="mt-2 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700"><Icon name="info" size={14} className="mt-0.5 shrink-0" />{errores.payment}</p>}
+            {intento && errores.payment && <p role="alert" className="mt-2 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700"><Icon name="info" size={14} className="mt-0.5 shrink-0" />{t(errores.payment)}</p>}
           </section>
 
           <section className="card p-5">
@@ -252,7 +242,7 @@ export default function Checkout() {
             {intento && faltantes.length > 0 && (
               <div role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
                 <p className="font-semibold">{t("checkout.missing")}</p>
-                <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">{faltantes.map((x) => <li key={x}>{msg(x)}</li>)}</ul>
+                <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">{faltantes.map((x) => <li key={x}>{t(x)}</li>)}</ul>
               </div>
             )}
             {err && <p aria-live="polite" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{err}</p>}

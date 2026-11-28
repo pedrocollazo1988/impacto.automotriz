@@ -1,10 +1,15 @@
 import Link from "next/link";
 import Icon from "@/components/brand/Icon";
 import { leerSeccion } from "@/lib/contenido-server";
+import { getT } from "@/lib/i18n";
 
-export const metadata = { title: "Preguntas frecuentes" };
+export async function generateMetadata() {
+  const { t } = await getT();
+  return { title: t("faq.metaTitle") };
+}
 
 export default async function FAQ() {
+  const { t } = await getT();
   const faq = await leerSeccion("faq");
 
   // FAQPage permite que Google y los asistentes de IA citen las respuestas
@@ -43,8 +48,8 @@ export default async function FAQ() {
             </details>
           ))}
           <div className="card mt-6 flex flex-wrap items-center justify-between gap-3 p-5">
-            <p className="text-sm text-slate-600">¿No encuentras la respuesta que buscas?</p>
-            <Link href="/contacto" className="btn btn-primary">Contactar</Link>
+            <p className="text-sm text-slate-600">{t("faq.notFound")}</p>
+            <Link href="/contacto" className="btn btn-primary">{t("faq.contact")}</Link>
           </div>
         </div>
       </section>

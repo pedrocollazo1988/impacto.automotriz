@@ -4,12 +4,16 @@ import Image from "next/image";
 import Icon from "@/components/brand/Icon";
 import { mediosDeFicha } from "@/lib/medios";
 import { ZOOM_INICIAL, ZOOM_MAX, ZOOM_MIN, anchoParaZoom, origenEn, zoomConBoton, zoomConRueda } from "@/lib/lupa";
+import { usePreferences } from "@/components/site/Preferences";
 
 // Galería con lupa: al pasar el ratón, la foto se amplía en su propio marco y
 // sigue al cursor. Se amplía en el sitio (no en un panel al lado) porque la ficha
 // tiene dos columnas y un panel flotante taparía el título y el precio.
 // En táctil no hay hover: ahí el gesto útil es abrir la foto a pantalla completa.
 export default function ProductGallery({ images, videos = [], name }: { images: string[]; videos?: string[]; name: string }) {
+  const { t } = usePreferences();
+  const txt = (key: string, vars: Record<string, string | number>) =>
+    Object.entries(vars).reduce((s, [k, v]) => s.replace(`{${k}}`, String(v)), t(key));
   const medios = mediosDeFicha(images, videos);
   const lista = medios.length ? medios : [{ url: "/placeholder.svg", tipo: "foto" as const }];
   // Si la ficha tiene vídeo, se abre en el vídeo: es lo primero que quiere ver
@@ -84,7 +88,7 @@ export default function ProductGallery({ images, videos = [], name }: { images: 
         style={esVideoActual ? undefined : { cursor: ampliada ? "zoom-out" : "zoom-in" }}
       >
         {esVideoActual ? (
-          <video key={actual.url} src={actual.url} poster={images[0]} className="h-full w-full bg-black object-cover" controls autoPlay muted loop playsInline preload="metadata" aria-label={`Vídeo de ${name}`} />
+          <video key={actual.url} src={actual.url} poster={images[0]} className="h-full w-full bg-black object-cover" controls autoPlay muted loop playsInline preload="metadata" aria-label={txt("gallery.videoOf", { name })} />
         ) : (
           <Image
             src={actual.url}
@@ -126,11 +130,11 @@ export default function ProductGallery({ images, videos = [], name }: { images: 
         {!esVideoActual && (
           <div className="absolute right-3 top-3 z-10 flex flex-col overflow-hidden rounded-full bg-navy/85 text-white shadow">
             <button type="button" onClick={() => { setLupa(true); setZoom((z) => zoomConBoton(z, true)); }} disabled={zoom >= ZOOM_MAX}
-              className="grid h-8 w-8 place-items-center transition hover:bg-white/15 disabled:opacity-40" aria-label="Acercar la imagen">
+              className="grid h-8 w-8 place-items-center transition hover:bg-white/15 disabled:opacity-40" aria-label={t("gallery.zoomIn")}>
               <Icon name="plus" size={14} />
             </button>
             <button type="button" onClick={() => { setLupa(true); setZoom((z) => zoomConBoton(z, false)); }} disabled={zoom <= ZOOM_MIN}
-              className="grid h-8 w-8 place-items-center transition hover:bg-white/15 disabled:opacity-40" aria-label="Alejar la imagen">
+              className="grid h-8 w-8 place-items-center transition hover:bg-white/15 disabled:opacity-40" aria-label={t("gallery.zoomOut")}>
               <Icon name="minus" size={14} />
             </button>
           </div>
@@ -140,9 +144,9 @@ export default function ProductGallery({ images, videos = [], name }: { images: 
           type="button"
           onClick={() => setGrande(true)}
           className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-navy/85 px-3 py-1.5 text-xs font-medium text-white shadow transition hover:bg-navy"
-          aria-label={esVideoActual ? "Ver el vídeo a pantalla completa" : "Ver la foto a pantalla completa"}
+          aria-label={esVideoActual ? t("gallery.videoFull") : t("gallery.photoFull")}
         >
-          <Icon name="search" size={12} /> Ampliar
+          <Icon name="search" size={12} /> {t("gallery.enlarge")}
         </button>
       </div>
 
@@ -153,7 +157,7 @@ export default function ProductGallery({ images, videos = [], name }: { images: 
               key={m.url}
               type="button"
               onClick={() => cambiar(k)}
-              aria-label={m.tipo === "video" ? `Vídeo ${k + 1}` : `Imagen ${k + 1}`}
+              aria-label={m.tipo === "video" ? txt("gallery.videoN", { n: k + 1 }) : txt("gallery.imageN", { n: k + 1 })}
               aria-current={k === i}
               className={`relative aspect-square overflow-hidden rounded-xl border-2 transition ${k === i ? "border-[color:var(--color-action)]" : "border-transparent opacity-70 hover:opacity-100"}`}
             >
@@ -173,15 +177,15 @@ export default function ProductGallery({ images, videos = [], name }: { images: 
       )}
 
       {grande && (
-        <div role="dialog" aria-modal="true" aria-label={`${esVideoActual ? "Vídeo" : "Foto"} ampliada de ${name}`}
+        <div role="dialog" aria-modal="true" aria-label={esVideoActual ? txt("gallery.expandedVideoOf", { name }) : txt("gallery.expandedPhotoOf", { name })}
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4" onClick={() => setGrande(false)}>
           <button type="button" onClick={() => setGrande(false)} autoFocus
-            className="absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/15 text-white transition hover:bg-white/25" aria-label="Cerrar">
+            className="absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/15 text-white transition hover:bg-white/25" aria-label={t("gallery.close")}>
             <Icon name="close" size={20} />
           </button>
           <div className="relative h-[85vh] w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
             {esVideoActual ? (
-              <video src={actual.url} className="h-full w-full object-contain" controls autoPlay playsInline aria-label={`Vídeo de ${name}`} />
+              <video src={actual.url} className="h-full w-full object-contain" controls autoPlay playsInline aria-label={txt("gallery.videoOf", { name })} />
             ) : (
               // quality 95: a pantalla completa se nota el detalle, y solo se paga al abrir.
               <Image src={actual.url} alt={name} fill sizes="90vw" quality={95} className="object-contain" unoptimized={actual.url.endsWith(".svg")} />

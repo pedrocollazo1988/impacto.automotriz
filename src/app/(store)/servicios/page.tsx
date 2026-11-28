@@ -2,10 +2,15 @@ import Link from "next/link";
 import Icon from "@/components/brand/Icon";
 import { SITE } from "@/lib/site";
 import { leerSeccion } from "@/lib/contenido-server";
+import { getT } from "@/lib/i18n";
 
-export const metadata = { title: "Servicios" };
+export async function generateMetadata() {
+  const { t } = await getT();
+  return { title: t("services.metaTitle") };
+}
 
 export default async function Servicios() {
+  const { t } = await getT();
   const [postventa, lineas] = await Promise.all([leerSeccion("servicios-postventa"), leerSeccion("servicios-lineas")]);
 
   return (
@@ -52,7 +57,7 @@ export default async function Servicios() {
             ))}
           </div>
           <p className="mt-8 text-sm text-slate-500">
-            ¿Tienes una consulta concreta? Escríbenos a{" "}
+            {t("services.askUs")}{" "}
             <a href={`mailto:${SITE.email}`} className="link-underline font-semibold text-navy">{SITE.email}</a>.
           </p>
         </section>

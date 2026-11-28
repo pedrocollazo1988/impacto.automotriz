@@ -18,7 +18,10 @@ const OPCIONES_OTROS = [
 ] as const;
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Catálogo de piezas y accesorios" };
+export async function generateMetadata() {
+  const { t } = await getT();
+  return { title: t("cat2.title") };
+}
 
 type SP = Promise<Record<string, string | undefined>>;
 
@@ -124,7 +127,7 @@ export default async function Catalogo({ searchParams }: { searchParams: SP }) {
                 {brands.map((b) => (
                   <Link key={b.id} href={link({ marca: s.marca === b.slug ? undefined : b.slug })} className={`chip min-h-12 lg:min-h-0 ${s.marca === b.slug ? "chip-active" : ""}`}>{b.name}</Link>
                 ))}
-                {brands.length === 0 && <p className="text-xs text-slate-500">Aún no hay marcas.</p>}
+                {brands.length === 0 && <p className="text-xs text-slate-500">{t("cat2.noBrands")}</p>}
               </div>
             </Filter>
             <Filter title={t("catalog.priceUsd")}>
