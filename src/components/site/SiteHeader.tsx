@@ -26,7 +26,7 @@ export default function SiteHeader({
   const [open, setOpen] = useState(false);
   const [oculto, setOculto] = useState(false);
   const ultimoY = useRef(0);
-  const { t } = usePreferences();
+  const { t, lang } = usePreferences();
   const tr = (href: string, label: string) => (CLAVE_NAV[href] ? t(CLAVE_NAV[href]) : label);
   const { count } = useCart();
   const path = usePathname();
@@ -68,7 +68,7 @@ export default function SiteHeader({
       <div className="hidden bg-[color:var(--color-navy-deep)] text-white/75 lg:block">
           <div className="container-x flex h-9 items-center justify-between gap-4 text-xs">
             <p className="flex items-center gap-4">
-              <span className="flex items-center gap-1.5"><Icon name="clock" size={13} /> {SITE.horario}</span>
+              <span className="flex items-center gap-1.5"><Icon name="clock" size={13} /> {lang === "en" ? SITE.horarioEn : SITE.horario}</span>
               {telefono && (
                 <a href={`tel:${telefono.replace(/\s/g, "")}`} className="flex items-center gap-1.5 transition hover:text-white">
                   <Icon name="phone" size={13} /> {telefono}

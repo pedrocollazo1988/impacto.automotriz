@@ -85,7 +85,7 @@ export default function PedidosCuenta({ pedidos }: { pedidos: PedidoCuenta[] }) 
             <Link key={o.id} href={`/pedido/${o.id}`} className="card card-hover flex flex-wrap items-center gap-4 p-4">
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name="box" size={20} /></span>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-slate-800">Pedido #{o.number}</p>
+                <p className="font-semibold text-slate-800">{t("ord.number")} #{o.number}</p>
                 <p className="text-xs text-slate-400">{new Date(o.createdAt).toLocaleDateString(lang === "en" ? "en-GB" : "es-CU")}</p>
               </div>
               <span className={`badge ${CLASE[o.status] ?? "bg-slate-100 text-slate-600"}`}>{t(`ord.st.${o.status}`)}</span>
