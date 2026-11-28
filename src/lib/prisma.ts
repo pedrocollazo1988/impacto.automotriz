@@ -41,6 +41,24 @@ export const prisma = base.$extends({
         return query(args);
       },
     },
+    customer: {
+      async $allOperations({ args, query }) {
+        await asegurarEsquema();
+        return query(args);
+      },
+    },
+    otpCode: {
+      async $allOperations({ args, query }) {
+        await asegurarEsquema();
+        return query(args);
+      },
+    },
+    authSession: {
+      async $allOperations({ args, query }) {
+        await asegurarEsquema();
+        return query(args);
+      },
+    },
   },
 }) as unknown as PrismaClient;
 

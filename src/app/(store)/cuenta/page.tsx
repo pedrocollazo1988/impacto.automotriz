@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCustomer } from "@/lib/customer-auth";
+import { telefonoLegible } from "@/lib/phone";
 import AuthForm from "@/components/AuthForm";
 import GarageManager from "@/components/GarageManager";
+import PerfilCuenta from "@/components/cuenta/PerfilCuenta";
 import ProductCard from "@/components/ProductCard";
 import VerifyBanner from "@/components/VerifyBanner";
 import Icon from "@/components/brand/Icon";
@@ -40,10 +42,11 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
       </div>
     </div>
   );
-  const [orders, garage, wish] = await Promise.all([
+  const [orders, garage, wish, credencial] = await Promise.all([
     prisma.order.findMany({ where: { customerId: me.id }, orderBy: { id: "desc" }, take: 20 }),
     prisma.garageVehicle.findMany({ where: { customerId: me.id } }),
     prisma.wishlistItem.findMany({ where: { customerId: me.id }, include: { product: { include: { category: { select: { slug: true } } } } } }),
+    prisma.customer.findUnique({ where: { id: me.id }, select: { passwordHash: true } }),
   ]);
   return (
     <div className="container-x py-8">
@@ -52,7 +55,7 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[color:var(--color-navy)] to-[color:var(--color-action)] font-display text-xl font-extrabold text-white">{me.name.slice(0, 1)}</span>
-            <div><h1 className="font-display text-2xl font-extrabold text-navy">Hola, {me.name.split(" ")[0]}</h1><p className="text-sm text-slate-500">{me.email}</p></div>
+            <div><h1 className="font-display text-2xl font-extrabold text-navy">Hola, {me.name.split(" ")[0]}</h1><p className="text-sm text-slate-500">{me.email ?? telefonoLegible(me.phoneE164)}</p></div>
           </div>
           <LogoutButton />
         </div>
@@ -60,8 +63,16 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
       <div className="mt-4 space-y-3">
         {sp.verificado === "1" && <p className="rounded-xl bg-green-50 p-3 text-sm text-green-700">¡Correo confirmado!</p>}
         {sp.verificado === "0" && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">El enlace de confirmación no es válido o venció.</p>}
-        {!me.emailVerified && <VerifyBanner />}
+        {me.email && !me.emailVerified && <VerifyBanner />}
       </div>
+
+      <PerfilCuenta
+        email={me.email}
+        emailVerified={me.emailVerified}
+        phone={me.phoneE164}
+        phoneVerified={!!me.phoneVerifiedAt}
+        tieneClave={!!credencial?.passwordHash}
+      />
 
       <section className="mt-8">
         <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="box" size={18} /> Mis pedidos</h2>

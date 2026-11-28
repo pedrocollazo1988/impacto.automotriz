@@ -385,20 +385,65 @@ model CampaignSend {
 }
 
 // ───────── Cuentas de cliente, cupones ─────────
+// Una cuenta puede tener correo, teléfono o ambos: los dos son opcionales y
+// únicos, y se verifican por separado (emailVerifiedAt / phoneVerifiedAt).
 model Customer {
-  id            String          @id @default(cuid())
-  email         String          @unique
-  name          String
-  phone         String?
-  passwordHash  String?
-  emailVerified Boolean         @default(false)
-  googleId      String?         @unique
-  createdAt     DateTime        @default(now())
-  orders        Order[]
-  wishlist      WishlistItem[]
-  garage        GarageVehicle[]
-  reviews       Review[]
-  tokens        AuthToken[]
+  id                String          @id @default(cuid())
+  email             String?         @unique
+  phoneE164         String?         @unique
+  name              String
+  phone             String?
+  passwordHash      String?
+  emailVerified     Boolean         @default(false)
+  emailVerifiedAt   DateTime?
+  phoneVerifiedAt   DateTime?
+  avatarUrl         String?
+  preferredLanguage String?
+  googleId          String?         @unique
+  createdAt         DateTime        @default(now())
+  orders            Order[]
+  wishlist          WishlistItem[]
+  garage            GarageVehicle[]
+  reviews           Review[]
+  tokens            AuthToken[]
+  otpCodes          OtpCode[]
+  sessions          AuthSession[]
+}
+
+// Código de un solo uso (OTP) para SMS o correo. Solo se guarda el HMAC con
+// APP_SECRET: una copia de la base de datos no permite probar los 10^6 códigos.
+model OtpCode {
+  id         String    @id @default(cuid())
+  identifier String // E.164 (+5355551234) o correo normalizado
+  channel    String // sms | email
+  purpose    String // register | login | reset | verify
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  consumedAt DateTime?
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  ip         String?
+  createdAt  DateTime  @default(now())
+
+  @@index([identifier, purpose])
+  @@index([createdAt])
+}
+
+// Sesión de cliente: el access token vive en memoria y el refresh token viaja
+// en cookie de sesión; en la base solo queda su hash.
+model AuthSession {
+  id               String    @id @default(cuid())
+  customerId       String
+  customer         Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  refreshTokenHash String    @unique
+  userAgent        String?
+  ip               String?
+  lastActivityAt   DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  revokedAt        DateTime?
+
+  @@index([customerId])
 }
 
 model WishlistItem {

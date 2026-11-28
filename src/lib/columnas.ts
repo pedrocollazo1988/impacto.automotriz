@@ -31,6 +31,14 @@ const COLUMNAS = [
   `UPDATE "PaymentGateway" SET "icon" = 'cash' WHERE "key" = 'CASH' AND "icon" = 'card'`,
   `UPDATE "PaymentGateway" SET "config" = '{"requiereContraEntrega":"true"}'::jsonb WHERE "key" = 'CASH' AND "config" IS NULL`,
   `UPDATE "Order" SET "paymentMethodName" = CASE "paymentMethod" WHEN 'TROPIPAY' THEN 'Tropipay' WHEN 'QVAPAY' THEN 'QvaPay' WHEN 'TRANSFER' THEN 'Transferencia bancaria' WHEN 'CASH' THEN 'Efectivo contra entrega' ELSE "paymentMethod" END WHERE "paymentMethodName" IS NULL`,
+  // Autenticación por teléfono: la cuenta puede tener correo, teléfono o ambos.
+  `ALTER TABLE "Customer" ADD COLUMN IF NOT EXISTS "phoneE164" TEXT`,
+  `ALTER TABLE "Customer" ADD COLUMN IF NOT EXISTS "phoneVerifiedAt" TIMESTAMP(3)`,
+  `ALTER TABLE "Customer" ADD COLUMN IF NOT EXISTS "emailVerifiedAt" TIMESTAMP(3)`,
+  `ALTER TABLE "Customer" ADD COLUMN IF NOT EXISTS "avatarUrl" TEXT`,
+  `ALTER TABLE "Customer" ADD COLUMN IF NOT EXISTS "preferredLanguage" TEXT`,
+  `ALTER TABLE "Customer" ALTER COLUMN "email" DROP NOT NULL`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "Customer_phoneE164_key" ON "Customer"("phoneE164")`,
 ];
 
 // Tablas nuevas. Se crean aquí por el mismo motivo: el despliegue no migra.
@@ -68,6 +76,39 @@ const TABLAS = [
    )`,
   `CREATE INDEX IF NOT EXISTS "ProductMovement_productId_createdAt_idx" ON "ProductMovement"("productId", "createdAt")`,
   `CREATE INDEX IF NOT EXISTS "ProductMovement_orderId_idx" ON "ProductMovement"("orderId")`,
+  // Códigos de un solo uso (SMS o correo), guardados solo como HMAC.
+  `CREATE TABLE IF NOT EXISTS "OtpCode" (
+     "id" TEXT NOT NULL,
+     "identifier" TEXT NOT NULL,
+     "channel" TEXT NOT NULL,
+     "purpose" TEXT NOT NULL,
+     "codeHash" TEXT NOT NULL,
+     "expiresAt" TIMESTAMP(3) NOT NULL,
+     "attempts" INTEGER NOT NULL DEFAULT 0,
+     "consumedAt" TIMESTAMP(3),
+     "customerId" TEXT,
+     "ip" TEXT,
+     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     CONSTRAINT "OtpCode_pkey" PRIMARY KEY ("id"),
+     CONSTRAINT "OtpCode_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE
+   )`,
+  `CREATE INDEX IF NOT EXISTS "OtpCode_identifier_purpose_idx" ON "OtpCode"("identifier", "purpose")`,
+  `CREATE INDEX IF NOT EXISTS "OtpCode_createdAt_idx" ON "OtpCode"("createdAt")`,
+  // Sesiones de cliente con rotación de refresh token.
+  `CREATE TABLE IF NOT EXISTS "AuthSession" (
+     "id" TEXT NOT NULL,
+     "customerId" TEXT NOT NULL,
+     "refreshTokenHash" TEXT NOT NULL,
+     "userAgent" TEXT,
+     "ip" TEXT,
+     "lastActivityAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     "revokedAt" TIMESTAMP(3),
+     CONSTRAINT "AuthSession_pkey" PRIMARY KEY ("id"),
+     CONSTRAINT "AuthSession_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE
+   )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "AuthSession_refreshTokenHash_key" ON "AuthSession"("refreshTokenHash")`,
+  `CREATE INDEX IF NOT EXISTS "AuthSession_customerId_idx" ON "AuthSession"("customerId")`,
 ];
 
 type Cliente = { $executeRawUnsafe(sql: string): Promise<unknown> };
