@@ -687,3 +687,19 @@ model ContentBlock {
   updatedAt DateTime @updatedAt
   updatedBy String   @default("")
 }
+
+/// Enlace de entrada por Telegram: se crea al pulsar el botón y lo confirma el
+/// bot cuando el cliente abre el enlace y pulsa Iniciar.
+model TelegramLogin {
+  id          Int       @id @default(autoincrement())
+  nonce       String    @unique
+  estado      String    @default("pendiente")
+  telegramId  String?
+  chatId      String?
+  nombre      String    @default("")
+  usuario     String?
+  foto        String?
+  creadoEn    DateTime  @default(now())
+  confirmadoEn DateTime?
+  usadoEn     DateTime?
+}

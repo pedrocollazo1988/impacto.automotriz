@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { prisma } from "./prisma";
 
 export type TelegramUsuario = { id: string; nombre: string; usuario: string | null; foto: string | null };
 
@@ -44,4 +45,42 @@ export function verificarTelegram(
     usuario: params.get("username") || null,
     foto: params.get("photo_url") || null,
   };
+}
+
+/** Enlace que abre el bot con un nonce. Es el camino que sí funciona en el móvil. */
+export function urlBot(usuario: string, nonce: string): string {
+  return `https://t.me/${usuario}?start=${nonce}`;
+}
+
+export function generarNonce(): string {
+  return crypto.randomBytes(24).toString("base64url");
+}
+
+/** Extrae el nonce de `/start <nonce>`; cualquier otro mensaje devuelve null. */
+export function comandoStart(texto: string | undefined | null): string | null {
+  const m = /^\/start(?:@\w+)?\s+(\S{16,64})$/.exec((texto ?? "").trim());
+  return m ? m[1] : null;
+}
+
+export async function enviarMensaje(chatId: string, texto: string, token = process.env.TELEGRAM_BOT_TOKEN) {
+  if (!token) return false;
+  const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text: texto, disable_web_page_preview: true }),
+  });
+  return r.ok;
+}
+
+/** Caducidad del enlace de entrada: si no se usa en 10 minutos, no vale. */
+export const NONCE_MINUTOS = 10;
+
+export async function crearEnlaceTelegram(usuario: string) {
+  const nonce = generarNonce();
+  await prisma.telegramLogin.create({ data: { nonce } });
+  return { nonce, url: urlBot(usuario, nonce) };
+}
+
+export async function nonceCaducado(creadoEn: Date, ahora = Date.now()): Promise<boolean> {
+  return ahora - creadoEn.getTime() > NONCE_MINUTOS * 60_000;
 }
