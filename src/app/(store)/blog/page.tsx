@@ -5,6 +5,7 @@ import Icon from "@/components/brand/Icon";
 import SubscribeForm from "@/components/site/SubscribeForm";
 import { BLOG_ARTICLES, type BlogArticle } from "@/lib/blog";
 import { leerSeccion } from "@/lib/contenido-server";
+import { enContenido } from "@/lib/contenido-en";
 import { buscarSeccion, type Item } from "@/lib/contenido";
 import { getT } from "@/lib/i18n";
 
@@ -73,7 +74,7 @@ const separar = (texto: string | undefined, separador: RegExp) =>
 
 /** Convierte los elementos guardados en el panel en artículos, cayendo en la guía
  *  de fábrica (por slug) para lo que el editor no tenga. */
-function articulosDesdeItems(items: Item[]): BlogArticle[] {
+function articulosDesdeItems(items: Item[], lang: string): BlogArticle[] {
   const fabrica = new Map(BLOG_ARTICLES.map((a) => [a.slug, a]));
   const usados = new Set<string>();
   return items.map((it, i) => {
@@ -90,15 +91,15 @@ function articulosDesdeItems(items: Item[]): BlogArticle[] {
     const puntos = separar(it.puntos, /\r?\n/);
     return {
       slug,
-      title: it.titulo?.trim() || base?.title || "",
-      excerpt: it.texto?.trim() || base?.excerpt || "",
+      title: enContenido(it.titulo?.trim() || base?.title || "", lang),
+      excerpt: enContenido(it.texto?.trim() || base?.excerpt || "", lang),
       date: it.fecha?.trim() || base?.date || "",
       brand: marca,
       image: it.imagen || base?.image || "/products/brake-pad.webp",
-      imageAlt: base?.imageAlt || it.titulo?.trim() || marca,
+      imageAlt: enContenido(base?.imageAlt || it.titulo?.trim() || marca, lang),
       readingTime: Number.isFinite(minutos) && minutos > 0 ? minutos : base?.readingTime ?? 0,
-      paragraphs: parrafos.length ? parrafos : base?.paragraphs ?? [],
-      highlights: puntos.length ? puntos : base?.highlights ?? [],
+      paragraphs: (parrafos.length ? parrafos : base?.paragraphs ?? []).map((x) => enContenido(x, lang)),
+      highlights: (puntos.length ? puntos : base?.highlights ?? []).map((x) => enContenido(x, lang)),
       brandLinks: base?.brandLinks.length && !marcaEditada
         ? base.brandLinks
         : marca
@@ -121,7 +122,7 @@ export default async function BlogPage() {
     leerSeccion("blog-boletin"),
     leerSeccion("blog-articulos"),
   ]);
-  const articulos = articulosDesdeItems(guias.items);
+  const articulos = articulosDesdeItems(guias.items, lang);
   const articulosVisibles = guias.visible ? articulos : [];
   const heroFab = buscarSeccion("blog-hero")?.defecto;
   const guiasFab = buscarSeccion("blog-guias")?.defecto;

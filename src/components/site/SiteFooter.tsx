@@ -10,6 +10,7 @@ const CLAVE_MENU: Record<string, string> = {
   "/despiece": "nav.despiece", "/blog": "nav.blog", "/novedades": "nav.novedades",
   "/contacto": "nav.contacto", "/nosotros": "nav.nosotros", "/testimonios": "nav.testimonios",
   "/preguntas-frecuentes": "nav.faq", "/renta": "nav.renta",
+  "/blog#suscribirme": "nav.subscribe", "/cuenta": "header.account",
 };
 
 const TIENDA: [string, string][] = [
