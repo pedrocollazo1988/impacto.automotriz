@@ -1,4 +1,4 @@
-import { plantillaSms, type SmsEnvio, type SmsProvider, type SmsResultado } from "./index";
+import { cuerpoSms, type SmsEnvio, type SmsProvider, type SmsResultado } from "./index";
 
 /**
  * Twilio Programmable SMS (Messages API). Se envía nuestro propio código, no
@@ -9,14 +9,14 @@ import { plantillaSms, type SmsEnvio, type SmsProvider, type SmsResultado } from
 export class TwilioSms implements SmsProvider {
   readonly nombre = "twilio";
 
-  async enviarCodigo({ to, codigo, lang }: SmsEnvio): Promise<SmsResultado> {
+  async enviarCodigo(envio: SmsEnvio): Promise<SmsResultado> {
     const sid = process.env.TWILIO_ACCOUNT_SID;
     const token = process.env.TWILIO_AUTH_TOKEN;
     const from = process.env.TWILIO_FROM;
     const servicio = process.env.TWILIO_MESSAGING_SERVICE_SID;
     if (!sid || !token || (!from && !servicio)) return { ok: false, error: "twilio_sin_configurar" };
 
-    const cuerpo = new URLSearchParams({ To: to, Body: plantillaSms(lang, codigo) });
+    const cuerpo = new URLSearchParams({ To: envio.to, Body: cuerpoSms(envio) });
     if (servicio) cuerpo.set("MessagingServiceSid", servicio);
     else cuerpo.set("From", from!);
 

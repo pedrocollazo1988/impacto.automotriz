@@ -4,7 +4,7 @@ import { TwilioSms } from "./twilio";
 import { VonageSms } from "./vonage";
 import { InfobipSms } from "./infobip";
 
-export type SmsEnvio = { to: string; codigo: string; lang: Idioma };
+export type SmsEnvio = { to: string; codigo: string; lang: Idioma; texto?: string };
 export type SmsResultado = { ok: boolean; error?: string; debugCode?: string };
 
 /**
@@ -22,16 +22,54 @@ export const plantillaSms = (lang: Idioma, codigo: string) =>
     ? `Impacto Automotriz: your verification code is ${codigo}. It expires in 5 minutes. Do not share it.`
     : `Impacto Automotriz: tu código de verificación es ${codigo}. Caduca en 5 minutos. No lo compartas.`;
 
+/** Texto de la prueba de configuración que se envía desde el panel. */
+export const MENSAJE_PRUEBA = "Impacto Automotriz: prueba de configuración de SMS. Si recibes este mensaje, el envío funciona.";
+
+export const cuerpoSms = (envio: SmsEnvio) => envio.texto ?? plantillaSms(envio.lang, envio.codigo);
+
+export type NombreProveedor = "twilio" | "vonage" | "infobip" | "mock";
+type ProveedorReal = Exclude<NombreProveedor, "mock">;
+
+// Cada grupo es "una de estas variables": se cumple si hay al menos una.
+const VARIABLES: Record<ProveedorReal, string[][]> = {
+  twilio: [["TWILIO_ACCOUNT_SID"], ["TWILIO_AUTH_TOKEN"], ["TWILIO_FROM", "TWILIO_MESSAGING_SERVICE_SID"]],
+  vonage: [["VONAGE_API_KEY"], ["VONAGE_API_SECRET"]],
+  infobip: [["INFOBIP_API_KEY"], ["INFOBIP_BASE_URL"], ["INFOBIP_FROM", "SMS_FROM"]],
+};
+
+const ORDEN: ProveedorReal[] = ["twilio", "vonage", "infobip"];
+
+export const faltantesSms = (proveedor: ProveedorReal, env: Record<string, string | undefined> = process.env) =>
+  VARIABLES[proveedor].filter((grupo) => !grupo.some((clave) => !!env[clave])).map((grupo) => grupo.join(" o "));
+
 /**
  * Elige el proveedor por SMS_PROVIDER. Si no se indica, usa el primero cuyas
  * credenciales estén completas y, si no hay ninguna, el mock (desarrollo).
+ * Devuelve también qué variables faltan, para poder diagnosticarlo en el panel.
  */
-export function proveedorSms(): SmsProvider {
-  const elegido = (process.env.SMS_PROVIDER ?? "").trim().toLowerCase();
-  const tiene = (...claves: string[]) => claves.every((k) => !!process.env[k]);
+export function elegirProveedor(env: Record<string, string | undefined> = process.env): { proveedor: NombreProveedor; faltan: string[] } {
+  const elegido = (env.SMS_PROVIDER ?? "").trim().toLowerCase();
+  const forzado = ORDEN.find((p) => p === elegido);
+  if (forzado) return { proveedor: forzado, faltan: faltantesSms(forzado, env) };
+  if (!elegido) {
+    const completo = ORDEN.find((p) => faltantesSms(p, env).length === 0);
+    if (completo) return { proveedor: completo, faltan: [] };
+  }
+  return { proveedor: "mock", faltan: [] };
+}
 
-  if (elegido === "twilio" || (!elegido && tiene("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN"))) return new TwilioSms();
-  if (elegido === "vonage" || (!elegido && tiene("VONAGE_API_KEY", "VONAGE_API_SECRET"))) return new VonageSms();
-  if (elegido === "infobip" || (!elegido && tiene("INFOBIP_API_KEY", "INFOBIP_BASE_URL"))) return new InfobipSms();
-  return new MockSms();
+/** Estado para el panel: si el envío real está listo y qué falta cuando no lo está. */
+export function estadoSms(env: Record<string, string | undefined> = process.env) {
+  const { proveedor, faltan } = elegirProveedor(env);
+  const real = proveedor !== "mock";
+  return { proveedor, real, listo: real && faltan.length === 0, faltan };
+}
+
+export function proveedorSms(env: Record<string, string | undefined> = process.env): SmsProvider {
+  switch (elegirProveedor(env).proveedor) {
+    case "twilio": return new TwilioSms();
+    case "vonage": return new VonageSms();
+    case "infobip": return new InfobipSms();
+    default: return new MockSms();
+  }
 }

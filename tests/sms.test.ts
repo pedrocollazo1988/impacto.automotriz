@@ -1,6 +1,6 @@
 import http from "node:http";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { plantillaSms, proveedorSms } from "@/lib/sms";
+import { cuerpoSms, elegirProveedor, estadoSms, faltantesSms, plantillaSms, proveedorSms } from "@/lib/sms";
 import { TwilioSms } from "@/lib/sms/twilio";
 import { VonageSms } from "@/lib/sms/vonage";
 import { InfobipSms, urlInfobip } from "@/lib/sms/infobip";
@@ -84,6 +84,12 @@ describe("Twilio", () => {
     expect(await new TwilioSms().enviarCodigo({ to: "+5355551234", codigo, lang: "es" })).toEqual({ ok: false, error: "twilio_500" });
   });
 
+  it("envía el texto propio cuando se indica (mensaje de prueba del panel)", async () => {
+    Object.assign(process.env, { TWILIO_ACCOUNT_SID: "AC123", TWILIO_AUTH_TOKEN: "secreto", TWILIO_FROM: "+1", TWILIO_API_BASE: base });
+    await new TwilioSms().enviarCodigo({ to: "+5355551234", codigo: "", lang: "es", texto: "Prueba de configuración" });
+    expect(new URLSearchParams(capturas[0].cuerpo).get("Body")).toBe("Prueba de configuración");
+  });
+
   it("no llama a la red sin credenciales", async () => {
     expect(await new TwilioSms().enviarCodigo({ to: "+5355551234", codigo, lang: "es" })).toEqual({ ok: false, error: "twilio_sin_configurar" });
     expect(capturas).toHaveLength(0);
@@ -162,10 +168,15 @@ describe("elección de proveedor", () => {
   it("elige el primer proveedor con credenciales completas", () => {
     Object.assign(process.env, { VONAGE_API_KEY: "k", VONAGE_API_SECRET: "s" });
     expect(proveedorSms().nombre).toBe("vonage");
-    Object.assign(process.env, { TWILIO_ACCOUNT_SID: "AC", TWILIO_AUTH_TOKEN: "t" });
+    Object.assign(process.env, { TWILIO_ACCOUNT_SID: "AC", TWILIO_AUTH_TOKEN: "t", TWILIO_FROM: "+1" });
     expect(proveedorSms().nombre).toBe("twilio");
     Object.assign(process.env, { INFOBIP_API_KEY: "k", INFOBIP_BASE_URL: "b" });
     expect(proveedorSms().nombre).toBe("twilio");
+  });
+
+  it("un Twilio a medias no tapa un Vonage que sí puede enviar", () => {
+    Object.assign(process.env, { VONAGE_API_KEY: "k", VONAGE_API_SECRET: "s", TWILIO_ACCOUNT_SID: "AC", TWILIO_AUTH_TOKEN: "t" });
+    expect(proveedorSms().nombre).toBe("vonage");
   });
 
   it("con SMS_PROVIDER=infobip devuelve infobip", () => {
@@ -184,5 +195,44 @@ describe("plantilla del mensaje", () => {
     }
     expect(plantillaSms("es", codigo)).toMatch(/caduca en 5 minutos/i);
     expect(plantillaSms("en", codigo)).toMatch(/expires in 5 minutes/i);
+  });
+});
+
+describe("diagnóstico del proveedor (panel)", () => {
+  it("sin nada configurado avisa de que está en modo prueba", () => {
+    expect(estadoSms({})).toEqual({ proveedor: "mock", real: false, listo: false, faltan: [] });
+  });
+
+  it("con SMS_PROVIDER forzado dice qué variables faltan", () => {
+    expect(elegirProveedor({ SMS_PROVIDER: "twilio" })).toEqual({
+      proveedor: "twilio",
+      faltan: ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM o TWILIO_MESSAGING_SERVICE_SID"],
+    });
+  });
+
+  it("acepta el servicio de mensajería en lugar del número remitente", () => {
+    const env = { SMS_PROVIDER: "twilio", TWILIO_ACCOUNT_SID: "AC", TWILIO_AUTH_TOKEN: "t", TWILIO_MESSAGING_SERVICE_SID: "MG" };
+    expect(estadoSms(env)).toEqual({ proveedor: "twilio", real: true, listo: true, faltan: [] });
+  });
+
+  it("Vonage solo necesita clave y secreto", () => {
+    expect(faltantesSms("vonage", { VONAGE_API_KEY: "k" })).toEqual(["VONAGE_API_SECRET"]);
+    expect(estadoSms({ VONAGE_API_KEY: "k", VONAGE_API_SECRET: "s" })).toEqual({ proveedor: "vonage", real: true, listo: true, faltan: [] });
+  });
+
+  it("Infobip acepta SMS_FROM como remitente común", () => {
+    const env = { SMS_PROVIDER: "infobip", INFOBIP_API_KEY: "k", INFOBIP_BASE_URL: "b", SMS_FROM: "Impacto" };
+    expect(estadoSms(env).listo).toBe(true);
+  });
+
+  it("un SMS_PROVIDER desconocido no rompe: cae al mock", () => {
+    expect(elegirProveedor({ SMS_PROVIDER: "telegram" }).proveedor).toBe("mock");
+  });
+});
+
+describe("cuerpo del mensaje", () => {
+  it("usa el texto indicado o la plantilla del idioma", () => {
+    expect(cuerpoSms({ to: "+1", codigo: "123456", lang: "es" })).toContain("123456");
+    expect(cuerpoSms({ to: "+1", codigo: "123456", lang: "es", texto: "Hola" })).toBe("Hola");
   });
 });

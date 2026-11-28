@@ -1,10 +1,10 @@
-import { plantillaSms, type SmsEnvio, type SmsProvider, type SmsResultado } from "./index";
+import { cuerpoSms, type SmsEnvio, type SmsProvider, type SmsResultado } from "./index";
 
 /** Vonage (antes Nexmo) · SMS API clásica. El destino va sin el "+". */
 export class VonageSms implements SmsProvider {
   readonly nombre = "vonage";
 
-  async enviarCodigo({ to, codigo, lang }: SmsEnvio): Promise<SmsResultado> {
+  async enviarCodigo(envio: SmsEnvio): Promise<SmsResultado> {
     const key = process.env.VONAGE_API_KEY;
     const secret = process.env.VONAGE_API_SECRET;
     const from = process.env.VONAGE_FROM ?? process.env.SMS_FROM ?? "Impacto";
@@ -14,8 +14,8 @@ export class VonageSms implements SmsProvider {
       api_key: key,
       api_secret: secret,
       from,
-      to: to.replace(/^\+/, ""),
-      text: plantillaSms(lang, codigo),
+      to: envio.to.replace(/^\+/, ""),
+      text: cuerpoSms(envio),
       type: "unicode",
     });
     // VONAGE_API_BASE permite apuntar a un servidor de pruebas.

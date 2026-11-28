@@ -1,4 +1,4 @@
-import { plantillaSms, type SmsEnvio, type SmsProvider, type SmsResultado } from "./index";
+import { cuerpoSms, type SmsEnvio, type SmsProvider, type SmsResultado } from "./index";
 
 /**
  * INFOBIP_BASE_URL admite el subdominio (xxxxx.api.infobip.com) o una URL
@@ -10,7 +10,7 @@ export const urlInfobip = (base: string) => (/^https?:\/\//i.test(base) ? base :
 export class InfobipSms implements SmsProvider {
   readonly nombre = "infobip";
 
-  async enviarCodigo({ to, codigo, lang }: SmsEnvio): Promise<SmsResultado> {
+  async enviarCodigo(envio: SmsEnvio): Promise<SmsResultado> {
     const key = process.env.INFOBIP_API_KEY;
     const base = process.env.INFOBIP_BASE_URL;
     const from = process.env.INFOBIP_FROM ?? process.env.SMS_FROM;
@@ -19,7 +19,7 @@ export class InfobipSms implements SmsProvider {
     const r = await fetch(`${urlInfobip(base)}/sms/2/text/advanced`, {
       method: "POST",
       headers: { Authorization: `App ${key}`, "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ messages: [{ destinations: [{ to }], from, text: plantillaSms(lang, codigo) }] }),
+      body: JSON.stringify({ messages: [{ destinations: [{ to: envio.to }], from, text: cuerpoSms(envio) }] }),
       cache: "no-store",
     }).catch(() => null);
     if (!r?.ok) return { ok: false, error: `infobip_${r?.status ?? "red"}` };
