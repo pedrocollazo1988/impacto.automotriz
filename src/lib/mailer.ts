@@ -5,7 +5,7 @@ import { prisma } from "./prisma";
 import { backInStockEmail, campaignEmail, testEmail } from "./email-templates";
 import { emailLang, emailT } from "./email-i18n";
 import { textoPanel } from "./auth";
-import { getLang } from "./i18n";
+import { getLang, type Idioma } from "./i18n";
 
 const secret = () => { if (!process.env.APP_SECRET) throw new Error("Falta APP_SECRET"); return process.env.APP_SECRET; };
 const key = () => crypto.createHash("sha256").update(secret()).digest();
@@ -117,19 +117,22 @@ export const audienceWhere = (s?: Segment | null): Prisma.SubscriberWhereInput =
   ...(s?.tags?.length ? { tags: { hasSome: s.tags } } : {}),
 });
 
-function render(html: string, to: { email: string; name?: string | null }, c: MailConfig) {
-  const body = html.replaceAll("{{nombre}}", esc(to.name ?? "cliente"));
-  return `${body}<hr style="margin-top:32px;border:0;border-top:1px solid #ddd"><p style="font:12px Arial;color:#777">${esc(c.companyInfo)} · Recibes este correo porque te suscribiste en nuestra tienda. <a href="${unsubUrl(to.email)}">Darme de baja</a></p>`;
+// Sin nombre en la ficha, el saludo usa un genérico en el idioma del correo.
+const SALUDO_CLIENTE: Record<Idioma, string> = { es: "cliente", en: "customer" };
+
+function render(html: string, to: { email: string; name?: string | null }, c: MailConfig, lang: Idioma = "es") {
+  const body = html.replaceAll("{{nombre}}", esc(to.name ?? SALUDO_CLIENTE[lang]));
+  return `${body}<hr style="margin-top:32px;border:0;border-top:1px solid #ddd"><p style="font:12px Arial;color:#777">${esc(c.companyInfo)} · ${esc(emailT(lang, "footer.campaign"))} <a href="${unsubUrl(to.email)}">${esc(emailT(lang, "footer.unsubscribe"))}</a></p>`;
 }
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e)).slice(0, 300);
 
-async function deliver(c: MailConfig, to: { email: string; name?: string | null }, subject: string, html: string, footer: boolean, unsubscribeHeader = false): Promise<SendResult> {
+async function deliver(c: MailConfig, to: { email: string; name?: string | null }, subject: string, html: string, footer: boolean, lang: Idioma = "es", unsubscribeHeader = false): Promise<SendResult> {
   try {
     const tr = transportFor(c);
     await tr.sendMail({
       from: `"${c.fromName}" <${c.fromEmail}>`, replyTo: c.replyTo ?? undefined, to: to.email, subject,
-      html: footer ? render(html, to, c) : html,
+      html: footer ? render(html, to, c, lang) : html,
       ...(footer || unsubscribeHeader ? { headers: { "List-Unsubscribe": `<${unsubUrl(to.email)}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } } : {}),
     });
     return { ok: true };
@@ -145,7 +148,7 @@ export async function sendTest(to: string, subject: string, html?: string) {
   const lang = await getLang();
   const cuerpo = html ? campaignEmail({ subject, html, lang }) : testEmail({ lang });
   const etiqueta = lang === "en" ? "TEST" : "PRUEBA";
-  const r = await deliver(c, { email: to, name: lang === "en" ? "Test" : "Prueba" }, `[${etiqueta}] ${subject}`, cuerpo, false);
+  const r = await deliver(c, { email: to, name: lang === "en" ? "Test" : "Prueba" }, `[${etiqueta}] ${subject}`, cuerpo, false, lang);
   if (!r.ok) throw new Error(r.error);
 }
 
@@ -166,7 +169,7 @@ export async function processQueue() {
     for (const sub of subs) {
       const lang = emailLang(sub.lang);
       const html = campaignEmail({ subject: campaign.subject, html: campaign.html, lang, unsubscribeUrl: unsubUrl(sub.email) });
-      const r = await deliver(c, sub, campaign.subject, html, false, true);
+      const r = await deliver(c, sub, campaign.subject, html, false, lang, true);
       await prisma.campaignSend.create({ data: { campaignId: campaign.id, subscriberId: sub.id, status: r.ok ? "SENT" : "FAILED", error: r.ok ? undefined : r.error } });
       if (r.ok) sent++;
       budget--;

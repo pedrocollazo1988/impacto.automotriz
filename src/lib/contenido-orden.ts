@@ -1,4 +1,5 @@
 import type { Seccion } from "./contenido";
+import { panelTexto } from "./contenido-en";
 
 // Orden en el que el visitante recorre la web. El editor del panel usa esta
 // lista para que los bloques aparezcan agrupados por página y en el mismo
@@ -65,6 +66,6 @@ export function ordenarSecciones(secciones: Seccion[]): Seccion[] {
   });
 }
 
-export function grupoDe(seccion: Seccion): string {
-  return seccion.label.split(" · ")[0] || "General";
+export function grupoDe(seccion: Seccion, lang = "es"): string {
+  return panelTexto(seccion.label, lang).split(" · ")[0] || "General";
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Icon from "@/components/brand/Icon";
 import { getT } from "@/lib/i18n";
+import { historialTexto } from "@/lib/historial-i18n";
 
 export type MovimientoProducto = {
   id: number;
@@ -47,7 +48,7 @@ const fecha = (d: Date) =>
   }).format(d);
 
 export default async function HistorialProducto({ movimientos, stock, creadoEn }: { movimientos: MovimientoProducto[]; stock: number; creadoEn?: Date }) {
-  const { t } = await getT();
+  const { lang, t } = await getT();
   return (
     <section className="rounded-xl border border-slate-200 bg-white">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
@@ -82,7 +83,7 @@ export default async function HistorialProducto({ movimientos, stock, creadoEn }
                       {t(CLAVE_MOVIMIENTO[m.kind] ?? m.kind)}
                     </span>
                   </td>
-                  <td className="max-w-[280px] px-4 py-3 text-xs text-slate-600">{m.detail || "—"}</td>
+                  <td className="max-w-[280px] px-4 py-3 text-xs text-slate-600">{historialTexto(m.detail, lang) || "—"}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-xs">
                     {m.orderId && m.orderNumber ? (
                       <Link href={`/admin/pedidos/${m.orderId}/prefactura`} className="font-semibold text-[color:var(--color-action)] hover:underline">

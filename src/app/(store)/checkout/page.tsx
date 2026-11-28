@@ -6,6 +6,7 @@ import { useCart } from "@/components/CartProvider";
 import DeliverySelector, { type DeliveryChoice } from "@/components/DeliverySelector";
 import Icon from "@/components/brand/Icon";
 import { textoEnvio, validarCheckout } from "@/lib/checkout-validation";
+import { pagoTexto } from "@/lib/pagos-i18n";
 import { usePreferences } from "@/components/site/Preferences";
 import Avatar from "@/components/cuenta/Avatar";
 import { track } from "@/lib/analytics";
@@ -194,17 +195,17 @@ export default function Checkout() {
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-slate-100 text-navy"><Icon name={m.icon} size={20} /></span>
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold text-slate-800">{m.name}</span>
+                      <span className="text-sm font-semibold text-slate-800">{pagoTexto(m.name, lang)}</span>
                       <span className={`badge ${m.automatic ? "badge-info" : "badge-mute"}`}>{m.automatic ? t("checkout.auto") : t("checkout.manual")}</span>
                     </span>
-                    <span className="mt-0.5 block text-xs text-slate-500">{m.description}</span>
+                    <span className="mt-0.5 block text-xs text-slate-500">{pagoTexto(m.description, lang)}</span>
                     {m.feePercent > 0 && <span className="mt-0.5 block text-xs font-semibold text-[color:var(--color-action-deep)]">{tt("checkout.commission", { n: m.feePercent })}</span>}
                     {pay === m.key && (m.instructions || m.details.length > 0 || m.url) && (
                       <span className="mt-2 block rounded-lg bg-slate-50 px-2.5 py-2 text-xs leading-relaxed text-slate-600">
-                        {m.instructions && <span className="block whitespace-pre-line">{m.instructions}</span>}
+                        {m.instructions && <span className="block whitespace-pre-line">{pagoTexto(m.instructions, lang)}</span>}
                         {m.details.length > 0 && (
                           <span className="mt-1 block space-y-0.5">
-                            {m.details.map((d) => <span key={d.etiqueta} className="block"><b className="font-semibold text-slate-700">{d.etiqueta}:</b> {d.valor}</span>)}
+                            {m.details.map((d) => <span key={d.etiqueta} className="block"><b className="font-semibold text-slate-700">{pagoTexto(d.etiqueta, lang)}:</b> {d.valor}</span>)}
                           </span>
                         )}
                         {m.url && <span className="mt-1 block break-all text-[color:var(--color-action-deep)]">{m.url}</span>}
@@ -237,7 +238,7 @@ export default function Checkout() {
               {comisionMonto > 0 && <div className="flex justify-between"><dt className="text-slate-500">{t("checkout.paymentFee")}</dt><dd className="font-semibold">{comisionMonto.toFixed(2)} USD</dd></div>}
               <div className="flex justify-between border-t border-slate-100 pt-3 text-lg"><dt className="font-semibold">{t("checkout.total")}</dt><dd className="font-display font-extrabold text-navy">{(base + fee + comisionMonto).toFixed(2)} USD</dd></div>
             </dl>
-            {metodo && <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">{t("checkout.payWith")} <b className="text-slate-700">{metodo.name}</b></p>}
+            {metodo && <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">{t("checkout.payWith")} <b className="text-slate-700">{pagoTexto(metodo.name, lang)}</b></p>}
             {!cartOk && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">{t("checkout.stockWarn")} <Link href="/carrito" className="font-semibold underline">{t("checkout.adjustCart")}</Link></p>}
             {intento && faltantes.length > 0 && (
               <div role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">

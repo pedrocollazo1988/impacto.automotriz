@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import type { IdiomaMensaje } from "./mensajes";
 
 // Módulo de servidor: usa node:crypto y APP_SECRET. No lo importes desde un
 // componente cliente (el componente solo habla con /api/captcha).
@@ -14,6 +15,12 @@ const TTL_MS = 10 * 60_000;
 const VERSION = 1;
 const FIRMA_BYTES = 32; // SHA-256
 const B64URL = /^[A-Za-z0-9_-]+$/;
+
+// Texto que anuncia el SVG a los lectores de pantalla.
+const TITULO: Record<IdiomaMensaje, string> = {
+  es: "Código de verificación de cuatro caracteres",
+  en: "Four-character verification code",
+};
 
 type Payload = { v: number; iat: number; exp: number; n: string; h: string };
 
@@ -91,7 +98,7 @@ function generarCodigo(): string {
   return Array.from({ length: LARGO }, () => ALFABETO[crypto.randomInt(0, ALFABETO.length)]).join("");
 }
 
-function dibujarSvg(answer: string, nonce: string): string {
+function dibujarSvg(answer: string, nonce: string, idioma: IdiomaMensaje): string {
   const ancho = 180;
   const alto = 64;
   const tintas = ["#0f172a", "#12283f", "#1f2937", "#0b3b5c"];
@@ -132,7 +139,7 @@ function dibujarSvg(answer: string, nonce: string): string {
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${ancho}" height="${alto}" viewBox="0 0 ${ancho} ${alto}" role="img" aria-labelledby="captcha-t-${nonce}">` +
-    `<title id="captcha-t-${nonce}">Código de verificación de cuatro caracteres</title>` +
+    `<title id="captcha-t-${nonce}">${TITULO[idioma]}</title>` +
     `<rect width="${ancho}" height="${alto}" fill="#ffffff"/>` +
     ruido.join("") +
     glifos +
@@ -141,7 +148,7 @@ function dibujarSvg(answer: string, nonce: string): string {
   );
 }
 
-export function createCaptcha(): { token: string; svg: string } {
+export function createCaptcha(idioma: IdiomaMensaje = "es"): { token: string; svg: string } {
   secreto(); // falla de inmediato y con un mensaje claro si no hay APP_SECRET
   const answer = generarCodigo();
   const nonce = crypto.randomBytes(12).toString("hex");
@@ -149,7 +156,7 @@ export function createCaptcha(): { token: string; svg: string } {
   const payload: Payload = { v: VERSION, iat, exp: iat + TTL_MS, n: nonce, h: hashRespuesta(nonce, answer) };
   const cuerpo = Buffer.from(JSON.stringify(payload), "utf8");
   const token = Buffer.concat([cuerpo, hmac(cuerpo)]).toString("base64url");
-  return { token, svg: dibujarSvg(answer, nonce) };
+  return { token, svg: dibujarSvg(answer, nonce, idioma) };
 }
 
 export function verifyCaptcha(token: string, answer: string): boolean {

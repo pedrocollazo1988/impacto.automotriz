@@ -50,6 +50,50 @@ export function GET() {
 - Los precios están en USD; el envío se calcula por provincia y municipio.
 - La existencia se muestra en la ficha y puede cambiar: confírmala antes de afirmar que un producto está disponible.
 - Las fichas incluyen datos estructurados schema.org (Product y Offer) con precio y disponibilidad.
+
+# ${SITE.nombre} (English)
+
+> Shop for parts, accessories and electric means of transport
+> in Cuba. Catalog sales with vehicle search (make, model and year), delivery to
+> all 15 provinces, and payment online or cash on delivery.
+
+## Business details
+
+- Legal name: ${SITE.razonSocial}
+- Address: ${SITE.direccion}
+- Email: ${SITE.email}
+- Hours: ${SITE.horarioEn}
+- Country served: Cuba
+
+## What it offers
+
+- Parts and spares by vehicle, with compatibility stated by make, model and year.
+- Exploded parts views by vehicle and system, with 3D views of some parts.
+- Rental of electric means of transport.
+- After-sales: maintenance, diagnostics and repair.
+
+## Main sections
+
+- [Catalog](${site}/catalogo): every product with price, stock and compatibility.
+- [Deals](${site}/ofertas): products with a current discount.
+- [Makes and models](${site}/marcas-y-modelos): which vehicles the catalog covers.
+- [Exploded views](${site}/despiece): parts grouped by vehicle and system.
+- [News](${site}/novedades): recent posts and products.
+- [FAQ](${site}/preguntas-frecuentes): payments, delivery, returns and compatibility.
+- [Contact](${site}/contacto): ways to get in touch and location.
+
+## How to buy
+
+1. Find the part by vehicle or by text search.
+2. Check compatibility on the product page.
+3. Pay online (Tropipay or QvaPay), by bank transfer or in cash on delivery.
+4. Receive at home, by courier to another province, or pick up at the store.
+
+## Notes for assistants
+
+- Prices are in USD; shipping is calculated by province and municipality.
+- Stock is shown on the product page and can change: confirm it before stating that a product is available.
+- Product pages include schema.org structured data (Product and Offer) with price and availability.
 `;
   return new Response(body, {
     headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" },

@@ -9,7 +9,7 @@ const post = (b: unknown) => fetch("/api/admin/campaigns", { method: "POST", hea
 const STATUS_TONE: Record<string, "ok" | "warn" | "info" | "mute"> = { SENT: "ok", SENDING: "info", DRAFT: "mute", CANCELED: "warn" };
 
 export default function CampaignsAdmin() {
-  const { t } = usePreferences();
+  const { lang, t } = usePreferences();
   const [list, setList] = useState<Camp[]>([]); const [provs, setProvs] = useState<{ id: number; name: string }[]>([]);
   const [f, setF] = useState({ id: 0, name: "", subject: "", html: "<h2>Hola {{nombre}}</h2><p>…</p>", provinceIds: [] as number[], tags: "" });
   const [msg, setMsg] = useState("");
@@ -65,7 +65,7 @@ export default function CampaignsAdmin() {
 
       <Modal open={testTo !== null} title={t("adm.campanas.sendTest")} onClose={() => setTestTo(null)}>
         <p className="mb-2 text-sm text-slate-600">{t("adm.campanas.testHint")}</p>
-        <input className={inputCls} autoFocus type="email" value={testTo ?? ""} onChange={(e) => setTestTo(e.target.value)} placeholder="correo@ejemplo.com"
+        <input className={inputCls} autoFocus type="email" value={testTo ?? ""} onChange={(e) => setTestTo(e.target.value)} placeholder={lang === "en" ? "you@email.com" : "correo@ejemplo.com"}
           onKeyDown={(e) => e.key === "Enter" && testTo && act("test", { to: testTo }).then(() => setTestTo(null))} />
         <div className="mt-4 flex justify-end gap-2">
           <button className="btn btn-ghost btn-sm" onClick={() => setTestTo(null)}>{t("adm.campanas.cancel")}</button>

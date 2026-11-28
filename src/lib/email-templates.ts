@@ -5,6 +5,7 @@
 import { SITE } from "./site";
 import type { Idioma } from "./i18n-dict";
 import { emailT, orderStatusEmailLabel } from "./email-i18n";
+import { motivoTexto } from "./pedido-i18n";
 
 const BRAND = {
   azul: "#0b2a5b",
@@ -318,7 +319,7 @@ export function orderItemRemovedEmail({
     preheader: emailT(lang, "removed.subject", { number: orderNumber }),
     intro: emailT(lang, "removed.intro", { name, item: itemName, qty, number: orderNumber }),
     bodyHtml: `
-              <p style="margin:0 0 12px;color:${BRAND.textoSuave};">${escHtml(emailT(lang, "removed.reason", { reason }))}</p>
+              <p style="margin:0 0 12px;color:${BRAND.textoSuave};">${escHtml(emailT(lang, "removed.reason", { reason: motivoTexto(reason, lang) }))}</p>
               <p style="margin:0;color:${BRAND.textoSuave};">${escHtml(total ? emailT(lang, "removed.total", { total }) : emailT(lang, "order.follow"))}</p>`,
     cta: trackingUrl ? { label: emailT(lang, "common.ctaOrder"), href: trackingUrl } : undefined,
   });

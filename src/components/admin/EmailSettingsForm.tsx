@@ -18,7 +18,7 @@ const EMPTY: Config = {
 };
 
 export default function EmailSettingsForm() {
-  const { t } = usePreferences();
+  const { lang, t } = usePreferences();
   const [f, setF] = useState<Config>(EMPTY);
   const [status, setStatus] = useState<Status | null>(null);
   const [hasPassword, setHasPassword] = useState(false);
@@ -100,7 +100,7 @@ export default function EmailSettingsForm() {
           <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={save}>{busy ? t("adm.correo.saving") : t("adm.correo.saveVerify")}</button>
         </div>
         <div className="flex flex-wrap items-end gap-2 md:col-span-2">
-          <label className="flex-1 text-xs font-semibold text-slate-600">{t("adm.correo.testTo")}<input className={`${inputCls} mt-1`} type="email" value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="tu@correo.com" /></label>
+          <label className="flex-1 text-xs font-semibold text-slate-600">{t("adm.correo.testTo")}<input className={`${inputCls} mt-1`} type="email" value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder={lang === "en" ? "you@email.com" : "tu@correo.com"} /></label>
           <button type="button" className="btn btn-ghost btn-sm" disabled={busy || !testTo} onClick={test}>{t("adm.correo.sendTest")}</button>
         </div>
         {msg && <p className="md:col-span-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{msg}</p>}

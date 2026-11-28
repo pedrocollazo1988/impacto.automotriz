@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader, Panel, PanelPad, EmptyState, Badge, Field, inputCls, Modal } from "@/components/admin/ui";
 import Icon, { NOMBRES_ICONO } from "@/components/brand/Icon";
 import PasswordField from "@/components/PasswordField";
+import { pagoTexto } from "@/lib/pagos-i18n";
 import { usePreferences } from "@/components/site/Preferences";
 
 type DriverId = "tropipay" | "qvapay" | "manual" | "link";
@@ -73,7 +74,7 @@ const formularioVacio = (preset?: Preset): Formulario => ({
 });
 
 export default function Pagos() {
-  const { t } = usePreferences();
+  const { t, lang } = usePreferences();
   // `t` cambia de identidad en cada render; el ref evita que `cargar` se recree
   // y dispare un bucle de peticiones en el efecto de montaje.
   const tRef = useRef(t);
@@ -244,20 +245,20 @@ export default function Pagos() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-display text-base font-bold text-navy">{m.name}</h3>
+                        <h3 className="font-display text-base font-bold text-navy">{pagoTexto(m.name, lang)}</h3>
                         <Badge tone={m.enabled ? "ok" : "mute"}>{m.enabled ? t("adm.pagos.active") : t("adm.pagos.inactive")}</Badge>
                         <Badge tone={m.kind === "online" ? "info" : "warn"}>{m.kind === "online" ? t("adm.pagos.automatic") : t("adm.pagos.manual")}</Badge>
                         {m.kind === "online" && <Badge tone={m.sandbox ? "warn" : "ok"}>{m.sandbox ? t("adm.pagos.sandbox") : t("adm.pagos.production")}</Badge>}
                       </div>
-                      <p className="mt-1 text-sm text-slate-500">{m.description || d?.descripcion}</p>
-                      <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-slate-400">{d?.nombre ?? m.provider} · {m.key}</p>
+                      <p className="mt-1 text-sm text-slate-500">{pagoTexto(m.description || d?.descripcion || "", lang)}</p>
+                      <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-slate-400">{pagoTexto(d?.nombre ?? m.provider, lang)} · {m.key}</p>
                     </div>
                   </div>
 
                   {aviso && (
                     <p className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
                       <Icon name="info" size={14} />
-                      <span>{t("adm.pagos.missingWarn").replace("{list}", pendientes.map((c) => c.etiqueta).join(` ${t("adm.pagos.joinAnd")} `))}</span>
+                      <span>{t("adm.pagos.missingWarn").replace("{list}", pendientes.map((c) => pagoTexto(c.etiqueta, lang)).join(` ${t("adm.pagos.joinAnd")} `))}</span>
                     </p>
                   )}
 
@@ -277,7 +278,7 @@ export default function Pagos() {
                       {secretos(m).length > 0 && m.creds && Object.values(m.creds).some(Boolean) && (
                         <button className="btn btn-danger btn-sm" onClick={() => setConfirmar({ tipo: "revocar", metodo: m })}>{t("adm.pagos.revoke")}</button>
                       )}
-                      <button className="btn btn-quiet btn-sm text-red-600" onClick={() => setConfirmar({ tipo: "archivar", metodo: m })} aria-label={`${t("adm.pagos.archive")} ${m.name}`}>
+                      <button className="btn btn-quiet btn-sm text-red-600" onClick={() => setConfirmar({ tipo: "archivar", metodo: m })} aria-label={`${t("adm.pagos.archive")} ${pagoTexto(m.name, lang)}`}>
                         <Icon name="trash" size={15} />
                       </button>
                     </div>
@@ -319,8 +320,8 @@ export default function Pagos() {
                       >
                         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-navy"><Icon name={p.icono} size={16} /></span>
                         <span className="min-w-0">
-                          <span className="block text-xs font-semibold text-slate-800">{p.nombre}</span>
-                          <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">{p.descripcion}</span>
+                          <span className="block text-xs font-semibold text-slate-800">{pagoTexto(p.nombre, lang)}</span>
+                          <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">{pagoTexto(p.descripcion, lang)}</span>
                         </span>
                       </button>
                     );
@@ -336,7 +337,7 @@ export default function Pagos() {
               <Field label={t("adm.pagos.typeLabel")} hint={t("adm.pagos.typeHint")}>
                 <div className="input flex items-center gap-2 bg-slate-50 text-slate-600">
                   <Icon name={driver?.icono ?? "card"} size={16} />
-                  {driver?.nombre ?? form.provider}
+                  {pagoTexto(driver?.nombre ?? form.provider, lang)}
                 </div>
               </Field>
               <Field label={t("adm.pagos.descLabel")} hint={t("adm.pagos.descHint")}>
@@ -366,7 +367,7 @@ export default function Pagos() {
 
             {campos.length > 0 && (
               <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{t("adm.pagos.dataTitle").replace("{name}", driver?.nombre ?? "")}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{t("adm.pagos.dataTitle").replace("{name}", pagoTexto(driver?.nombre ?? "", lang))}</p>
                 <div className="mt-2 grid gap-3 sm:grid-cols-2">
                   {campos.map((c) => {
                     const valor = c.secreto ? (form.creds[c.campo] ?? "") : (form.config[c.campo] ?? "");
@@ -380,12 +381,12 @@ export default function Pagos() {
                             checked={form.config[c.campo] === "true"}
                             onChange={(e) => setForm({ ...form, config: { ...form.config, [c.campo]: e.target.checked ? "true" : "false" } })}
                           />
-                          <span><span className="block font-semibold">{c.etiqueta}</span>{c.ayuda && <span className="mt-0.5 block text-xs text-slate-500">{c.ayuda}</span>}</span>
+                          <span><span className="block font-semibold">{pagoTexto(c.etiqueta, lang)}</span>{c.ayuda && <span className="mt-0.5 block text-xs text-slate-500">{pagoTexto(c.ayuda, lang)}</span>}</span>
                         </label>
                       );
                     }
                     return (
-                      <Field key={c.campo} label={c.etiqueta} hint={guardado ? t("adm.pagos.savedValueHint") : c.ayuda}>
+                      <Field key={c.campo} label={pagoTexto(c.etiqueta, lang)} hint={guardado ? t("adm.pagos.savedValueHint") : c.ayuda ? pagoTexto(c.ayuda, lang) : undefined}>
                         {c.tipo === "textarea" ? (
                           <textarea className={inputCls} rows={3} value={valor} onChange={(e) => setForm(c.secreto ? { ...form, creds: { ...form.creds, [c.campo]: e.target.value } } : { ...form, config: { ...form.config, [c.campo]: e.target.value } })} />
                         ) : c.secreto ? (
@@ -442,8 +443,8 @@ export default function Pagos() {
       <Modal open={!!confirmar} title={confirmar?.tipo === "revocar" ? t("adm.pagos.revokeTitle") : t("adm.pagos.archiveTitle")} onClose={() => setConfirmar(null)}>
         <p className="text-sm text-slate-600">
           {confirmar?.tipo === "revocar"
-            ? t("adm.pagos.revokeBody").replace("{name}", confirmar.metodo.name)
-            : t("adm.pagos.archiveBody").replace("{name}", confirmar?.metodo.name ?? "")}
+            ? t("adm.pagos.revokeBody").replace("{name}", pagoTexto(confirmar.metodo.name, lang))
+            : t("adm.pagos.archiveBody").replace("{name}", pagoTexto(confirmar?.metodo.name ?? "", lang))}
         </p>
         <div className="mt-4 flex justify-end gap-2">
           <button className="btn btn-ghost btn-sm" onClick={() => setConfirmar(null)}>{t("adm.pagos.cancel")}</button>

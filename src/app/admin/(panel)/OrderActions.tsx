@@ -3,15 +3,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePreferences } from "@/components/site/Preferences";
 import { Modal, inputCls } from "@/components/admin/ui";
+import { MOTIVOS_CANCELACION, motivoTexto } from "@/lib/pedido-i18n";
 
 export default function OrderActions({ id, paid, status, items, puedeQuitar }: { id: string; paid: boolean; status: string; items: { id: number; name: string; qty: number }[]; puedeQuitar: boolean }) {
   const router = useRouter();
-  const { t } = usePreferences();
+  const { lang, t } = usePreferences();
   const [pin, setPin] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [quitar, setQuitar] = useState(false);
   const [itemId, setItemId] = useState(String(items[0]?.id ?? ""));
-  const [motivo, setMotivo] = useState("Producto no disponible");
+  const [motivo, setMotivo] = useState<string>(MOTIVOS_CANCELACION[0]);
   const [err, setErr] = useState("");
   const call = async (body: object) => {
     const r = await fetch("/api/admin/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...body }) });
@@ -52,11 +53,7 @@ export default function OrderActions({ id, paid, status, items, puedeQuitar }: {
         </label>
         <label className="mt-2 block text-xs font-semibold text-slate-600">{t("adm.pedidos.reason")}
           <select className="input mt-1" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
-            <option value="Producto no disponible">{t("adm.pedidos.reasonUnavailable")}</option>
-            <option value="Producto dañado">{t("adm.pedidos.reasonDamaged")}</option>
-            <option value="Error en el pedido">{t("adm.pedidos.reasonError")}</option>
-            <option value="Precio incorrecto">{t("adm.pedidos.reasonPrice")}</option>
-            <option value="Otro">{t("adm.pedidos.reasonOther")}</option>
+            {MOTIVOS_CANCELACION.map((v) => <option key={v} value={v}>{motivoTexto(v, lang)}</option>)}
           </select>
         </label>
         <div className="mt-4 flex justify-end gap-2">

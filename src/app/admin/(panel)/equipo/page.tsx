@@ -7,7 +7,7 @@ import { usePreferences } from "@/components/site/Preferences";
 
 type U = { id: string; email: string; name: string; role: string; active: boolean; lastLoginAt: string | null };
 export default function Equipo() {
-  const { t } = usePreferences();
+  const { lang, t } = usePreferences();
   const ROLES: [string, string][] = [
     ["ADMIN", t("adm.equipo.roleAdmin")],
     ["MANAGER", t("adm.equipo.roleManager")],
@@ -25,7 +25,7 @@ export default function Equipo() {
       <PanelPad className="mb-4">
         <div className="flex flex-wrap items-end gap-2">
           <label className="space-y-1"><span className="block text-xs font-semibold text-slate-600">{t("adm.equipo.name")}</span><input className={inputCls} placeholder={t("adm.equipo.namePlaceholder")} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
-          <label className="space-y-1"><span className="block text-xs font-semibold text-slate-600">{t("adm.equipo.email")}</span><input className={inputCls} placeholder="persona@correo.com" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></label>
+          <label className="space-y-1"><span className="block text-xs font-semibold text-slate-600">{t("adm.equipo.email")}</span><input className={inputCls} placeholder={lang === "en" ? "you@email.com" : "persona@correo.com"} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></label>
           <label className="space-y-1"><span className="block text-xs font-semibold text-slate-600">{t("adm.equipo.role")}</span><select className={inputCls} value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })}>{ROLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
           <label className="space-y-1"><span className="block text-xs font-semibold text-slate-600">{t("adm.equipo.initialPassword")}</span><PasswordField className="w-52" placeholder={t("adm.equipo.passwordPlaceholder")} autoComplete="new-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></label>
           <button className="btn btn-primary" onClick={async () => { if (await send({ ...f, active: true })) setF({ email: "", name: "", role: "SALES", password: "" }); }}><Icon name="plus" size={14} /> {t("adm.equipo.add")}</button>

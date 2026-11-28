@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { canViewOrder } from "@/lib/order-access";
 import { porClave } from "@/lib/payment-gateways";
 import { datosPublicos, esCobroAutomatico, redirigeAlPagar } from "@/lib/pasarelas";
+import { pagoTexto } from "@/lib/pagos-i18n";
 import { getT } from "@/lib/i18n";
 import Icon from "@/components/brand/Icon";
 import PayRetry from "./PayRetry";
@@ -21,12 +22,12 @@ const DELIVERY_KEY: Record<string, string> = { PENDING: "order.del.PENDING", REA
 export default async function Pedido({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ t?: string }> }) {
   const o = await prisma.order.findUnique({ where: { id: (await params).id }, include: { items: true, delivery: true } });
   if (!o || !(await canViewOrder(o, (await searchParams).t))) notFound();
-  const { t } = await getT();
+  const { t, lang } = await getT();
   const tok = (await searchParams).t;
   const idx = STEPS.indexOf(o.status as (typeof STEPS)[number]);
   const canceled = o.status === "CANCELED";
   const gw = await porClave(o.paymentMethod);
-  const metodo = o.paymentMethodName ?? gw?.name ?? o.paymentMethod;
+  const metodo = pagoTexto(o.paymentMethodName ?? gw?.name ?? o.paymentMethod, lang);
   const detalles = gw ? datosPublicos(gw) : [];
   return (
     <div className="container-x py-8">
@@ -92,12 +93,12 @@ export default async function Pedido({ params, searchParams }: { params: Promise
         {!o.paid && !canceled && gw && gw.kind === "manual" && (
           <div className="card border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
             <p className="flex items-center gap-2 font-semibold"><Icon name={gw.icon} size={16} /> {t("order.howToPay")} {metodo}</p>
-            {gw.instructions && <p className="mt-2 whitespace-pre-line leading-relaxed">{gw.instructions}</p>}
+            {gw.instructions && <p className="mt-2 whitespace-pre-line leading-relaxed">{pagoTexto(gw.instructions, lang)}</p>}
             {detalles.length > 0 && (
               <dl className="mt-3 grid gap-x-4 gap-y-1 sm:grid-cols-[auto_1fr]">
                 {detalles.map((d) => (
                   <div key={d.etiqueta} className="contents">
-                    <dt className="font-semibold">{d.etiqueta}</dt>
+                    <dt className="font-semibold">{pagoTexto(d.etiqueta, lang)}</dt>
                     <dd className="break-words">{d.valor}</dd>
                   </div>
                 ))}
@@ -106,7 +107,7 @@ export default async function Pedido({ params, searchParams }: { params: Promise
             <p className="mt-3">{t("order.reference").replace("{number}", String(o.number))}</p>
             {redirigeAlPagar(gw) && gw.config?.url && (
               <a href={gw.config.url} target="_blank" rel="noreferrer" className="btn btn-primary mt-3">
-                <Icon name="arrowRight" size={16} /> {gw.config.referencia || t("order.goToPay")}
+                <Icon name="arrowRight" size={16} /> {gw.config.referencia ? pagoTexto(gw.config.referencia, lang) : t("order.goToPay")}
               </a>
             )}
           </div>

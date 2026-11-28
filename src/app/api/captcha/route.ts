@@ -1,5 +1,6 @@
 import { createCaptcha } from "@/lib/captcha";
 import { mensaje } from "@/lib/mensajes";
+import { getLang } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -10,7 +11,7 @@ const SIN_CACHE = { "Cache-Control": "no-store" } as const;
 // la respuesta.
 export async function GET() {
   try {
-    const { token, svg } = createCaptcha();
+    const { token, svg } = createCaptcha(await getLang());
     return Response.json({ token, svg }, { headers: SIN_CACHE });
   } catch (e) {
     console.error("captcha: no se pudo crear el reto", e);

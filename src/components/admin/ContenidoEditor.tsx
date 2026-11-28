@@ -4,6 +4,7 @@ import Icon, { NOMBRES_ICONO } from "@/components/brand/Icon";
 import { Field, inputCls, Modal } from "@/components/admin/ui";
 import { usePreferences } from "@/components/site/Preferences";
 import { grupoDe } from "@/lib/contenido-orden";
+import { panelTexto } from "@/lib/contenido-en";
 import type { Bloque, Item, Seccion } from "@/lib/contenido";
 
 type Idioma = "es" | "en";
@@ -26,7 +27,7 @@ const IDIOMAS: { code: Idioma; label: string }[] = [
 const marcar = (claves: string[]) => Object.fromEntries(claves.map((k) => [k, true]));
 
 export default function ContenidoEditor({ secciones, valores, defectos, guardadas }: Props) {
-  const { t } = usePreferences();
+  const { t, lang } = usePreferences();
   const [idioma, setIdioma] = useState<Idioma>("es");
   const [abierta, setAbierta] = useState<string | null>(secciones[0]?.key ?? null);
   const [estado, setEstado] = useState<PorIdioma<Record<string, Bloque>>>(valores);
@@ -111,7 +112,7 @@ export default function ContenidoEditor({ secciones, valores, defectos, guardada
       setGuardado((g) => ({ ...g, [idioma]: { ...g[idioma], [sec.key]: true } }));
       setAviso({
         tipo: "ok",
-        texto: t("adm.contenido.saved").replace("{label}", sec.label).replace("{lang}", nombreIdioma),
+        texto: t("adm.contenido.saved").replace("{label}", panelTexto(sec.label, lang)).replace("{lang}", nombreIdioma),
       });
     } catch (e) {
       setAviso({ tipo: "error", texto: e instanceof Error ? e.message : t("adm.contenido.errSaveGeneric") });
@@ -132,7 +133,7 @@ export default function ContenidoEditor({ secciones, valores, defectos, guardada
       setGuardado((g) => ({ ...g, [idioma]: { ...g[idioma], [sec.key]: false } }));
       setAviso({
         tipo: "ok",
-        texto: t("adm.contenido.restored").replace("{label}", sec.label).replace("{lang}", nombreIdioma),
+        texto: t("adm.contenido.restored").replace("{label}", panelTexto(sec.label, lang)).replace("{lang}", nombreIdioma),
       });
     } catch (e) {
       setAviso({ tipo: "error", texto: e instanceof Error ? e.message : t("adm.contenido.errRestoreGeneric") });
@@ -195,7 +196,7 @@ export default function ContenidoEditor({ secciones, valores, defectos, guardada
         const max = sec.maxItems ?? 30;
         const fijo = sec.key === "facturacion" || sec.key === "carrito-config";
         const camposItem = sec.camposItem ?? [];
-        const grupo = grupoDe(sec);
+        const grupo = grupoDe(sec, lang);
         const nuevoGrupo = grupo !== grupoAnterior;
         grupoAnterior = grupo;
         return (
@@ -217,8 +218,8 @@ export default function ContenidoEditor({ secciones, valores, defectos, guardada
                 <Icon name={guardadoEn[sec.key] ? "check" : "info"} size={16} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block font-display text-sm font-bold text-navy">{sec.label}</span>
-                <span className="block truncate text-xs text-slate-500">{sec.descripcion}</span>
+                <span className="block font-display text-sm font-bold text-navy">{panelTexto(sec.label, lang)}</span>
+                <span className="block truncate text-xs text-slate-500">{panelTexto(sec.descripcion, lang)}</span>
               </span>
               {!guardadoEn[sec.key] && (
                 <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amber-700">
@@ -244,7 +245,7 @@ export default function ContenidoEditor({ secciones, valores, defectos, guardada
                       if (!avanzado && c.tipo === "icono") return null;
                       return (
                       <div key={c.key} className={c.ancho ? "sm:col-span-2" : ""}>
-                        <Field label={c.label}>
+                        <Field label={panelTexto(c.label, lang)}>
                           {c.tipo === "parrafo" ? (
                             <textarea
                               className={inputCls}
@@ -297,7 +298,7 @@ export default function ContenidoEditor({ secciones, valores, defectos, guardada
                             if (!avanzado && c.tipo === "icono") return null;
                             return (
                             <div key={c.key} className={c.ancho ? "sm:col-span-2" : ""}>
-                              <Field label={c.label}>
+                              <Field label={panelTexto(c.label, lang)}>
                                 {c.tipo === "icono" ? (
                                   <select
                                     className={inputCls}

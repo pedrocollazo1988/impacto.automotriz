@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import OrderActions from "./OrderActions";
 import { requirePage } from "@/lib/auth";
 import { getT } from "@/lib/i18n";
+import { pagoTexto } from "@/lib/pagos-i18n";
 import { PageHeader, EmptyState, Badge } from "@/components/admin/ui";
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ const STATUS: Record<string, "ok" | "warn" | "info" | "danger" | "mute"> = {
 
 export default async function Pedidos() {
   const u = await requirePage("orders");
-  const { t } = await getT();
+  const { t, lang } = await getT();
   const orders = await prisma.order.findMany({ orderBy: { id: "desc" }, take: 50, include: { items: true, delivery: true } });
   const estado = (valor: string) => {
     const clave = `ord.st.${valor}`;
@@ -45,7 +46,7 @@ export default async function Pedidos() {
                 </span>
               </div>
               <p className="mt-1 text-slate-500">{o.items.map((i) => `${i.qty}× ${i.name}`).join(", ")}</p>
-              <p className="text-slate-500">{o.delivery ? `${o.delivery.methodName} · ${o.delivery.address ?? t("adm.pedidos.pickupShort")} · ${o.customerPhone}` : `${t("order.payment")}: ${o.paymentMethodName ?? o.paymentMethod}`}</p>
+              <p className="text-slate-500">{o.delivery ? `${o.delivery.methodName} · ${o.delivery.address ?? t("adm.pedidos.pickupShort")} · ${o.customerPhone}` : `${t("order.payment")}: ${pagoTexto(o.paymentMethodName ?? o.paymentMethod, lang)}`}</p>
               <OrderActions id={o.id} paid={o.paid} status={o.status} items={o.items.map((i) => ({ id: i.id, name: i.name, qty: i.qty }))} puedeQuitar={u.role === "ADMIN"} />
             </div>
           );

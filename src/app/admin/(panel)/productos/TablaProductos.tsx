@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Icon from "@/components/brand/Icon";
 import { Modal } from "@/components/admin/ui";
 import { usePreferences } from "@/components/site/Preferences";
+import { MOTIVOS_RETIRADA, motivoTexto } from "@/lib/pedido-i18n";
 import { filtrarProductos, ordenarProductos, type ClaveOrden, type Direccion, type FilaProducto } from "@/lib/admin-sort";
 
 type Props = { filas: FilaProducto[]; puedeEliminar: boolean };
@@ -27,7 +28,7 @@ function Flecha({ activa, arriba }: { activa: boolean; arriba: boolean }) {
 }
 
 export default function TablaProductos({ filas, puedeEliminar }: Props) {
-  const { t } = usePreferences();
+  const { lang, t } = usePreferences();
   const router = useRouter();
   const [consulta, setConsulta] = useState("");
   // El input responde al instante; filtrar y ordenar se hace con el valor diferido.
@@ -36,7 +37,7 @@ export default function TablaProductos({ filas, puedeEliminar }: Props) {
   const [aBorrar, setABorrar] = useState<FilaProducto | null>(null);
   const [borrando, setBorrando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [motivo, setMotivo] = useState("Sin existencias");
+  const [motivo, setMotivo] = useState<string>(MOTIVOS_RETIRADA[0]);
   const [detalle, setDetalle] = useState("");
   // Tras borrar, la fila desaparece al instante aunque `router.refresh()` tarde
   // en traer los datos nuevos (o los sirva de su caché).
@@ -156,7 +157,7 @@ export default function TablaProductos({ filas, puedeEliminar }: Props) {
                           className="btn btn-danger btn-xs"
                           onClick={() => {
                             setError(null);
-                            setMotivo("Sin existencias");
+                            setMotivo(MOTIVOS_RETIRADA[0]);
                             setDetalle("");
                             setABorrar(p);
                           }}
@@ -186,11 +187,7 @@ export default function TablaProductos({ filas, puedeEliminar }: Props) {
         <label className="mt-4 block text-xs font-semibold text-slate-600">
           {t("adm.prod.reason")}
           <select className="input mt-1" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
-            <option value="Sin existencias">{t("adm.prod.reasonOutOfStock")}</option>
-            <option value="Producto dañado">{t("adm.prod.reasonDamaged")}</option>
-            <option value="Descontinuado">{t("adm.prod.reasonDiscontinued")}</option>
-            <option value="Duplicado">{t("adm.prod.reasonDuplicate")}</option>
-            <option value="Otro">{t("adm.prod.reasonOther")}</option>
+            {MOTIVOS_RETIRADA.map((v) => <option key={v} value={v}>{motivoTexto(v, lang)}</option>)}
           </select>
         </label>
         <label className="mt-2 block text-xs font-semibold text-slate-600">

@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requirePage, textoPanel } from "@/lib/auth";
+import { getT } from "@/lib/i18n";
 import { PageHeader } from "@/components/admin/ui";
 import ContenidoEditor from "@/components/admin/ContenidoEditor";
 import { SECCIONES } from "@/lib/contenido";
@@ -7,7 +9,11 @@ import { componerSecciones, type FilaContenido, type IdiomaContenido } from "@/l
 import { ordenarSecciones } from "@/lib/contenido-orden";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Contenido de la web" };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return { title: t("meta.adminContenido") };
+}
 
 export default async function ContenidoPage() {
   await requirePage("content");

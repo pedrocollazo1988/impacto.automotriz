@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requirePage } from "@/lib/auth";
 import { leerSeccion } from "@/lib/contenido-server";
+import { pagoTexto } from "@/lib/pagos-i18n";
 import { getT } from "@/lib/i18n";
 import { SITE } from "@/lib/site";
 import PrintButton from "@/components/PrintButton";
@@ -57,7 +58,7 @@ function Titulo({ children }: { children: ReactNode }) {
 export default async function PrefacturaAdmin({ params }: { params: Promise<{ id: string }> }) {
   await requirePage("orders");
   const { id } = await params;
-  const { t } = await getT();
+  const { t, lang } = await getT();
   const tr = (clave: string | undefined, respaldo: string) => {
     if (!clave) return respaldo;
     const texto = t(clave);
@@ -151,7 +152,7 @@ export default async function PrefacturaAdmin({ params }: { params: Promise<{ id
           <div className="rounded border border-slate-200 p-2.5">
             <Titulo>{t("order.payment")}</Titulo>
             <dl className="mt-1 space-y-0.5">
-              <Dato label={t("adm.pedidos.method")} value={o.paymentMethodName ?? o.paymentMethod} />
+              <Dato label={t("adm.pedidos.method")} value={pagoTexto(o.paymentMethodName ?? o.paymentMethod, lang)} />
               <Dato label={t("adm.pedidos.status")} value={o.paid ? t("ord.st.PAID") : t("ord.st.PENDING_PAYMENT")} />
               <Dato label={t("adm.pedidos.paidAt")} value={o.paidAt ? fechaHora(o.paidAt) : null} />
               <Dato label={t("adm.pedidos.paymentRef")} value={o.paymentRef ? <span className="font-mono text-[10px]">{o.paymentRef}</span> : null} />
