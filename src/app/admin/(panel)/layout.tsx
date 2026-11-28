@@ -16,6 +16,7 @@ const LINKS: [string, string, Perm, string][] = [
   ["/admin/pagos", "Pagos", "payments", "card"],
   ["/admin/envios", "Entregas y zonas", "logistics", "truck"],
   ["/admin/campanas", "Email marketing", "email", "mail"],
+  ["/admin/sms", "SMS de verificación", "email", "mobile"],
   ["/admin/reportes", "Reportes", "reports", "chart"],
   ["/admin/resenas", "Reseñas", "reviews", "star"],
   ["/admin/contenido", "Contenido", "content", "image"],

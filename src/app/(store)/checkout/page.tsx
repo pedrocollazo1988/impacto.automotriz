@@ -7,6 +7,7 @@ import DeliverySelector, { type DeliveryChoice } from "@/components/DeliverySele
 import Icon from "@/components/brand/Icon";
 import { textoEnvio, validarCheckout } from "@/lib/checkout-validation";
 import { usePreferences } from "@/components/site/Preferences";
+import Avatar from "@/components/cuenta/Avatar";
 import { track } from "@/lib/analytics";
 import Turnstile from "@/components/Turnstile";
 import AuthForm from "@/components/AuthForm";
@@ -53,6 +54,7 @@ export default function Checkout() {
   const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
   const [captcha, setCaptcha] = useState(""); const [captchaKey, setCaptchaKey] = useState(0);
   const [session, setSession] = useState<"loading" | "in" | "out">("loading");
+  const [avatar, setAvatar] = useState<string | null>(null);
   // El correo se fija solo si la cuenta ya tiene uno: quien entra por SMS lo escribe aquí.
   const [emailFijo, setEmailFijo] = useState(false);
 
@@ -73,6 +75,7 @@ export default function Checkout() {
         if (!m) { setSession("out"); return; }
         setC({ name: m.name ?? "", email: m.email ?? "", phone: m.phoneE164 ?? m.phone ?? "" });
         setEmailFijo(!!m.email);
+        setAvatar(typeof m.avatarUrl === "string" ? m.avatarUrl : null);
         setSession("in");
       })
       .catch(() => setSession("out"));
@@ -159,6 +162,12 @@ export default function Checkout() {
         <div className="space-y-5">
           <section className="card p-5">
             <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><span className="grid h-6 w-6 place-items-center rounded-full bg-[color:var(--color-navy)] text-xs text-white">1</span> {t("checkout.stepData")}</h2>
+            {session === "in" && (
+              <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                <Avatar url={avatar} name={c.name} size={24} redondo />
+                {tt("checkout.loggedAs", { name: c.name })}
+              </p>
+            )}
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="block sm:col-span-2">
                 <span className="mb-1 block text-xs font-semibold text-slate-600">{t("checkout.name")}</span>

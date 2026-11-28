@@ -26,7 +26,7 @@ export const DICCIONARIO: Record<Idioma, Record<string, string>> = {
     "cart.unavailableBanner": "{n} producto(s) del carrito ya no están disponibles.", "cart.removeUnavailable": "Quitar los no disponibles",
     "cart.clear": "Vaciar carrito", "cart.priceError": "No pudimos actualizar precios y existencias. Tus productos siguen guardados y puedes quitarlos igualmente.",
     "checkout.title": "Finalizar compra", "checkout.empty": "Tu carrito está vacío", "checkout.viewCatalog": "Ver catálogo",
-    "checkout.stepData": "Tus datos", "checkout.name": "Nombre completo", "checkout.email": "Correo electrónico", "checkout.phone": "Teléfono",
+    "checkout.stepData": "Tus datos", "checkout.loggedAs": "Compras como {name}", "checkout.name": "Nombre completo", "checkout.email": "Correo electrónico", "checkout.phone": "Teléfono",
     "checkout.stepDelivery": "Entrega", "checkout.deliveryHint": "El precio del servicio de entrega se calcula al elegir provincia y municipio. Se confirma al seleccionar el método.",
     "checkout.stepPayment": "Pago", "checkout.noPayments": "No hay métodos de pago disponibles ahora mismo. Escríbenos para coordinar el cobro.",
     "checkout.auto": "Automático", "checkout.manual": "Manual", "checkout.commission": "+{n} % de comisión",
@@ -75,7 +75,7 @@ export const DICCIONARIO: Record<Idioma, Record<string, string>> = {
     "auth.accept": "Acepto la política de privacidad y los términos.", "auth.forgotLink": "Olvidé mi contraseña",
     "auth.backLogin": "Volver a iniciar sesión", "auth.google": "Continuar con Google", "auth.resetSent": "Si la cuenta existe, te enviamos un enlace para restablecer la contraseña.",
     "auth.review": "Revisa los campos marcados.", "auth.captcha": "Completa el código de seguridad para crear la cuenta.",
-    "auth.byEmail": "Correo", "auth.byPhone": "Teléfono", "auth.byPhoneHint": "Te enviamos un código por SMS: sin contraseñas que recordar.",
+    "auth.byEmail": "Correo", "auth.byPhone": "Teléfono", "auth.phoneProximamente": "El acceso por teléfono estará disponible próximamente. Mientras tanto, entra con tu correo.", "auth.byPhoneHint": "Te enviamos un código por SMS: sin contraseñas que recordar.",
     "auth.loginWithCode": "Entrar con código", "auth.loginWithPassword": "Entrar con contraseña",
     "auth.passwordOptional": "Contraseña (opcional, para entrar sin código)", "auth.sendCode": "Enviar código SMS",
     "phone.country": "País", "phone.search": "Buscar país", "phone.noResults": "Sin resultados", "phone.placeholder": "555 1234", "phone.number": "Número de teléfono",
@@ -124,7 +124,7 @@ export const DICCIONARIO: Record<Idioma, Record<string, string>> = {
     "err.AUTH_RATE_LIMIT": "Demasiados intentos. Espera unos minutos.",
     "err.AUTH_SMS_SEND_FAILED": "No pudimos enviar el SMS. Inténtalo de nuevo en un momento.",
     "err.AUTH_BAD_CREDENTIALS": "Correo o contraseña incorrectos.",
-    "err.default": "Algo salió mal. Inténtalo de nuevo.",
+    "err.default": "Algo salió mal. Inténtalo de nuevo.", "err.MAIL_SIN_CONFIGURAR": "No podemos enviar correos en este momento. Escríbenos y te ayudamos a entrar.", "err.SMS_SIN_CONFIGURAR": "El acceso por SMS no está disponible todavía. Entra con tu correo.",
     "nav.home": "Inicio", "catalog.other": "Otros", "catalog.noResults": "Sin resultados",
     "catalog.onlyAvailable": "Solo disponibles", "catalog.onlyDeals": "Solo en oferta", "catalog.only360": "Se puede girar 360°",
     "catalog.priceUsd": "Precio (USD)", "catalog.min": "Mín", "catalog.max": "Máx", "catalog.go": "Ir",
@@ -158,7 +158,7 @@ export const DICCIONARIO: Record<Idioma, Record<string, string>> = {
     "cart.unavailableBanner": "{n} item(s) in your cart are no longer available.", "cart.removeUnavailable": "Remove unavailable",
     "cart.clear": "Clear cart", "cart.priceError": "We could not refresh prices and stock. Your items are still saved and you can remove them anyway.",
     "checkout.title": "Checkout", "checkout.empty": "Your cart is empty", "checkout.viewCatalog": "View catalog",
-    "checkout.stepData": "Your details", "checkout.name": "Full name", "checkout.email": "Email", "checkout.phone": "Phone",
+    "checkout.stepData": "Your details", "checkout.loggedAs": "Checking out as {name}", "checkout.name": "Full name", "checkout.email": "Email", "checkout.phone": "Phone",
     "checkout.stepDelivery": "Delivery", "checkout.deliveryHint": "The delivery price is calculated when you choose province and municipality. It is confirmed when you select a method.",
     "checkout.stepPayment": "Payment", "checkout.noPayments": "No payment methods are available right now. Contact us to arrange payment.",
     "checkout.auto": "Automatic", "checkout.manual": "Manual", "checkout.commission": "+{n}% fee",
@@ -207,7 +207,7 @@ export const DICCIONARIO: Record<Idioma, Record<string, string>> = {
     "auth.accept": "I accept the privacy policy and terms.", "auth.forgotLink": "Forgot my password",
     "auth.backLogin": "Back to sign in", "auth.google": "Continue with Google", "auth.resetSent": "If the account exists, we sent you a password reset link.",
     "auth.review": "Check the highlighted fields.", "auth.captcha": "Complete the security code to create the account.",
-    "auth.byEmail": "Email", "auth.byPhone": "Phone", "auth.byPhoneHint": "We text you a code, so there is no password to remember.",
+    "auth.byEmail": "Email", "auth.byPhone": "Phone", "auth.phoneProximamente": "Phone sign-in is coming soon. For now, sign in with your email.", "auth.byPhoneHint": "We text you a code, so there is no password to remember.",
     "auth.loginWithCode": "Sign in with a code", "auth.loginWithPassword": "Sign in with password",
     "auth.passwordOptional": "Password (optional, to sign in without a code)", "auth.sendCode": "Send SMS code",
     "phone.country": "Country", "phone.search": "Search country", "phone.noResults": "No results", "phone.placeholder": "555 1234", "phone.number": "Phone number",
@@ -256,7 +256,7 @@ export const DICCIONARIO: Record<Idioma, Record<string, string>> = {
     "err.AUTH_RATE_LIMIT": "Too many attempts. Wait a few minutes.",
     "err.AUTH_SMS_SEND_FAILED": "We could not send the SMS. Try again in a moment.",
     "err.AUTH_BAD_CREDENTIALS": "Wrong email or password.",
-    "err.default": "Something went wrong. Try again.",
+    "err.default": "Something went wrong. Try again.", "err.MAIL_SIN_CONFIGURAR": "We cannot send emails right now. Contact us and we will help you sign in.", "err.SMS_SIN_CONFIGURAR": "SMS sign-in is not available yet. Please sign in with your email.",
     "nav.home": "Home", "catalog.other": "Other", "catalog.noResults": "No results",
     "catalog.onlyAvailable": "In stock only", "catalog.onlyDeals": "On sale only", "catalog.only360": "360° view available",
     "catalog.priceUsd": "Price (USD)", "catalog.min": "Min", "catalog.max": "Max", "catalog.go": "Go",
@@ -269,3 +269,6 @@ export const DICCIONARIO: Record<Idioma, Record<string, string>> = {
 
 export const traducir = (lang: Idioma, key: string): string =>
   DICCIONARIO[lang][key] ?? DICCIONARIO.es[key] ?? key;
+
+/** Valida un idioma venido de la base o de una cookie; null si no es ninguno. */
+export const idiomaDe = (v: unknown): Idioma | null => (v === "es" || v === "en" ? v : null);
