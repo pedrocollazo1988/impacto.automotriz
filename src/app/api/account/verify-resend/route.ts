@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { errorHttp } from "@/lib/mensajes";
 import { handle, HttpError } from "@/lib/auth";
 import { limit, limitKey } from "@/lib/ratelimit";
 import { requireCustomer } from "@/lib/customer-auth";
@@ -12,7 +13,7 @@ export const POST = handle(async (req: Request) => {
   const c = await prisma.customer.findUniqueOrThrow({ where: { id: me.id } });
   if (!c.emailVerified && c.email) {
     const r = await sendVerificationPin(c, await getLang());
-    if (!r.ok) throw new HttpError(502, "No pudimos enviar el código. Revisa la configuración de correo e inténtalo de nuevo.");
+    if (!r.ok) throw await errorHttp(502, "mensaje.envioFallido");
   }
   return Response.json({ ok: true });
 });

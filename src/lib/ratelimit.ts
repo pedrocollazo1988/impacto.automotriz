@@ -1,3 +1,4 @@
+import { errorHttp } from "@/lib/mensajes";
 import { prisma } from "./prisma";
 import { HttpError } from "./auth";
 
@@ -14,5 +15,5 @@ export async function limitKey(rawKey: string, scope: string, max = 8, windowMs 
   const now = new Date();
   const row = await prisma.rateLimit.upsert({ where: { key }, create: { key, count: 1, resetAt: new Date(now.getTime() + windowMs) }, update: { count: { increment: 1 } } });
   if (row.resetAt < now) { await prisma.rateLimit.update({ where: { key }, data: { count: 1, resetAt: new Date(now.getTime() + windowMs) } }); return; }
-  if (row.count > max) throw new HttpError(429, "Demasiados intentos. Espera unos minutos.");
+  if (row.count > max) throw await errorHttp(429, "err.demasiadosIntentos");
 }

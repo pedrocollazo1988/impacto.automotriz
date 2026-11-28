@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { errorHttp } from "@/lib/mensajes";
 import { handle, HttpError } from "@/lib/auth";
 import { limit } from "@/lib/ratelimit";
 import { hashPassword } from "@/lib/customer-auth";
@@ -15,7 +16,7 @@ export const POST = handle(async (req: Request) => {
   }).parse(await req.json());
   await requireTurnstile(req, b.turnstileToken);
   const r = await prisma.authToken.findUnique({ where: { tokenHash: crypto.createHash("sha256").update(b.token).digest("hex") } });
-  if (!r || r.kind !== "RESET" || r.usedAt || r.expiresAt < new Date()) throw new HttpError(400, "Enlace inválido o vencido");
+  if (!r || r.kind !== "RESET" || r.usedAt || r.expiresAt < new Date()) throw await errorHttp(400, "auth.enlaceInvalido");
   await prisma.$transaction([
     prisma.customer.update({ where: { id: r.customerId }, data: { passwordHash: hashPassword(b.password) } }),
     prisma.authToken.update({ where: { id: r.id }, data: { usedAt: new Date() } }),

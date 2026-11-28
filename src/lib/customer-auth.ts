@@ -1,3 +1,4 @@
+import { errorHttp } from "@/lib/mensajes";
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { prisma } from "./prisma";
@@ -31,5 +32,5 @@ export async function getCustomer() {
   return prisma.customer.findUnique({ where: { id }, select: { id: true, email: true, name: true, phone: true, phoneE164: true, emailVerified: true, phoneVerifiedAt: true, avatarUrl: true, preferredLanguage: true, telegramId: true } });
 }
 export async function requireCustomer() {
-  const c = await getCustomer(); if (!c) throw new HttpError(401, "Inicia sesión"); return c;
+  const c = await getCustomer(); if (!c) throw await errorHttp(401, "err.sesion"); return c;
 }

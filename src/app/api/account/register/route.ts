@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { errorHttp } from "@/lib/mensajes";
 import { handle, HttpError } from "@/lib/auth";
 import { limit } from "@/lib/ratelimit";
 import { hashPassword, startCustomerSession, assertCustomerAuthConfigured } from "@/lib/customer-auth";
@@ -33,12 +34,12 @@ export const POST = handle(async (req: Request) => {
   if (turnstileActivo()) {
     await requireTurnstile(req, b.turnstileToken);
   } else if (!verifyCaptcha(b.captchaToken ?? "", b.captchaAnswer ?? "")) {
-    throw new HttpError(400, "El código de seguridad no es válido o venció. Pide otro e inténtalo de nuevo.");
+    throw await errorHttp(400, "codigo.invalido");
   }
   if (b.website) return Response.json({ ok: true, pin: true }); // honeypot: no se crea nada
-  if (await prisma.customer.findUnique({ where: { email: b.email } })) throw new HttpError(409, "Ya existe una cuenta con ese correo");
+  if (await prisma.customer.findUnique({ where: { email: b.email } })) throw await errorHttp(409, "cuenta.yaExiste");
   if (!turnstileActivo() && !(await consumeCaptchaToken(b.captchaToken ?? ""))) {
-    throw new HttpError(400, "Ese código de seguridad ya se usó. Pide otro e inténtalo de nuevo.");
+    throw await errorHttp(400, "codigo.usado");
   }
 
   const lang = await getLang();

@@ -5,6 +5,8 @@ import { ZodError } from "zod";
 import { prisma } from "./prisma";
 import { hashPassword, verifyPassword } from "./password";
 
+import { mensaje } from "./mensajes";
+
 export class HttpError extends Error {
   constructor(public status: number, message: string) { super(message); }
 }
@@ -77,8 +79,8 @@ export const handle = <C = unknown>(fn: (req: Request, ctx: C) => Promise<Respon
     try { return await fn(req, ctx); }
     catch (e) {
       if (e instanceof HttpError) return Response.json({ error: e.message }, { status: e.status });
-      if (e instanceof ZodError) return Response.json({ error: "Datos inválidos", details: e.flatten() }, { status: 400 });
+      if (e instanceof ZodError) return Response.json({ error: await mensaje("err.datos"), details: e.flatten() }, { status: 400 });
       console.error(e);
-      return Response.json({ error: "Error interno" }, { status: 500 });
+      return Response.json({ error: await mensaje("err.interno") }, { status: 500 });
     }
   };
