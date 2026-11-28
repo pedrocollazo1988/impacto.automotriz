@@ -4,6 +4,7 @@ import { cuerpoSms, elegirProveedor, estadoSms, faltantesSms, plantillaSms, prov
 import { TwilioSms } from "@/lib/sms/twilio";
 import { VonageSms } from "@/lib/sms/vonage";
 import { InfobipSms, urlInfobip } from "@/lib/sms/infobip";
+import { WhatsappSms } from "@/lib/sms/whatsapp";
 
 type Captura = { metodo: string; ruta: string; headers: http.IncomingHttpHeaders; cuerpo: string };
 
@@ -29,7 +30,8 @@ beforeAll(async () => {
   base = `http://127.0.0.1:${dir.port}`;
 });
 
-const CLAVES = ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM", "TWILIO_MESSAGING_SERVICE_SID", "TWILIO_API_BASE", "VONAGE_API_KEY", "VONAGE_API_SECRET", "VONAGE_FROM", "VONAGE_API_BASE", "INFOBIP_API_KEY", "INFOBIP_BASE_URL", "INFOBIP_FROM", "SMS_FROM", "SMS_PROVIDER"];
+const CLAVES = ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM", "TWILIO_MESSAGING_SERVICE_SID", "TWILIO_API_BASE", "VONAGE_API_KEY", "VONAGE_API_SECRET", "VONAGE_FROM", "VONAGE_API_BASE", "INFOBIP_API_KEY", "INFOBIP_BASE_URL", "INFOBIP_FROM", "SMS_FROM", "SMS_PROVIDER",
+  "WHATSAPP_TOKEN", "WHATSAPP_PHONE_ID", "WHATSAPP_TEMPLATE", "WHATSAPP_TEMPLATE_LANG", "WHATSAPP_TEMPLATE_PRUEBA", "WHATSAPP_API_BASE", "WHATSAPP_API_VERSION"];
 const entornoPrevio = new Map(CLAVES.map((k) => [k, process.env[k]]));
 
 afterAll(async () => {
@@ -152,6 +154,90 @@ describe("Infobip", () => {
     Object.assign(process.env, { INFOBIP_API_KEY: "app-key", INFOBIP_BASE_URL: base });
     expect(await new InfobipSms().enviarCodigo({ to: "+5355551234", codigo, lang: "es" })).toEqual({ ok: false, error: "infobip_sin_configurar" });
     expect(capturas).toHaveLength(0);
+  });
+});
+
+describe("WhatsApp Cloud API", () => {
+  const config = (extra: Record<string, string> = {}) =>
+    Object.assign(process.env, { WHATSAPP_TOKEN: "EAAtoken", WHATSAPP_PHONE_ID: "1234567890", WHATSAPP_API_BASE: base, ...extra });
+
+  it("manda la plantilla con el código como parámetro y el teléfono sin +", async () => {
+    config({ WHATSAPP_TEMPLATE: "codigo_acceso", WHATSAPP_TEMPLATE_LANG: "es" });
+    const r = await new WhatsappSms().enviarCodigo({ to: "+5355551234", codigo, lang: "es" });
+
+    expect(r).toEqual({ ok: true });
+    expect(capturas).toHaveLength(1);
+    const [p] = capturas;
+    expect(p.metodo).toBe("POST");
+    expect(p.ruta).toBe("/v21.0/1234567890/messages");
+    expect(p.headers.authorization).toBe("Bearer EAAtoken");
+    const cuerpo = JSON.parse(p.cuerpo);
+    expect(cuerpo.messaging_product).toBe("whatsapp");
+    expect(cuerpo.to).toBe("5355551234");
+    expect(cuerpo.type).toBe("template");
+    expect(cuerpo.template.name).toBe("codigo_acceso");
+    expect(cuerpo.template.language.code).toBe("es");
+    expect(cuerpo.template.components[0].parameters[0]).toEqual({ type: "text", text: codigo });
+  });
+
+  it("respeta la plantilla y el idioma configurados", async () => {
+    config({ WHATSAPP_TEMPLATE: "codigo_v2", WHATSAPP_TEMPLATE_LANG: "en_US" });
+    await new WhatsappSms().enviarCodigo({ to: "+5355551234", codigo, lang: "en" });
+
+    const cuerpo = JSON.parse(capturas[0].cuerpo);
+    expect(cuerpo.template.name).toBe("codigo_v2");
+    expect(cuerpo.template.language.code).toBe("en_US");
+  });
+
+  it("no llama a la API si faltan credenciales", async () => {
+    Object.assign(process.env, { WHATSAPP_TOKEN: "EAAtoken" });
+    const r = await new WhatsappSms().enviarCodigo({ to: "+5355551234", codigo, lang: "es" });
+
+    expect(r).toEqual({ ok: false, error: "whatsapp_sin_configurar" });
+    expect(capturas).toHaveLength(0);
+  });
+
+  it("informa del código de error del proveedor", async () => {
+    config();
+    respuesta = { status: 400, body: '{"error":{"message":"bad template"}}' };
+    const r = await new WhatsappSms().enviarCodigo({ to: "+5355551234", codigo, lang: "es" });
+
+    expect(r).toEqual({ ok: false, error: "whatsapp_400" });
+  });
+
+  it("la prueba del panel usa su plantilla si está definida", async () => {
+    config({ WHATSAPP_TEMPLATE_PRUEBA: "prueba_config" });
+    await new WhatsappSms().enviarCodigo({ to: "+5355551234", codigo, lang: "es", texto: "prueba" });
+
+    const cuerpo = JSON.parse(capturas[0].cuerpo);
+    expect(cuerpo.template.name).toBe("prueba_config");
+    expect(cuerpo.template.components).toBeUndefined();
+  });
+
+  it("sin plantilla de prueba manda la de códigos con 000000", async () => {
+    config();
+    await new WhatsappSms().enviarCodigo({ to: "+5355551234", codigo, lang: "es", texto: "prueba" });
+
+    const cuerpo = JSON.parse(capturas[0].cuerpo);
+    expect(cuerpo.template.components[0].parameters[0].text).toBe("000000");
+  });
+
+  it("se elige solo cuando es el único proveedor completo", () => {
+    Object.assign(process.env, { WHATSAPP_TOKEN: "EAAtoken", WHATSAPP_PHONE_ID: "1234567890" });
+    expect(estadoSms()).toEqual({ proveedor: "whatsapp", real: true, listo: true, faltan: [] });
+  });
+
+  it("SMS_PROVIDER=whatsapp lo fuerza aunque haya Twilio completo", () => {
+    Object.assign(process.env, {
+      TWILIO_ACCOUNT_SID: "AC1", TWILIO_AUTH_TOKEN: "t", TWILIO_FROM: "+1555",
+      WHATSAPP_TOKEN: "EAAtoken", WHATSAPP_PHONE_ID: "1234567890", SMS_PROVIDER: "whatsapp",
+    });
+    expect(proveedorSms().nombre).toBe("whatsapp");
+  });
+
+  it("indica qué variables faltan", () => {
+    expect(faltantesSms("whatsapp", { WHATSAPP_TOKEN: "x" })).toEqual(["WHATSAPP_PHONE_ID"]);
+    expect(faltantesSms("whatsapp", {})).toEqual(["WHATSAPP_TOKEN", "WHATSAPP_PHONE_ID"]);
   });
 });
 
