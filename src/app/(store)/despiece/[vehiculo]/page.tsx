@@ -5,29 +5,31 @@ import { getVehicle, getVehiclesCached } from "@/lib/despiece";
 import Icon from "@/components/brand/Icon";
 import VehiclePicker from "@/components/despiece/VehiclePicker";
 import { getT } from "@/lib/i18n";
+import { resumenVehiculo, versionVehiculo } from "@/lib/datos-i18n";
+import { enContenido } from "@/lib/contenido-en";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ vehiculo: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { t } = await getT();
+  const { t, lang } = await getT();
   const v = await getVehicle((await params).vehiculo);
   if (!v) return {};
   return {
     title: t("parts.vehicleMeta")
       .replace("{brand}", v.brand)
       .replace("{model}", v.model)
-      .replace("{version}", v.version),
+      .replace("{version}", versionVehiculo(v, lang)),
     description: t("parts.vehicleMetaDesc")
       .replace("{brand}", v.brand)
       .replace("{model}", v.model)
-      .replace("{summary}", v.summary ?? "")
+      .replace("{summary}", resumenVehiculo(v, lang))
       .slice(0, 160),
   };
 }
 
 export default async function VehiculoDespiece({ params }: Props) {
-  const { t } = await getT();
+  const { t, lang } = await getT();
   const slug = (await params).vehiculo;
   const v = await getVehicle(slug);
   if (!v) notFound();
@@ -47,12 +49,12 @@ export default async function VehiculoDespiece({ params }: Props) {
           <p className="eyebrow text-[color:var(--color-action-deep)]">{v.brand}</p>
           <h1 className="mt-1 font-display text-3xl font-extrabold text-navy sm:text-4xl">{t("parts.heading").replace("{model}", v.model)}</h1>
           <p className="mt-1 font-mono text-xs uppercase tracking-widest text-slate-500">
-            {v.version}{v.voltage ? ` · ${v.voltage}` : ""}{v.power ? ` · ${v.power}` : ""}{v.payload ? ` · ${v.payload}` : ""}
+            {versionVehiculo(v, lang)}{v.voltage ? ` · ${v.voltage}` : ""}{v.power ? ` · ${v.power}` : ""}{v.payload ? ` · ${v.payload}` : ""}
           </p>
-          {v.summary && <p className="mt-3 text-sm leading-relaxed text-slate-600">{v.summary}</p>}
+          {v.summary && <p className="mt-3 text-sm leading-relaxed text-slate-600">{resumenVehiculo(v, lang)}</p>}
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">
-          <VehiclePicker vehicle={{ slug: v.slug, brand: v.brand, model: v.model, version: v.version }} />
+          <VehiclePicker vehicle={{ slug: v.slug, brand: v.brand, model: v.model, version: versionVehiculo(v, lang) }} />
           <p className="font-mono text-[11px] uppercase tracking-widest text-slate-500">{t("parts.piecesSystems").replace("{n}", String(total)).replace("{m}", String(v.diagrams.length))}</p>
         </div>
       </header>
@@ -65,7 +67,7 @@ export default async function VehiculoDespiece({ params }: Props) {
             <Link key={d.id} href={`/despiece/${v.slug}/${d.system.slug}`} className="adm-panel group flex flex-col transition hover:-translate-y-0.5 hover:shadow-lg">
               <div className="relative overflow-hidden border-b border-slate-100 bg-slate-50">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={d.image} alt={d.title} className="aspect-[3/2] w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <img src={d.image} alt={enContenido(d.title, lang)} className="aspect-[3/2] w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <span className="absolute left-2 top-2 rounded-md bg-[color:var(--color-navy)]/90 px-1.5 py-0.5 font-mono text-[10px] font-bold text-white">
                   {t("parts.piecesCount").replace("{n}", String(d.pins.length))}
                 </span>
@@ -73,9 +75,9 @@ export default async function VehiculoDespiece({ params }: Props) {
               <div className="flex flex-1 flex-col p-3">
                 <h2 className="flex items-center gap-1.5 font-display text-lg font-extrabold leading-tight text-navy">
                   <Icon name={d.system.icon} size={15} className="text-[color:var(--color-action)]" />
-                  {d.system.name}
+                  {enContenido(d.system.name, lang)}
                 </h2>
-                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500">{d.system.blurb || d.notes}</p>
+                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500">{enContenido(d.system.blurb || d.notes || "", lang)}</p>
                 <div className="mt-auto flex items-center justify-between pt-2 text-[11px]">
                   <span className="font-mono text-slate-500">{t("parts.from")} {desde.toFixed(2)} USD</span>
                   <span className="flex items-center gap-1 font-semibold text-[color:var(--color-action-deep)] group-hover:underline">
@@ -96,7 +98,7 @@ export default async function VehiculoDespiece({ params }: Props) {
           <h2 className="mb-3 font-display text-lg font-extrabold text-navy">{t("parts.otherVehicles")}</h2>
           <div className="flex flex-wrap gap-2">
             {otros.map((o) => (
-              <Link key={o.id} href={`/despiece/${o.slug}`} className="chip">{o.brand} {o.model} · {o.version}</Link>
+              <Link key={o.id} href={`/despiece/${o.slug}`} className="chip">{o.brand} {o.model} · {versionVehiculo(o, lang)}</Link>
             ))}
           </div>
         </section>

@@ -6,6 +6,7 @@ import VehiclePicker from "@/components/despiece/VehiclePicker";
 import { leerSeccion } from "@/lib/contenido-server";
 import { getT } from "@/lib/i18n";
 import { enContenido } from "@/lib/contenido-en";
+import { resumenVehiculo, versionVehiculo } from "@/lib/datos-i18n";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -47,14 +48,14 @@ export default async function DespieceIndex() {
                 <div>
                   <p className="font-mono text-[11px] uppercase tracking-widest text-slate-500">{v.brand}</p>
                   <h2 className="font-display text-2xl font-extrabold text-navy">{v.model}</h2>
-                  <p className="mt-0.5 text-xs text-slate-500">{enContenido(v.version, lang)} · {v.voltage} · {v.power}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{versionVehiculo(v, lang)} · {v.voltage} · {v.power}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-display text-2xl font-extrabold text-navy">{piezas}</p>
                   <p className="text-[10px] uppercase tracking-wider text-slate-500">{t("parts.pieces")}</p>
                 </div>
               </div>
-              {v.summary && <p className="border-b border-slate-100 p-4 text-sm leading-relaxed text-slate-600">{v.summary}</p>}
+              {v.summary && <p className="border-b border-slate-100 p-4 text-sm leading-relaxed text-slate-600">{resumenVehiculo(v, lang)}</p>}
               <ul className="grid grid-cols-2 gap-px bg-slate-100 sm:grid-cols-3">
                 {v.diagrams.map((dg) => (
                   <li key={dg.id}>

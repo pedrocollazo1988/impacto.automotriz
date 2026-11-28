@@ -12,6 +12,8 @@ import {
   marcaDeFabrica,
   pagoDeFabrica,
   productoDeFabrica,
+  vehiculoDeFabrica,
+  versionDeFabrica,
 } from "./catalogo-en";
 import { pagoTexto } from "./pagos-i18n";
 
@@ -56,6 +58,24 @@ export function specsProducto(p: Producto, lang: string): [string, string][] {
 
 function conDatos(v: unknown): boolean {
   return !!v && typeof v === "object" && !Array.isArray(v) && Object.keys(v as object).length > 0;
+}
+
+type Vehiculo = {
+  slug: string;
+  version: string;
+  versionEn?: string | null;
+  summary?: string | null;
+  summaryEn?: string | null;
+};
+
+export function versionVehiculo(v: Vehiculo, lang: string): string {
+  if (!en(lang)) return v.version;
+  return limpio(v.versionEn) || vehiculoDeFabrica(v.slug)?.version || versionDeFabrica(v.version) || v.version;
+}
+
+export function resumenVehiculo(v: Vehiculo, lang: string): string {
+  if (!en(lang)) return v.summary ?? "";
+  return limpio(v.summaryEn) || vehiculoDeFabrica(v.slug)?.summary || v.summary || "";
 }
 
 /** Etiqueta corta del pin en el dibujo del despiece. */

@@ -187,6 +187,8 @@ const AJUSTES = [
   `ALTER TABLE "DeliveryMethod" ADD COLUMN IF NOT EXISTS "descriptionEn" TEXT`,
   `ALTER TABLE "PaymentGateway" ADD COLUMN IF NOT EXISTS "nameEn" TEXT`,
   `ALTER TABLE "PaymentGateway" ADD COLUMN IF NOT EXISTS "descriptionEn" TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS "versionEn" TEXT`,
+  `ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS "summaryEn" TEXT`,
   `ALTER TABLE "PaymentGateway" ADD COLUMN IF NOT EXISTS "instructionsEn" TEXT NOT NULL DEFAULT ''`,
 ];
 
