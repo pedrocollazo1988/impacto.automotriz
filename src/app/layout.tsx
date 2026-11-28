@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { SITE } from "@/lib/site";
 import { PreferencesProvider } from "@/components/site/Preferences";
+import { getLang } from "@/lib/i18n";
 
 // Fuentes autoalojadas (variables) para que el build no dependa de la red de Google Fonts.
 const archivo = localFont({ src: "./fonts/archivo-latin.woff2", weight: "500 800", variable: "--font-archivo", display: "swap" });
@@ -60,14 +61,17 @@ const sitioWeb = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // El idioma viaja en la cookie para que el primer HTML salga ya traducido:
+  // los componentes cliente lo reciben como valor inicial y no cambian al hidratar.
+  const lang = await getLang();
   return (
-    <html lang="es" suppressHydrationWarning className={`${archivo.variable} ${manrope.variable} ${mono.variable}`}>
+    <html lang={lang} suppressHydrationWarning className={`${archivo.variable} ${manrope.variable} ${mono.variable}`}>
       <body className="min-h-screen antialiased">
         {/* Antes de pintar: evita el destello blanco al entrar en modo noche. */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem("theme")||"system";var d=t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.dataset.theme=d?"dark":"light";document.documentElement.style.colorScheme=d?"dark":"light";var l=localStorage.getItem("lang");if(l==="en")document.documentElement.lang="en";}catch(e){}})()` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem("theme")||"system";var d=t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.dataset.theme=d?"dark":"light";document.documentElement.style.colorScheme=d?"dark":"light";}catch(e){}})()` }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([organizacion, sitioWeb]).replace(/</g, "\\u003c") }} />
-        <PreferencesProvider>{children}</PreferencesProvider>
+        <PreferencesProvider initialLang={lang}>{children}</PreferencesProvider>
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, handle, requireAdmin, HttpError } from "@/lib/auth";
+import { audit, handle, requireAdmin, errorPanel } from "@/lib/auth";
 import { cifrar, descifrar, driversDelPanel, leerPasarelas, limpiarConfig, limpiarCreds } from "@/lib/payment-gateways";
 import { DRIVERS, PRESETS, claveValida, driverDe, esDriverId, slugify } from "@/lib/pasarelas";
 
@@ -72,12 +72,12 @@ export const POST = handle(async (req: Request) => {
   const b = Body.parse(await req.json());
 
   if (b.minTotalUsd != null && b.maxTotalUsd != null && b.minTotalUsd > b.maxTotalUsd) {
-    throw new HttpError(422, "El mínimo no puede superar al máximo");
+    throw await errorPanel(422, "El mínimo no puede superar al máximo", "The minimum cannot exceed the maximum");
   }
 
   if (b.id) {
     const actual = await prisma.paymentGateway.findUnique({ where: { id: b.id } });
-    if (!actual) throw new HttpError(404, "Método de pago desconocido");
+    if (!actual) throw await errorPanel(404, "Método de pago desconocido", "Unknown payment method");
     const provider = esDriverId(actual.provider) ? actual.provider : "manual";
     const driver = DRIVERS[provider];
 
@@ -124,16 +124,16 @@ export const POST = handle(async (req: Request) => {
   }
 
   // Alta: el driver es obligatorio; la clave se genera del nombre si no viene.
-  if (!b.provider || !esDriverId(b.provider)) throw new HttpError(422, "Elige un tipo de método de pago");
-  if (!b.name || b.name.trim().length < 2) throw new HttpError(422, "El nombre es obligatorio");
+  if (!b.provider || !esDriverId(b.provider)) throw await errorPanel(422, "Elige un tipo de método de pago", "Choose a payment method type");
+  if (!b.name || b.name.trim().length < 2) throw await errorPanel(422, "El nombre es obligatorio", "The name is required");
   const provider = b.provider;
   const driver = DRIVERS[provider];
 
   const base = b.key?.trim() || slugify(b.name);
-  if (!claveValida(base)) throw new HttpError(422, "La clave solo admite letras, números, guion y guion bajo");
+  if (!claveValida(base)) throw await errorPanel(422, "La clave solo admite letras, números, guion y guion bajo", "The key only allows letters, numbers, hyphen and underscore");
   let key = base;
   if (await prisma.paymentGateway.findUnique({ where: { key } })) {
-    if (b.key) throw new HttpError(409, "Ya existe un método con esa clave");
+    if (b.key) throw await errorPanel(409, "Ya existe un método con esa clave", "A method with that key already exists");
     let n = 2;
     while (await prisma.paymentGateway.findUnique({ where: { key } })) key = `${base}-${n++}`;
   }
@@ -168,9 +168,9 @@ export const DELETE = handle(async (req: Request) => {
   const u = await requireAdmin(req, "payments");
   const url = new URL(req.url);
   const id = Number(url.searchParams.get("id"));
-  if (!Number.isInteger(id) || id <= 0) throw new HttpError(400, "Método no válido");
+  if (!Number.isInteger(id) || id <= 0) throw await errorPanel(400, "Método no válido", "Invalid method");
   const actual = await prisma.paymentGateway.findUnique({ where: { id } });
-  if (!actual) throw new HttpError(404, "Método de pago desconocido");
+  if (!actual) throw await errorPanel(404, "Método de pago desconocido", "Unknown payment method");
   const revocar = url.searchParams.get("mode") === "creds";
   await prisma.paymentGateway.update({
     where: { id },

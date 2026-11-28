@@ -4,7 +4,7 @@ import { handle } from "@/lib/auth";
 import { limit } from "@/lib/ratelimit";
 import { confirmUrl, sendTransactional } from "@/lib/mailer";
 import { requireTurnstile } from "@/lib/turnstile";
-import { getLang } from "@/lib/i18n";
+import { idiomaDeCliente } from "@/lib/i18n";
 import { subscriptionConfirmEmail } from "@/lib/email-templates";
 import { emailT } from "@/lib/email-i18n";
 
@@ -21,9 +21,10 @@ export const POST = handle(async (req: Request) => {
   await limit(req, "subscribe", 5);
   const b = Body.parse(await req.json());
   await requireTurnstile(req, b.turnstileToken);
-  const lang = await getLang();
   const cur = await prisma.subscriber.findUnique({ where: { email: b.email } });
   if (cur?.status === "ACTIVE") return Response.json({ ok: true }); // no revela si ya existía
+  // Si ya estaba en la lista manda su idioma guardado; si es nuevo, el del visitante.
+  const lang = await idiomaDeCliente(cur?.lang);
   await prisma.subscriber.upsert({
     where: { email: b.email },
     create: { email: b.email, name: b.name, provinceId: b.provinceId, tags: b.tags ?? [], status: "PENDING", consentAt: new Date(), source: b.source ?? "web", lang },

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, handle, requireAdmin } from "@/lib/auth";
+import { audit, handle, requireAdmin, textoPanel } from "@/lib/auth";
 import { encrypt, getTransport, mailStatus } from "@/lib/mailer";
 
 export const GET = handle(async (req: Request) => {
@@ -24,7 +24,7 @@ export const POST = handle(async (req: Request) => {
   const { smtpPass, ...f } = Body.parse(await req.json());
   const cur = await prisma.emailSettings.findUnique({ where: { id: 1 } });
   const smtpPassEnc = smtpPass ? encrypt(smtpPass) : cur?.smtpPassEnc;
-  if (!smtpPassEnc) return Response.json({ error: "Falta la contraseña SMTP" }, { status: 400 });
+  if (!smtpPassEnc) return Response.json({ error: await textoPanel("Falta la contraseña SMTP", "SMTP password is missing") }, { status: 400 });
   const s = await prisma.emailSettings.upsert({ where: { id: 1 }, create: { id: 1, ...f, smtpPassEnc }, update: { ...f, smtpPassEnc } });
   await audit(u, "correo.configurar", s.fromEmail);
   try { await getTransport(s).verify(); return Response.json({ ok: true, verified: true }); }

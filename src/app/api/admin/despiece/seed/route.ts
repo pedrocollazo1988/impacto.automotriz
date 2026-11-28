@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { audit, handle, requireAdmin } from "@/lib/auth";
+import { audit, handle, requireAdmin, textoPanel } from "@/lib/auth";
 import { invalidarCacheDespiece } from "@/lib/despiece";
 import { sembrarDespiece } from "@/lib/despiece-seed";
 
@@ -10,6 +10,6 @@ export const POST = handle(async (req: Request) => {
   const u = await requireAdmin(req, "products");
   const r = await sembrarDespiece(prisma);
   invalidarCacheDespiece();
-  await audit(u, "despiece.sembrar", `${r.piezas} piezas, ${r.laminas} láminas`);
+  await audit(u, "despiece.sembrar", await textoPanel(`${r.piezas} piezas, ${r.laminas} láminas`, `${r.piezas} parts, ${r.laminas} sheets`));
   return Response.json(r);
 });

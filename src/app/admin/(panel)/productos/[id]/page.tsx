@@ -3,8 +3,10 @@ import { prisma } from "@/lib/prisma";
 import ProductForm from "../ProductForm";
 import { PageHeader, PanelPad } from "@/components/admin/ui";
 import HistorialProducto from "@/components/admin/HistorialProducto";
+import { getT } from "@/lib/i18n";
 export const dynamic = "force-dynamic";
 export default async function Editar({ params }: { params: Promise<{ id: string }> }) {
+  const { t } = await getT();
   const p = await prisma.product.findUnique({ where: { id: Number((await params).id) }, include: { fits: true, category: true, brand: true, variants: { where: { active: true } } } });
   if (!p) notFound();
   const [c, b, movimientos] = await Promise.all([
@@ -14,7 +16,7 @@ export default async function Editar({ params }: { params: Promise<{ id: string 
   ]);
   return (
     <>
-      <PageHeader title="Editar producto" subtitle={p.name} />
+      <PageHeader title={t("adm.prod.editTitle")} subtitle={p.name} />
       <PanelPad>
         <ProductForm categories={c.map((x) => x.name)} brands={b.map((x) => x.name)} blob={!!process.env.BLOB_READ_WRITE_TOKEN} initial={{
           id: p.id, sku: p.sku, name: p.name, description: p.description, priceUsd: Number(p.priceUsd), compareAtUsd: p.compareAtUsd ? Number(p.compareAtUsd) : null, stock: p.stock, lowStockAt: p.lowStockAt,

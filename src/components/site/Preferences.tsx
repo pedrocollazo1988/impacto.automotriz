@@ -26,12 +26,22 @@ const aplicarTema = (t: Tema) => {
   document.documentElement.style.colorScheme = oscuro ? "dark" : "light";
 };
 
-export function PreferencesProvider({ children }: { children: ReactNode }) {
+/**
+ * `initialLang` llega del layout raíz ya resuelto desde la cookie, para que el
+ * HTML del servidor salga en el idioma del visitante y no cambie al hidratar.
+ */
+export function PreferencesProvider({
+  children,
+  initialLang = "es",
+  initialTheme = "system",
+}: { children: ReactNode; initialLang?: Idioma; initialTheme?: Tema }) {
   const router = useRouter();
-  const [theme, setThemeState] = useState<Tema>("system");
-  const [lang, setLangState] = useState<Idioma>("es");
+  const [theme, setThemeState] = useState<Tema>(initialTheme);
+  const [lang, setLangState] = useState<Idioma>(initialLang);
   const [ready, setReady] = useState(false);
 
+  // Tras hidratar se revalida contra localStorage: manda lo que el visitante
+  // eligió en este navegador si el servidor no lo sabía (cookie borrada, etc.).
   useEffect(() => {
     const t = localStorage.getItem("theme");
     const l = localStorage.getItem("lang");

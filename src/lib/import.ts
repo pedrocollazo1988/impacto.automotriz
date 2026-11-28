@@ -33,15 +33,17 @@ export function parseSpecs(v: string): Record<string, string> {
 }
 
 // Importa filas (cabecera + datos). Columnas: sku, nombre, precio, existencias, categoria, [marca, descripcion, imagenes, modelo3d, destacado, compatibilidad, especificaciones]
-export async function importRows(rows: string[][], ctx: { actor?: string } = {}) {
+export async function importRows(rows: string[][], ctx: { actor?: string; lang?: "es" | "en" } = {}) {
+  const lang = ctx.lang ?? "es";
+  const txt = (es: string, en: string) => (lang === "en" ? en : es);
   const head = rows[0].map(norm); const col = (r: string[], n: string) => (r[head.indexOf(n)] ?? "").trim();
-  for (const need of ["sku", "nombre", "precio", "existencias", "categoria"]) if (!head.includes(need)) throw new Error(`Falta la columna «${need}»`);
+  for (const need of ["sku", "nombre", "precio", "existencias", "categoria"]) if (!head.includes(need)) throw new Error(txt(`Falta la columna «${need}»`, `Missing column “${need}”`));
   let created = 0, updated = 0; const errors: { fila: number; error: string }[] = [];
   for (const [idx, r] of rows.slice(1).entries()) {
     try {
       const price = num(col(r, "precio")), stock = Number(col(r, "existencias"));
-      if (!col(r, "sku") || !col(r, "nombre") || !col(r, "categoria") || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0) throw new Error("Datos incompletos o inválidos");
-      const fits = col(r, "compatibilidad").split("|").filter(Boolean).map((x) => { const [make, model, a, b] = x.split(":").map((t) => t.trim()); if (!make || !model || !+a || !+b) throw new Error(`Compatibilidad inválida «${x}»`); return { make, model, yearFrom: +a, yearTo: +b }; });
+      if (!col(r, "sku") || !col(r, "nombre") || !col(r, "categoria") || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0) throw new Error(txt("Datos incompletos o inválidos", "Incomplete or invalid data"));
+      const fits = col(r, "compatibilidad").split("|").filter(Boolean).map((x) => { const [make, model, a, b] = x.split(":").map((t) => t.trim()); if (!make || !model || !+a || !+b) throw new Error(txt(`Compatibilidad inválida «${x}»`, `Invalid fitment “${x}”`)); return { make, model, yearFrom: +a, yearTo: +b }; });
       // Sin pares válidos se omite, para no borrar las que ya tenga la ficha.
       const specs = parseSpecs(col(r, "especificaciones"));
       const { created: c } = await saveProduct({

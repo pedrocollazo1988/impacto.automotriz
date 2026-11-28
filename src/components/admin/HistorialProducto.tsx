@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Icon from "@/components/brand/Icon";
+import { getT } from "@/lib/i18n";
 
 export type MovimientoProducto = {
   id: number;
@@ -15,14 +16,14 @@ export type MovimientoProducto = {
   createdAt: Date;
 };
 
-const ETIQUETA: Record<string, string> = {
-  ALTA: "Alta",
-  EDICION: "Edición",
-  AJUSTE: "Ajuste de existencias",
-  VENTA: "Venta",
-  DEVOLUCION: "Devolución",
-  CANCELACION: "Cancelación",
-  BAJA: "Baja",
+const CLAVE_MOVIMIENTO: Record<string, string> = {
+  ALTA: "adm.prod.movAlta",
+  EDICION: "adm.prod.movEdicion",
+  AJUSTE: "adm.prod.movAjuste",
+  VENTA: "adm.prod.movVenta",
+  DEVOLUCION: "adm.prod.movDevolucion",
+  CANCELACION: "adm.prod.movCancelacion",
+  BAJA: "adm.prod.movBaja",
 };
 
 const COLOR: Record<string, string> = {
@@ -45,30 +46,31 @@ const fecha = (d: Date) =>
     minute: "2-digit",
   }).format(d);
 
-export default function HistorialProducto({ movimientos, stock, creadoEn }: { movimientos: MovimientoProducto[]; stock: number; creadoEn?: Date }) {
+export default async function HistorialProducto({ movimientos, stock, creadoEn }: { movimientos: MovimientoProducto[]; stock: number; creadoEn?: Date }) {
+  const { t } = await getT();
   return (
     <section className="rounded-xl border border-slate-200 bg-white">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
         <div>
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-navy"><Icon name="box" size={16} /> Historial de inventario</h2>
-          <p className="mt-0.5 text-xs text-slate-500">Altas, ajustes, ventas y devoluciones. Existencia actual: <b className="text-navy">{stock}</b>{creadoEn ? ` · Creado el ${fecha(creadoEn)}` : ""}</p>
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-navy"><Icon name="box" size={16} /> {t("adm.prod.historyTitle")}</h2>
+          <p className="mt-0.5 text-xs text-slate-500">{t("adm.prod.historySubtitle")} <b className="text-navy">{stock}</b>{creadoEn ? ` · ${t("adm.prod.historyCreatedAt").replace("{date}", fecha(creadoEn))}` : ""}</p>
         </div>
-        <span className="text-xs text-slate-400">{movimientos.length} movimiento(s)</span>
+        <span className="text-xs text-slate-400">{t("adm.prod.historyCount").replace("{n}", String(movimientos.length))}</span>
       </header>
       {movimientos.length === 0 ? (
-        <p className="px-4 py-8 text-center text-sm text-slate-500">Todavía no hay movimientos registrados para este producto{creadoEn ? ` desde su alta el ${fecha(creadoEn)}` : ""}</p>
+        <p className="px-4 py-8 text-center text-sm text-slate-500">{creadoEn ? t("adm.prod.historyEmptySince").replace("{date}", fecha(creadoEn)) : t("adm.prod.historyEmpty")}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
               <tr>
-                <th className="px-4 py-2 font-semibold">Fecha</th>
-                <th className="px-4 py-2 font-semibold">Movimiento</th>
-                <th className="px-4 py-2 font-semibold">Detalle</th>
-                <th className="px-4 py-2 font-semibold">Pedido</th>
-                <th className="px-4 py-2 text-right font-semibold">Cambio</th>
-                <th className="px-4 py-2 text-right font-semibold">Existencia final</th>
-                <th className="px-4 py-2 font-semibold">Usuario</th>
+                <th className="px-4 py-2 font-semibold">{t("adm.prod.colDate")}</th>
+                <th className="px-4 py-2 font-semibold">{t("adm.prod.colMovement")}</th>
+                <th className="px-4 py-2 font-semibold">{t("adm.prod.colDetail")}</th>
+                <th className="px-4 py-2 font-semibold">{t("adm.prod.colOrder")}</th>
+                <th className="px-4 py-2 text-right font-semibold">{t("adm.prod.colChange")}</th>
+                <th className="px-4 py-2 text-right font-semibold">{t("adm.prod.colFinalStock")}</th>
+                <th className="px-4 py-2 font-semibold">{t("adm.prod.colUser")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -77,14 +79,14 @@ export default function HistorialProducto({ movimientos, stock, creadoEn }: { mo
                   <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">{fecha(m.createdAt)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${COLOR[m.kind] ?? "bg-slate-100 text-slate-700"}`}>
-                      {ETIQUETA[m.kind] ?? m.kind}
+                      {t(CLAVE_MOVIMIENTO[m.kind] ?? m.kind)}
                     </span>
                   </td>
                   <td className="max-w-[280px] px-4 py-3 text-xs text-slate-600">{m.detail || "—"}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-xs">
                     {m.orderId && m.orderNumber ? (
                       <Link href={`/admin/pedidos/${m.orderId}/prefactura`} className="font-semibold text-[color:var(--color-action)] hover:underline">
-                        #{m.orderNumber} · prefactura
+                        {t("adm.prod.historyOrderLink").replace("{n}", String(m.orderNumber))}
                       </Link>
                     ) : "—"}
                   </td>

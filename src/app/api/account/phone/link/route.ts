@@ -6,7 +6,7 @@ import { limit, limitKey } from "@/lib/ratelimit";
 import { normalizarTelefono } from "@/lib/phone";
 import { enviarOtpSms, OTP_MAX_POR_HORA } from "@/lib/otp";
 import { errorOtp, errorJson } from "@/lib/otp-http";
-import { getLang } from "@/lib/i18n";
+import { idiomaDeCliente } from "@/lib/i18n";
 
 const Body = z.object({ phone: z.string().min(4).max(30) });
 
@@ -28,7 +28,7 @@ export const POST = handle(async (req: Request) => {
 
     const envio = await enviarOtpSms({
       telefono,
-      lang: await getLang(),
+      lang: await idiomaDeCliente(me.preferredLanguage),
       purpose: "link",
       customerId: me.id,
       ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,

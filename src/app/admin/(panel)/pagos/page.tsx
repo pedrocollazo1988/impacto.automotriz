@@ -1,8 +1,9 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader, Panel, PanelPad, EmptyState, Badge, Field, inputCls, Modal } from "@/components/admin/ui";
 import Icon, { NOMBRES_ICONO } from "@/components/brand/Icon";
 import PasswordField from "@/components/PasswordField";
+import { usePreferences } from "@/components/site/Preferences";
 
 type DriverId = "tropipay" | "qvapay" | "manual" | "link";
 type Campo = {
@@ -72,6 +73,11 @@ const formularioVacio = (preset?: Preset): Formulario => ({
 });
 
 export default function Pagos() {
+  const { t } = usePreferences();
+  // `t` cambia de identidad en cada render; el ref evita que `cargar` se recree
+  // y dispare un bucle de peticiones en el efecto de montaje.
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; }, [t]);
   const [metodos, setMetodos] = useState<Metodo[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [presets, setPresets] = useState<Preset[]>([]);
@@ -87,7 +93,7 @@ export default function Pagos() {
     const r = await fetch("/api/admin/payments");
     const j = await r.json().catch(() => ({}));
     if (!r.ok) {
-      setErr(j.error ?? "No se pudieron cargar los métodos de pago");
+      setErr(j.error ?? tRef.current("adm.pagos.loadError"));
       setCargando(false);
       return;
     }
@@ -114,8 +120,8 @@ export default function Pagos() {
   const secretos = (m: Metodo) => (driverDe(m.provider)?.campos ?? []).filter((c) => c.secreto);
   const credenciales = (m: Metodo) => {
     const s = secretos(m);
-    if (!s.length) return "No requiere";
-    return s.every((c) => m.creds[c.campo]) ? "Configuradas" : "Incompletas";
+    if (!s.length) return t("adm.pagos.credsNone");
+    return s.every((c) => m.creds[c.campo]) ? t("adm.pagos.credsSet") : t("adm.pagos.credsIncomplete");
   };
 
   const abrir = (m: Metodo) => {
@@ -142,7 +148,7 @@ export default function Pagos() {
   const guardar = async () => {
     if (!form) return;
     setErr(""); setMsg("");
-    if (form.name.trim().length < 2) return setErr("Ponle un nombre al método de pago");
+    if (form.name.trim().length < 2) return setErr(t("adm.pagos.errName"));
     setBusy(true);
     const body: Record<string, unknown> = {
       provider: form.provider,
@@ -163,8 +169,8 @@ export default function Pagos() {
     const r = await fetch("/api/admin/payments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({}));
     setBusy(false);
-    if (!r.ok) return setErr(j.error ?? "No se pudo guardar");
-    setMsg(form.id ? "Cambios guardados" : "Método añadido");
+    if (!r.ok) return setErr(j.error ?? t("adm.pagos.errSave"));
+    setMsg(form.id ? t("adm.pagos.saved") : t("adm.pagos.added"));
     setForm(null); setEditando(null);
     cargar();
   };
@@ -182,7 +188,7 @@ export default function Pagos() {
     const { tipo, metodo } = confirmar;
     await fetch(`/api/admin/payments?id=${metodo.id}${tipo === "revocar" ? "&mode=creds" : ""}`, { method: "DELETE" });
     setConfirmar(null);
-    setMsg(tipo === "revocar" ? "Credenciales revocadas" : "Método archivado");
+    setMsg(tipo === "revocar" ? t("adm.pagos.credsRevoked") : t("adm.pagos.archived"));
     cargar();
   };
 
@@ -191,9 +197,9 @@ export default function Pagos() {
   return (
     <>
       <PageHeader
-        title="Métodos de pago"
-        subtitle="Activa lo que ya usas y añade cualquier forma de cobro nueva"
-        actions={<button className="btn btn-primary btn-sm" onClick={nuevo}><Icon name="plus" size={15} /> Añadir método</button>}
+        title={t("adm.pagos.title")}
+        subtitle={t("adm.pagos.subtitle")}
+        actions={<button className="btn btn-primary btn-sm" onClick={nuevo}><Icon name="plus" size={15} /> {t("adm.pagos.add")}</button>}
       />
 
       {msg && <p className="mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{msg}</p>}
@@ -205,22 +211,24 @@ export default function Pagos() {
             <Icon name="wallet" size={20} />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="font-display text-sm font-bold text-navy">Un método para cada cliente</p>
+            <p className="font-display text-sm font-bold text-navy">{t("adm.pagos.introTitle")}</p>
             <p className="mt-0.5 text-sm text-slate-500">
-              Transferencia, Zelle, USDT, efectivo o un enlace externo. Los métodos automáticos cobran solos; los manuales se confirman desde Pedidos.
+              {t("adm.pagos.introText")}
             </p>
           </div>
           <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            {activos} {activos === 1 ? "activo" : "activos"} de {metodos.length}
+            {t(activos === 1 ? "adm.pagos.activeOfTotal" : "adm.pagos.activeOfTotalPlural")
+              .replace("{n}", String(activos))
+              .replace("{total}", String(metodos.length))}
           </div>
         </div>
       </PanelPad>
 
       {cargando ? (
-        <Panel><PanelPad><p className="text-sm text-slate-500">Cargando métodos…</p></PanelPad></Panel>
+        <Panel><PanelPad><p className="text-sm text-slate-500">{t("adm.pagos.loading")}</p></PanelPad></Panel>
       ) : !metodos.length ? (
-        <Panel><EmptyState icon="card" title="Sin métodos de pago" hint="Añade el primero con el botón de arriba." /></Panel>
+        <Panel><EmptyState icon="card" title={t("adm.pagos.emptyTitle")} hint={t("adm.pagos.emptyHint")} /></Panel>
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
           {metodos.map((m) => {
@@ -237,9 +245,9 @@ export default function Pagos() {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-display text-base font-bold text-navy">{m.name}</h3>
-                        <Badge tone={m.enabled ? "ok" : "mute"}>{m.enabled ? "Activo" : "Inactivo"}</Badge>
-                        <Badge tone={m.kind === "online" ? "info" : "warn"}>{m.kind === "online" ? "Automático" : "Manual"}</Badge>
-                        {m.kind === "online" && <Badge tone={m.sandbox ? "warn" : "ok"}>{m.sandbox ? "Pruebas" : "Producción"}</Badge>}
+                        <Badge tone={m.enabled ? "ok" : "mute"}>{m.enabled ? t("adm.pagos.active") : t("adm.pagos.inactive")}</Badge>
+                        <Badge tone={m.kind === "online" ? "info" : "warn"}>{m.kind === "online" ? t("adm.pagos.automatic") : t("adm.pagos.manual")}</Badge>
+                        {m.kind === "online" && <Badge tone={m.sandbox ? "warn" : "ok"}>{m.sandbox ? t("adm.pagos.sandbox") : t("adm.pagos.production")}</Badge>}
                       </div>
                       <p className="mt-1 text-sm text-slate-500">{m.description || d?.descripcion}</p>
                       <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-slate-400">{d?.nombre ?? m.provider} · {m.key}</p>
@@ -249,27 +257,27 @@ export default function Pagos() {
                   {aviso && (
                     <p className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
                       <Icon name="info" size={14} />
-                      <span>Activo pero no se muestra al comprador: falta {pendientes.map((c) => c.etiqueta).join(" y ")}.</span>
+                      <span>{t("adm.pagos.missingWarn").replace("{list}", pendientes.map((c) => c.etiqueta).join(` ${t("adm.pagos.joinAnd")} `))}</span>
                     </p>
                   )}
 
                   <dl className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-slate-50 p-3 text-xs">
-                    <div><dt className="text-slate-400">Comisión</dt><dd className="mt-0.5 font-semibold text-slate-700">{m.feePercent ? `${m.feePercent} %` : "Sin comisión"}</dd></div>
-                    <div><dt className="text-slate-400">Mínimo</dt><dd className="mt-0.5 font-semibold text-slate-700">{m.minTotalUsd == null ? "—" : `${m.minTotalUsd} USD`}</dd></div>
-                    <div><dt className="text-slate-400">Máximo</dt><dd className="mt-0.5 font-semibold text-slate-700">{m.maxTotalUsd == null ? "—" : `${m.maxTotalUsd} USD`}</dd></div>
-                    <div className="col-span-3 border-t border-slate-200/70 pt-2"><dt className="inline text-slate-400">Credenciales: </dt><dd className="inline font-semibold text-slate-700">{credenciales(m)}</dd></div>
+                    <div><dt className="text-slate-400">{t("adm.pagos.fee")}</dt><dd className="mt-0.5 font-semibold text-slate-700">{m.feePercent ? `${m.feePercent} %` : t("adm.pagos.noFee")}</dd></div>
+                    <div><dt className="text-slate-400">{t("adm.pagos.min")}</dt><dd className="mt-0.5 font-semibold text-slate-700">{m.minTotalUsd == null ? "—" : `${m.minTotalUsd} USD`}</dd></div>
+                    <div><dt className="text-slate-400">{t("adm.pagos.max")}</dt><dd className="mt-0.5 font-semibold text-slate-700">{m.maxTotalUsd == null ? "—" : `${m.maxTotalUsd} USD`}</dd></div>
+                    <div className="col-span-3 border-t border-slate-200/70 pt-2"><dt className="inline text-slate-400">{t("adm.pagos.credentials")}: </dt><dd className="inline font-semibold text-slate-700">{credenciales(m)}</dd></div>
                   </dl>
 
                   <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <button className="btn btn-ghost btn-sm" onClick={() => abrir(m)}><Icon name="edit" size={14} /> Editar</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => abrir(m)}><Icon name="edit" size={14} /> {t("adm.pagos.edit")}</button>
                     <button className={`btn btn-sm ${m.enabled ? "btn-ghost" : "btn-primary"}`} onClick={() => alternar(m)}>
-                      {m.enabled ? "Desactivar" : "Activar"}
+                      {m.enabled ? t("adm.pagos.deactivate") : t("adm.pagos.activate")}
                     </button>
                     <div className="ml-auto flex items-center gap-1">
                       {secretos(m).length > 0 && m.creds && Object.values(m.creds).some(Boolean) && (
-                        <button className="btn btn-danger btn-sm" onClick={() => setConfirmar({ tipo: "revocar", metodo: m })}>Revocar</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => setConfirmar({ tipo: "revocar", metodo: m })}>{t("adm.pagos.revoke")}</button>
                       )}
-                      <button className="btn btn-quiet btn-sm text-red-600" onClick={() => setConfirmar({ tipo: "archivar", metodo: m })} aria-label={`Archivar ${m.name}`}>
+                      <button className="btn btn-quiet btn-sm text-red-600" onClick={() => setConfirmar({ tipo: "archivar", metodo: m })} aria-label={`${t("adm.pagos.archive")} ${m.name}`}>
                         <Icon name="trash" size={15} />
                       </button>
                     </div>
@@ -283,22 +291,22 @@ export default function Pagos() {
 
       <Panel className="mt-6">
         <PanelPad>
-          <h3 className="font-display text-sm font-bold text-navy">Cómo se calcula el cobro</h3>
+          <h3 className="font-display text-sm font-bold text-navy">{t("adm.pagos.howTitle")}</h3>
           <ul className="mt-2 space-y-1.5 text-sm text-slate-600">
-            <li>· Las credenciales se guardan cifradas (AES-256-GCM). Nunca se muestran de vuelta, solo si están puestas.</li>
-            <li>· Un método activo sin lo obligatorio no aparece en el checkout; arriba se indica qué falta.</li>
-            <li>· La comisión se suma al total del comprador y queda reflejada en el pedido.</li>
-            <li>· Los métodos manuales se confirman desde Pedidos; los automáticos reciben la confirmación de la pasarela.</li>
+            <li>· {t("adm.pagos.how1")}</li>
+            <li>· {t("adm.pagos.how2")}</li>
+            <li>· {t("adm.pagos.how3")}</li>
+            <li>· {t("adm.pagos.how4")}</li>
           </ul>
         </PanelPad>
       </Panel>
 
-      <Modal open={!!form} title={form?.id ? "Editar método de pago" : "Añadir método de pago"} onClose={() => { setForm(null); setEditando(null); }} size="lg">
+      <Modal open={!!form} title={form?.id ? t("adm.pagos.editTitle") : t("adm.pagos.newTitle")} onClose={() => { setForm(null); setEditando(null); }} size="lg">
         {form && (
           <>
             {!form.id && (
               <div className="mb-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Empieza con una plantilla</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{t("adm.pagos.templateTitle")}</p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {presets.map((p) => {
                     const activo = form.provider === p.provider && form.name === p.nombre;
@@ -322,19 +330,19 @@ export default function Pagos() {
             )}
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Nombre visible" hint="Es el nombre que verá el comprador.">
-                <input className={inputCls} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Transferencia bancaria" />
+              <Field label={t("adm.pagos.nameLabel")} hint={t("adm.pagos.nameHint")}>
+                <input className={inputCls} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("adm.pagos.namePlaceholder")} />
               </Field>
-              <Field label="Tipo de cobro" hint="Define cómo se confirma el pago.">
+              <Field label={t("adm.pagos.typeLabel")} hint={t("adm.pagos.typeHint")}>
                 <div className="input flex items-center gap-2 bg-slate-50 text-slate-600">
                   <Icon name={driver?.icono ?? "card"} size={16} />
                   {driver?.nombre ?? form.provider}
                 </div>
               </Field>
-              <Field label="Descripción en el checkout" hint="Una línea que explique cómo se paga.">
-                <input className={inputCls} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Transferencia o depósito. Confirmamos el pago a mano." />
+              <Field label={t("adm.pagos.descLabel")} hint={t("adm.pagos.descHint")}>
+                <input className={inputCls} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t("adm.pagos.descPlaceholder")} />
               </Field>
-              <Field label="Icono" hint="Se usa en el checkout y en esta lista.">
+              <Field label={t("adm.pagos.iconLabel")} hint={t("adm.pagos.iconHint")}>
                 <div className="flex items-center gap-2">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-slate-100 text-navy"><Icon name={form.icon} size={18} /></span>
                   <select className={inputCls} value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })}>
@@ -342,23 +350,23 @@ export default function Pagos() {
                   </select>
                 </div>
               </Field>
-              <Field label="Comisión (%)" hint="Se suma al total que ve el comprador.">
+              <Field label={t("adm.pagos.feeLabel")} hint={t("adm.pagos.feeHint")}>
                 <input className={inputCls} type="number" step="0.01" min="0" max="30" value={form.feePercent} onChange={(e) => setForm({ ...form, feePercent: Number(e.target.value) })} />
               </Field>
-              <Field label="Orden" hint="Menor número aparece antes.">
+              <Field label={t("adm.pagos.orderLabel")} hint={t("adm.pagos.orderHint")}>
                 <input className={inputCls} type="number" min="0" max="99" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })} />
               </Field>
-              <Field label="Importe mínimo (USD)" hint="Vacío = sin mínimo.">
+              <Field label={t("adm.pagos.minLabel")} hint={t("adm.pagos.minHint")}>
                 <input className={inputCls} type="number" min="0" step="0.01" value={form.minTotalUsd ?? ""} onChange={(e) => setForm({ ...form, minTotalUsd: e.target.value === "" ? null : Number(e.target.value) })} />
               </Field>
-              <Field label="Importe máximo (USD)" hint="Vacío = sin máximo.">
+              <Field label={t("adm.pagos.maxLabel")} hint={t("adm.pagos.maxHint")}>
                 <input className={inputCls} type="number" min="0" step="0.01" value={form.maxTotalUsd ?? ""} onChange={(e) => setForm({ ...form, maxTotalUsd: e.target.value === "" ? null : Number(e.target.value) })} />
               </Field>
             </div>
 
             {campos.length > 0 && (
               <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Datos de {driver?.nombre}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{t("adm.pagos.dataTitle").replace("{name}", driver?.nombre ?? "")}</p>
                 <div className="mt-2 grid gap-3 sm:grid-cols-2">
                   {campos.map((c) => {
                     const valor = c.secreto ? (form.creds[c.campo] ?? "") : (form.config[c.campo] ?? "");
@@ -377,13 +385,13 @@ export default function Pagos() {
                       );
                     }
                     return (
-                      <Field key={c.campo} label={c.etiqueta} hint={guardado ? "Ya hay un valor guardado. Escribe solo si quieres cambiarlo." : c.ayuda}>
+                      <Field key={c.campo} label={c.etiqueta} hint={guardado ? t("adm.pagos.savedValueHint") : c.ayuda}>
                         {c.tipo === "textarea" ? (
                           <textarea className={inputCls} rows={3} value={valor} onChange={(e) => setForm(c.secreto ? { ...form, creds: { ...form.creds, [c.campo]: e.target.value } } : { ...form, config: { ...form.config, [c.campo]: e.target.value } })} />
                         ) : c.secreto ? (
                           <PasswordField
                             autoComplete="new-password"
-                            placeholder={guardado ? "•••••••• (guardado)" : c.porDefecto ?? ""}
+                            placeholder={guardado ? t("adm.pagos.savedPlaceholder") : c.porDefecto ?? ""}
                             value={valor}
                             onChange={(e) => setForm({ ...form, creds: { ...form.creds, [c.campo]: e.target.value } })}
                           />
@@ -404,43 +412,43 @@ export default function Pagos() {
             )}
 
             <div className="mt-4">
-              <Field label="Instrucciones para el comprador" hint="Se muestran al elegir este método: datos bancarios, redes, notas de entrega…">
+              <Field label={t("adm.pagos.instructionsLabel")} hint={t("adm.pagos.instructionsHint")}>
                 <textarea className={inputCls} rows={4} value={form.instructions} onChange={(e) => setForm({ ...form, instructions: e.target.value })} />
               </Field>
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-4">
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <input type="checkbox" checked={form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} /> Activo
+                <input type="checkbox" checked={form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} /> {t("adm.pagos.active")}
               </label>
               {driver?.kind === "online" && (
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                  <input type="checkbox" checked={form.sandbox} onChange={(e) => setForm({ ...form, sandbox: e.target.checked })} /> Modo pruebas
+                  <input type="checkbox" checked={form.sandbox} onChange={(e) => setForm({ ...form, sandbox: e.target.checked })} /> {t("adm.pagos.sandboxMode")}
                 </label>
               )}
               <div className="ml-auto flex gap-2">
-                <button className="btn btn-ghost btn-sm" onClick={() => { setForm(null); setEditando(null); }}>Cancelar</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => { setForm(null); setEditando(null); }}>{t("adm.pagos.cancel")}</button>
                 <button className="btn btn-primary btn-sm" onClick={guardar} disabled={busy}>
-                  <Icon name="check" size={14} /> {busy ? "Guardando…" : "Guardar"}
+                  <Icon name="check" size={14} /> {busy ? t("adm.pagos.saving") : t("adm.pagos.save")}
                 </button>
               </div>
             </div>
 
-            {form.key && <p className="mt-3 font-mono text-[10px] text-slate-400">Clave interna: {form.key} · no cambia al renombrar</p>}
+            {form.key && <p className="mt-3 font-mono text-[10px] text-slate-400">{t("adm.pagos.internalKey").replace("{key}", form.key)}</p>}
           </>
         )}
       </Modal>
 
-      <Modal open={!!confirmar} title={confirmar?.tipo === "revocar" ? "Revocar credenciales" : "Archivar método"} onClose={() => setConfirmar(null)}>
+      <Modal open={!!confirmar} title={confirmar?.tipo === "revocar" ? t("adm.pagos.revokeTitle") : t("adm.pagos.archiveTitle")} onClose={() => setConfirmar(null)}>
         <p className="text-sm text-slate-600">
           {confirmar?.tipo === "revocar"
-            ? `Se borrarán las credenciales de ${confirmar.metodo.name} y el método quedará desactivado. Los pedidos anteriores no cambian.`
-            : `${confirmar?.metodo.name} dejará de aparecer en el checkout. Los pedidos anteriores conservan su método y su nombre.`}
+            ? t("adm.pagos.revokeBody").replace("{name}", confirmar.metodo.name)
+            : t("adm.pagos.archiveBody").replace("{name}", confirmar?.metodo.name ?? "")}
         </p>
         <div className="mt-4 flex justify-end gap-2">
-          <button className="btn btn-ghost btn-sm" onClick={() => setConfirmar(null)}>Cancelar</button>
+          <button className="btn btn-ghost btn-sm" onClick={() => setConfirmar(null)}>{t("adm.pagos.cancel")}</button>
           <button className={`btn btn-sm ${confirmar?.tipo === "revocar" ? "btn-danger" : "btn-primary"}`} onClick={ejecutarConfirmacion}>
-            {confirmar?.tipo === "revocar" ? "Revocar" : "Archivar"}
+            {confirmar?.tipo === "revocar" ? t("adm.pagos.revoke") : t("adm.pagos.archive")}
           </button>
         </div>
       </Modal>

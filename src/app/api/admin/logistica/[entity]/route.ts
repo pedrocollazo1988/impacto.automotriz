@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, handle, requireAdmin, HttpError } from "@/lib/auth";
+import { audit, handle, requireAdmin, errorPanel } from "@/lib/auth";
 
 // CRUD administrable de: methods (métodos de entrega), pickup-points, slots (franjas), addons (servicios extra)
 const usd = z.number().min(0);
@@ -26,7 +26,7 @@ type Ctx = { params: Promise<{ entity: string }> };
 async function cfg(ctx: Ctx) {
   const { entity } = await ctx.params;
   const c = CFG[entity as keyof typeof CFG];
-  if (!c) throw new HttpError(404, "Entidad desconocida");
+  if (!c) throw await errorPanel(404, "Entidad desconocida", "Unknown entity");
   // El delegate sale de una lista cerrada (CFG) y el cuerpo se valida con zod.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return { schema: c.schema, db: (prisma as any)[c.delegate] };

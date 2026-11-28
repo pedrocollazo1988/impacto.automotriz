@@ -10,7 +10,7 @@ import { errorOtp, errorJson } from "@/lib/otp-http";
 import { requireTurnstile, turnstileActivo } from "@/lib/turnstile";
 import { verifyCaptcha } from "@/lib/captcha";
 import { consumeCaptchaToken } from "@/lib/captcha-use";
-import { getLang } from "@/lib/i18n";
+import { idiomaDeCliente } from "@/lib/i18n";
 
 const Body = z.object({
   name: z.string().min(2).max(120),
@@ -50,8 +50,8 @@ export const POST = handle(async (req: Request) => {
     await limitKey(telefono, "otp-sms-number", OTP_MAX_POR_HORA, 3600_000);
     await limit(req, "otp-sms-ip", OTP_MAX_POR_HORA * 2, 3600_000);
 
-    const lang = await getLang();
-    const existente = await prisma.customer.findUnique({ where: { phoneE164: telefono }, select: { id: true, phoneVerifiedAt: true } });
+    const existente = await prisma.customer.findUnique({ where: { phoneE164: telefono }, select: { id: true, phoneVerifiedAt: true, preferredLanguage: true } });
+    const lang = await idiomaDeCliente(existente?.preferredLanguage);
 
     let customerId: string;
     let purpose: "register" | "login";
@@ -60,7 +60,7 @@ export const POST = handle(async (req: Request) => {
       purpose = "login";
     } else if (existente) {
       // Cuenta a medias: se actualiza con lo que acaba de escribir y se reenvía.
-      await prisma.customer.update({ where: { id: existente.id }, data: { name: b.name, phone: telefono, ...(b.password ? { passwordHash: hashPassword(b.password) } : {}) } });
+      await prisma.customer.update({ where: { id: existente.id }, data: { name: b.name, phone: telefono, preferredLanguage: existente.preferredLanguage ?? lang, ...(b.password ? { passwordHash: hashPassword(b.password) } : {}) } });
       customerId = existente.id;
       purpose = "register";
     } else {

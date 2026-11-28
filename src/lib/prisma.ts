@@ -71,6 +71,16 @@ export const prisma = base.$extends({
         return query(args);
       },
     },
+    // El contenido editable guarda una fila por sección e idioma. Antes de
+    // leerlo hay que asegurar la columna `lang` y, además, los menús siguen
+    // pidiendo la sección por su clave sola (`findUnique({ where: { key } })`),
+    // que ya no es única: esa lectura equivale a la fila en español.
+    contentBlock: {
+      async $allOperations({ args, query }) {
+        await asegurarEsquema();
+        return query(args);
+      },
+    },
   },
 }) as unknown as PrismaClient;
 

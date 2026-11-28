@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/brand/Icon";
 import { PageHeader, Panel, PanelPad, EmptyState, Badge, Modal, inputCls, inputSmCls } from "@/components/admin/ui";
+import { usePreferences } from "@/components/site/Preferences";
 
 type Prod = { id: number; sku: string; name: string; stock: number };
 type Pin = { id: number; number: number; x: number; y: number; svgId: string | null; label: string | null; product: Prod };
@@ -10,6 +11,7 @@ type Diagram = { id: number; title: string; image: string; notes: string | null;
 type Vehicle = { id: number; slug: string; brand: string; model: string; version: string; diagrams: Diagram[] };
 
 export default function DespieceAdmin() {
+  const { t } = usePreferences();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [vSlug, setVSlug] = useState("");
   const [dIdx, setDIdx] = useState(0);
@@ -28,28 +30,28 @@ export default function DespieceAdmin() {
       const r = await fetch("/api/admin/despiece");
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
-        setErr(j.error ?? `No se pudo cargar el despiece (HTTP ${r.status})`);
+        setErr(j.error ?? `${t("adm.despiece.errLoad")} (HTTP ${r.status})`);
         return;
       }
       const d: Vehicle[] = await r.json();
       setVehicles(Array.isArray(d) ? d : []);
       setVSlug((s) => s || d[0]?.slug || "");
     } catch {
-      setErr("No se pudo conectar con el servidor. Revisa tu conexión y recarga.");
+      setErr(t("adm.despiece.errConnection"));
     }
   }, []);
   useEffect(() => { load(); }, [load]);
 
   const sembrar = async () => {
-    if (!confirm("Se cargarán las 7 láminas y 23 piezas del Kvitova DDS-OD en esta base de datos. ¿Continuar?")) return;
+    if (!confirm(t("adm.despiece.seedConfirm"))) return;
     setSembrando(true); setErr("");
     try {
       const r = await fetch("/api/admin/despiece/seed", { method: "POST" });
       const j = await r.json().catch(() => ({}));
-      if (!r.ok) { setErr(j.error ?? `No se pudo cargar el despiece (HTTP ${r.status})`); return; }
+      if (!r.ok) { setErr(j.error ?? `${t("adm.despiece.errLoad")} (HTTP ${r.status})`); return; }
       await load();
     } catch {
-      setErr("No se pudo conectar con el servidor. Revisa tu conexión y recarga.");
+      setErr(t("adm.despiece.errConnection"));
     } finally {
       setSembrando(false);
     }
@@ -120,7 +122,7 @@ export default function DespieceAdmin() {
 
   const guardarPin = async () => {
     if (!diagram) return;
-    if (!pending || !form.productId) return setErr("Elige un producto");
+    if (!pending || !form.productId) return setErr(t("adm.despiece.errChooseProduct"));
     setBusy(true);
     const r = await fetch("/api/admin/despiece", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -133,7 +135,7 @@ export default function DespieceAdmin() {
     });
     const j = await r.json();
     setBusy(false);
-    if (!r.ok) return setErr(j.error ?? "No se pudo guardar");
+    if (!r.ok) return setErr(j.error ?? t("adm.despiece.errSave"));
     setPending(null); setErr(""); await load();
   };
 
@@ -146,7 +148,7 @@ export default function DespieceAdmin() {
     const n = pin.number + delta;
     if (n < 1) return;
     const r = await fetch("/api/admin/despiece", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: pin.id, number: n }) });
-    if (!r.ok) { const j = await r.json(); setErr(j.error ?? "Número ocupado"); return; }
+    if (!r.ok) { const j = await r.json(); setErr(j.error ?? t("adm.despiece.errNumberTaken")); return; }
     setErr(""); await load();
   };
 
@@ -155,12 +157,12 @@ export default function DespieceAdmin() {
   return (
     <>
       <PageHeader
-        title="Despiece interactivo"
-        subtitle="Coloca los pines sobre la lámina y asígnalos a un producto del catálogo"
+        title={t("adm.despiece.title")}
+        subtitle={t("adm.despiece.subtitle")}
         actions={
           vehicle && (
             <Link href={`/despiece/${vehicle.slug}/${diagram?.system.slug ?? ""}`} target="_blank" className="btn btn-ghost btn-sm">
-              <Icon name="search" size={14} /> Ver en la tienda
+              <Icon name="search" size={14} /> {t("adm.despiece.viewStore")}
             </Link>
           )
         }
@@ -169,19 +171,19 @@ export default function DespieceAdmin() {
       <PanelPad className="mb-4">
         <div className="flex flex-wrap items-end gap-2">
           <label className="space-y-1">
-            <span className="block text-xs font-semibold text-slate-600">Vehículo</span>
+            <span className="block text-xs font-semibold text-slate-600">{t("adm.despiece.vehicle")}</span>
             <select className={inputCls} value={vSlug} onChange={(e) => { setVSlug(e.target.value); setDIdx(0); setSel(null); }}>
               {vehicles.map((v) => <option key={v.id} value={v.slug}>{v.brand} {v.model} · {v.version}</option>)}
             </select>
           </label>
           <label className="space-y-1">
-            <span className="block text-xs font-semibold text-slate-600">Sistema / lámina</span>
+            <span className="block text-xs font-semibold text-slate-600">{t("adm.despiece.systemSheet")}</span>
             <select className={inputCls} value={dIdx} onChange={(e) => { setDIdx(Number(e.target.value)); setSel(null); }}>
-              {(vehicle?.diagrams ?? []).map((d, i) => <option key={d.id} value={i}>{d.system.name} ({d.pins.length} pines)</option>)}
+              {(vehicle?.diagrams ?? []).map((d, i) => <option key={d.id} value={i}>{d.system.name} ({t("adm.despiece.pinsCount").replace("{n}", String(d.pins.length))})</option>)}
             </select>
           </label>
           <p className="ml-auto flex items-center gap-1.5 text-xs text-slate-500">
-            <Icon name="info" size={13} /> Haz clic en la lámina para añadir un pin. Arrastra un pin para moverlo.
+            <Icon name="info" size={13} /> {t("adm.despiece.addPinHint")}
           </p>
         </div>
         {err && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
@@ -191,23 +193,23 @@ export default function DespieceAdmin() {
         <Panel>
           <EmptyState
             icon="layers"
-            title="No hay vehículos con despiece"
-            hint="La base de datos de este entorno no tiene el despiece cargado. Puedes cargar el Kvitova DDS-OD con sus 7 láminas y 23 piezas ahora mismo."
+            title={t("adm.despiece.noVehicles")}
+            hint={t("adm.despiece.noVehiclesHint")}
           />
           <div className="flex justify-center pb-6">
             <button className="btn btn-primary btn-sm" disabled={sembrando} onClick={sembrar}>
-              {sembrando ? "Cargando…" : "Cargar despiece de fábrica"}
+              {sembrando ? t("adm.despiece.seedLoading") : t("adm.despiece.seedAction")}
             </button>
           </div>
         </Panel>
       ) : !diagram ? (
-        <Panel><EmptyState icon="layers" title="Sin láminas" hint="Este vehículo no tiene láminas cargadas." /></Panel>
+        <Panel><EmptyState icon="layers" title={t("adm.despiece.noSheets")} hint={t("adm.despiece.noSheetsHint")} /></Panel>
       ) : (
         <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
           <Panel className="lg:col-span-8">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-3 py-2">
               <p className="font-mono text-[11px] uppercase tracking-widest text-slate-400">{diagram.title}</p>
-              <Badge tone={diagram.pins.length ? "ok" : "warn"}>{diagram.pins.length} pines</Badge>
+              <Badge tone={diagram.pins.length ? "ok" : "warn"}>{t("adm.despiece.pinsCount").replace("{n}", String(diagram.pins.length))}</Badge>
             </div>
             <div className="relative select-none bg-slate-50 p-2">
               <div
@@ -244,7 +246,7 @@ export default function DespieceAdmin() {
               </div>
               {sinPines && (
                 <p className="pointer-events-none absolute inset-0 grid place-items-center text-sm font-semibold text-slate-400">
-                  Haz clic sobre la lámina para colocar el primer pin
+                  {t("adm.despiece.firstPinHint")}
                 </p>
               )}
             </div>
@@ -253,10 +255,10 @@ export default function DespieceAdmin() {
           <div className="lg:col-span-4">
             <Panel>
               <div className="border-b border-slate-100 px-3 py-2">
-                <p className="font-mono text-[11px] uppercase tracking-widest text-slate-400">Pines de esta lámina</p>
+                <p className="font-mono text-[11px] uppercase tracking-widest text-slate-400">{t("adm.despiece.sheetPins")}</p>
               </div>
               {diagram.pins.length === 0 ? (
-                <EmptyState icon="pin" title="Sin pines" hint="Haz clic sobre el dibujo para añadir el primero." />
+                <EmptyState icon="pin" title={t("adm.despiece.noPins")} hint={t("adm.despiece.noPinsHint")} />
               ) : (
                 <ul className="max-h-[62vh] divide-y divide-slate-100 overflow-y-auto">
                   {diagram.pins.map((p) => (
@@ -270,10 +272,10 @@ export default function DespieceAdmin() {
                         </div>
                         <div className="flex shrink-0 flex-col gap-1">
                           <div className="flex gap-1">
-                            <button onClick={() => moverNumero(p, -1)} className="grid h-5 w-5 place-items-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50" aria-label="Bajar número">−</button>
-                            <button onClick={() => moverNumero(p, 1)} className="grid h-5 w-5 place-items-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50" aria-label="Subir número">+</button>
+                            <button onClick={() => moverNumero(p, -1)} className="grid h-5 w-5 place-items-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50" aria-label={t("adm.despiece.ariaLowerNumber")}>−</button>
+                            <button onClick={() => moverNumero(p, 1)} className="grid h-5 w-5 place-items-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50" aria-label={t("adm.despiece.ariaRaiseNumber")}>+</button>
                           </div>
-                          <button onClick={() => borrarPin(p.id)} className="btn btn-danger btn-xs" aria-label="Quitar pin">
+                          <button onClick={() => borrarPin(p.id)} className="btn btn-danger btn-xs" aria-label={t("adm.despiece.ariaRemovePin")}>
                             <Icon name="trash" size={11} />
                           </button>
                         </div>
@@ -287,37 +289,37 @@ export default function DespieceAdmin() {
         </div>
       )}
 
-      <Modal open={!!pending} title="Nueva pieza en el diagrama" onClose={() => setPending(null)}>
+      <Modal open={!!pending} title={t("adm.despiece.newPinTitle")} onClose={() => setPending(null)}>
         {pending && (
           <div className="space-y-3">
             <p className="rounded-lg bg-slate-50 px-3 py-2 font-mono text-xs text-slate-500">
-              Posición: x {pending.x}% · y {pending.y}%
+              {t("adm.despiece.position")}: x {pending.x}% · y {pending.y}%
             </p>
             <label className="block space-y-1">
-              <span className="text-xs font-semibold text-slate-600">Producto</span>
+              <span className="text-xs font-semibold text-slate-600">{t("adm.despiece.product")}</span>
               <select className={inputCls} value={form.productId} onChange={(e) => setForm({ ...form, productId: e.target.value })}>
-                <option value="">Elige un producto…</option>
+                <option value="">{t("adm.despiece.productPlaceholder")}</option>
                 {products.map((p) => <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>)}
               </select>
             </label>
             <div className="grid grid-cols-2 gap-2">
               <label className="block space-y-1">
-                <span className="text-xs font-semibold text-slate-600">Número en el dibujo</span>
+                <span className="text-xs font-semibold text-slate-600">{t("adm.despiece.numberInDrawing")}</span>
                 <input className={inputCls} type="number" min={1} value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} />
               </label>
               <label className="block space-y-1">
-                <span className="text-xs font-semibold text-slate-600">Etiqueta corta</span>
-                <input className={inputCls} placeholder="Motor" value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} />
+                <span className="text-xs font-semibold text-slate-600">{t("adm.despiece.shortLabel")}</span>
+                <input className={inputCls} placeholder={t("adm.despiece.labelPlaceholder")} value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} />
               </label>
             </div>
             <label className="block space-y-1">
-              <span className="text-xs font-semibold text-slate-600">id del grupo SVG (opcional)</span>
+              <span className="text-xs font-semibold text-slate-600">{t("adm.despiece.svgIdLabel")}</span>
               <input className={`${inputSmCls} w-full font-mono`} placeholder="parte-01" value={form.svgId} onChange={(e) => setForm({ ...form, svgId: e.target.value })} />
             </label>
             {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
             <div className="flex justify-end gap-2 pt-1">
-              <button className="btn btn-ghost btn-sm" onClick={() => setPending(null)}>Cancelar</button>
-              <button className="btn btn-primary btn-sm" disabled={busy} onClick={guardarPin}>{busy ? "Guardando…" : "Añadir pin"}</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setPending(null)}>{t("adm.despiece.cancel")}</button>
+              <button className="btn btn-primary btn-sm" disabled={busy} onClick={guardarPin}>{busy ? t("adm.despiece.saving") : t("adm.despiece.addPin")}</button>
             </div>
           </div>
         )}

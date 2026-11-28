@@ -25,7 +25,7 @@ async function leerMenu(key: string): Promise<Enlace[]> {
   if (!seccion) return [];
   const porDefecto = (seccion.defecto.items ?? []).flatMap(enlaceDe);
   try {
-    const fila = await prisma.contentBlock.findUnique({ where: { key } });
+    const fila = await prisma.contentBlock.findFirst({ where: { key, lang: "es" } });
     if (!fila) return porDefecto;
     const enlaces = componer(seccion, fila).items.flatMap(enlaceDe);
     return enlaces.length ? enlaces : porDefecto;

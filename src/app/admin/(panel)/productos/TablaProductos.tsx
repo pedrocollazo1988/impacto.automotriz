@@ -4,16 +4,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/brand/Icon";
 import { Modal } from "@/components/admin/ui";
+import { usePreferences } from "@/components/site/Preferences";
 import { filtrarProductos, ordenarProductos, type ClaveOrden, type Direccion, type FilaProducto } from "@/lib/admin-sort";
 
 type Props = { filas: FilaProducto[]; puedeEliminar: boolean };
 
 const COLUMNAS: { clave: ClaveOrden; titulo: string; numerica?: boolean }[] = [
-  { clave: "sku", titulo: "Código" },
-  { clave: "name", titulo: "Producto" },
-  { clave: "category", titulo: "Categoría" },
-  { clave: "priceUsd", titulo: "Precio", numerica: true },
-  { clave: "stock", titulo: "Existencias", numerica: true },
+  { clave: "sku", titulo: "adm.prod.colSku" },
+  { clave: "name", titulo: "adm.prod.colProduct" },
+  { clave: "category", titulo: "adm.prod.colCategory" },
+  { clave: "priceUsd", titulo: "adm.prod.colPrice", numerica: true },
+  { clave: "stock", titulo: "adm.prod.stock", numerica: true },
 ];
 
 // Chevron propio: el sprite no trae flecha y un "+"/"−" no se lee como orden.
@@ -26,6 +27,7 @@ function Flecha({ activa, arriba }: { activa: boolean; arriba: boolean }) {
 }
 
 export default function TablaProductos({ filas, puedeEliminar }: Props) {
+  const { t } = usePreferences();
   const router = useRouter();
   const [consulta, setConsulta] = useState("");
   // El input responde al instante; filtrar y ordenar se hace con el valor diferido.
@@ -60,13 +62,13 @@ export default function TablaProductos({ filas, puedeEliminar }: Props) {
       const r = await fetch(`/api/admin/products?${qs}`, { method: "DELETE" });
       if (!r.ok) {
         const cuerpo = await r.json().catch(() => ({}));
-        throw new Error(cuerpo.error || `No se pudo eliminar (${r.status})`);
+        throw new Error(cuerpo.error || `${t("adm.prod.deleteFailed")} (${r.status})`);
       }
       setEliminados((s) => new Set(s).add(victima.id));
       setABorrar(null);
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo eliminar");
+      setError(e instanceof Error ? e.message : t("adm.prod.deleteFailed"));
     } finally {
       setBorrando(false);
     }
@@ -81,15 +83,15 @@ export default function TablaProductos({ filas, puedeEliminar }: Props) {
             type="search"
             value={consulta}
             onChange={(e) => setConsulta(e.target.value)}
-            placeholder="Buscar por nombre…"
-            aria-label="Buscar productos por nombre"
+            placeholder={t("adm.prod.searchPlaceholder")}
+            aria-label={t("adm.prod.searchLabel")}
             className="input input-sm w-full pl-9"
           />
         </div>
         <p className="adm-sub" role="status" aria-live="polite">
           {visibles.length === base.length
-            ? `${base.length} producto${base.length === 1 ? "" : "s"}`
-            : `${visibles.length} de ${base.length}`}
+            ? `${base.length} ${t(base.length === 1 ? "adm.prod.productOne" : "adm.prod.productMany")}`
+            : `${visibles.length} ${t("adm.prod.of")} ${base.length}`}
         </p>
       </div>
 
@@ -102,13 +104,13 @@ export default function TablaProductos({ filas, puedeEliminar }: Props) {
       {!visibles.length ? (
         <div className="adm-empty">
           <Icon name="search" size={30} />
-          <p className="font-semibold text-navy">Ningún producto coincide</p>
-          <p className="text-sm">Prueba con otro nombre o borra la búsqueda.</p>
+          <p className="font-semibold text-navy">{t("adm.prod.noMatch")}</p>
+          <p className="text-sm">{t("adm.prod.noMatchHint")}</p>
         </div>
       ) : (
         <div className="adm-scroll">
           <table className="adm-table">
-            <caption className="sr-only">Productos activos</caption>
+            <caption className="sr-only">{t("adm.prod.activeProducts")}</caption>
             <thead>
               <tr>
                 {COLUMNAS.map((c) => {
@@ -124,13 +126,13 @@ export default function TablaProductos({ filas, puedeEliminar }: Props) {
                         onClick={() => alOrdenar(c.clave)}
                         className={`inline-flex items-center gap-1 hover:text-navy ${c.numerica ? "flex-row-reverse" : ""}`}
                       >
-                        {c.titulo}
+                        {t(c.titulo)}
                         <Flecha activa={activa} arriba={orden.direccion === "asc"} />
                       </button>
                     </th>
                   );
                 })}
-                <th className="text-right">Acciones</th>
+                <th className="text-right">{t("adm.prod.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -141,12 +143,12 @@ export default function TablaProductos({ filas, puedeEliminar }: Props) {
                   <td className="text-slate-500">{p.category}</td>
                   <td className="text-right">{p.priceUsd.toFixed(2)}</td>
                   <td className="text-right">
-                    {p.stock <= p.lowStockAt ? <span className="badge badge-danger">{p.stock} · bajas</span> : <span>{p.stock}</span>}
+                    {p.stock <= p.lowStockAt ? <span className="badge badge-danger">{p.stock} · {t("adm.prod.low")}</span> : <span>{p.stock}</span>}
                   </td>
                   <td className="text-right">
                     <div className="flex justify-end gap-1">
                       <Link className="btn btn-quiet btn-xs" href={`/admin/productos/${p.id}`}>
-                        Editar
+                        {t("adm.prod.edit")}
                       </Link>
                       {puedeEliminar ? (
                         <button
@@ -158,12 +160,12 @@ export default function TablaProductos({ filas, puedeEliminar }: Props) {
                             setDetalle("");
                             setABorrar(p);
                           }}
-                          aria-label={`Eliminar ${p.name}`}
+                          aria-label={`${t("adm.prod.delete")} ${p.name}`}
                         >
-                          <Icon name="trash" size={12} /> Eliminar
+                          <Icon name="trash" size={12} /> {t("adm.prod.delete")}
                         </button>
                       ) : (
-                        <span className="px-1 text-[11px] text-slate-400">Solo admin</span>
+                        <span className="px-1 text-[11px] text-slate-400">{t("adm.prod.adminOnly")}</span>
                       )}
                     </div>
                   </td>
@@ -174,33 +176,33 @@ export default function TablaProductos({ filas, puedeEliminar }: Props) {
         </div>
       )}
 
-      <Modal open={!!aBorrar} title="Eliminar producto" onClose={() => (borrando ? null : setABorrar(null))}>
+      <Modal open={!!aBorrar} title={t("adm.prod.deleteTitle")} onClose={() => (borrando ? null : setABorrar(null))}>
         <p className="text-sm text-slate-600">
-          ¿Seguro que quieres eliminar <strong className="text-navy">{aBorrar?.name}</strong>? Dejará de mostrarse en la tienda y en el catálogo.
+          {t("adm.prod.deleteConfirmLead")} <strong className="text-navy">{aBorrar?.name}</strong>? {t("adm.prod.deleteConfirmTail")}
         </p>
         <p className="mt-2 text-xs text-slate-500">
-          Los pedidos anteriores y sus datos se conservan, así que el historial de ventas no se pierde.
+          {t("adm.prod.deleteKeepHistory")}
         </p>
         <label className="mt-4 block text-xs font-semibold text-slate-600">
-          Motivo
+          {t("adm.prod.reason")}
           <select className="input mt-1" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
-            <option>Sin existencias</option>
-            <option>Producto dañado</option>
-            <option>Descontinuado</option>
-            <option>Duplicado</option>
-            <option>Otro</option>
+            <option value="Sin existencias">{t("adm.prod.reasonOutOfStock")}</option>
+            <option value="Producto dañado">{t("adm.prod.reasonDamaged")}</option>
+            <option value="Descontinuado">{t("adm.prod.reasonDiscontinued")}</option>
+            <option value="Duplicado">{t("adm.prod.reasonDuplicate")}</option>
+            <option value="Otro">{t("adm.prod.reasonOther")}</option>
           </select>
         </label>
         <label className="mt-2 block text-xs font-semibold text-slate-600">
-          Detalle (opcional)
-          <input className="input mt-1" value={detalle} onChange={(e) => setDetalle(e.target.value)} maxLength={300} placeholder="Ej.: el proveedor dejó de fabricarlo" />
+          {t("adm.prod.detailOptional")}
+          <input className="input mt-1" value={detalle} onChange={(e) => setDetalle(e.target.value)} maxLength={300} placeholder={t("adm.prod.detailPlaceholder")} />
         </label>
         <div className="mt-4 flex justify-end gap-2">
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setABorrar(null)} disabled={borrando}>
-            Cancelar
+            {t("adm.prod.cancel")}
           </button>
           <button type="button" className="btn btn-primary btn-sm" onClick={eliminar} disabled={borrando}>
-            {borrando ? "Eliminando…" : "Sí, eliminar"}
+            {borrando ? t("adm.prod.deleting") : t("adm.prod.deleteYes")}
           </button>
         </div>
       </Modal>

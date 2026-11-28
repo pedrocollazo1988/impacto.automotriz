@@ -4,6 +4,8 @@ import type { Prisma, EmailSettings } from "@prisma/client";
 import { prisma } from "./prisma";
 import { backInStockEmail, campaignEmail, testEmail } from "./email-templates";
 import { emailLang, emailT } from "./email-i18n";
+import { textoPanel } from "./auth";
+import { getLang } from "./i18n";
 
 const secret = () => { if (!process.env.APP_SECRET) throw new Error("Falta APP_SECRET"); return process.env.APP_SECRET; };
 const key = () => crypto.createHash("sha256").update(secret()).digest();
@@ -139,9 +141,11 @@ async function deliver(c: MailConfig, to: { email: string; name?: string | null 
 
 export async function sendTest(to: string, subject: string, html?: string) {
   const c = await loadMailConfig();
-  if (!c) throw new Error("Configura la cuenta de correo (o define SMTP_HOST, SMTP_USER, SMTP_PASS y MAIL_FROM_EMAIL)");
-  const cuerpo = html ? campaignEmail({ subject, html, lang: "es" }) : testEmail({ lang: "es" });
-  const r = await deliver(c, { email: to, name: "Prueba" }, `[PRUEBA] ${subject}`, cuerpo, false);
+  if (!c) throw new Error(await textoPanel("Configura la cuenta de correo (o define SMTP_HOST, SMTP_USER, SMTP_PASS y MAIL_FROM_EMAIL)", "Set up the email account (or define SMTP_HOST, SMTP_USER, SMTP_PASS and MAIL_FROM_EMAIL)"));
+  const lang = await getLang();
+  const cuerpo = html ? campaignEmail({ subject, html, lang }) : testEmail({ lang });
+  const etiqueta = lang === "en" ? "TEST" : "PRUEBA";
+  const r = await deliver(c, { email: to, name: lang === "en" ? "Test" : "Prueba" }, `[${etiqueta}] ${subject}`, cuerpo, false);
   if (!r.ok) throw new Error(r.error);
 }
 
@@ -149,11 +153,11 @@ export async function sendTest(to: string, subject: string, html?: string) {
 // para no ser marcado como spam por el proveedor del dominio y evitar timeouts del servidor.
 export async function processQueue() {
   const c = await loadMailConfig();
-  if (!c) return { sent: 0, note: "Sin configuración de correo" };
+  if (!c) return { sent: 0, note: await textoPanel("Sin configuración de correo", "No email configuration") };
   const day = new Date(); day.setHours(0, 0, 0, 0);
   const today = await prisma.campaignSend.count({ where: { status: "SENT", sentAt: { gte: day } } });
   let budget = Math.min(c.perMinute, c.dailyLimit - today);
-  if (budget <= 0) return { sent: 0, note: "Límite diario alcanzado" };
+  if (budget <= 0) return { sent: 0, note: await textoPanel("Límite diario alcanzado", "Daily limit reached") };
   let sent = 0;
   for (const campaign of await prisma.campaign.findMany({ where: { status: "SENDING" }, orderBy: { id: "asc" } })) {
     if (budget <= 0) break;
@@ -176,7 +180,7 @@ export async function processQueue() {
 export async function sendTransactional(to: string, subject: string, html: string): Promise<SendResult> {
   const c = await loadMailConfig();
   if (!c) {
-    const error = "No hay configuración SMTP (panel de correo o variables SMTP_HOST/SMTP_USER/SMTP_PASS/MAIL_FROM_EMAIL)";
+    const error = await textoPanel("No hay configuración SMTP (panel de correo o variables SMTP_HOST/SMTP_USER/SMTP_PASS/MAIL_FROM_EMAIL)", "No SMTP configuration (email panel or SMTP_HOST/SMTP_USER/SMTP_PASS/MAIL_FROM_EMAIL variables)");
     console.error(`[correo] ${error}; no se envió "${subject}" a ${to}`);
     return { ok: false, error };
   }

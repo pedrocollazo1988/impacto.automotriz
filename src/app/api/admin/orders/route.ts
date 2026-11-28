@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma, asegurarEsquema } from "@/lib/prisma";
-import { audit, handle, requireAdmin, HttpError } from "@/lib/auth";
+import { audit, handle, requireAdmin, errorPanel, textoPanel } from "@/lib/auth";
 import { notifyBackInStock, sendTransactional } from "@/lib/mailer";
 import { orderItemRemovedEmail, orderStatusEmail } from "@/lib/email-templates";
 import { emailLang, emailT, orderStatusEmailLabel } from "@/lib/email-i18n";
@@ -21,11 +21,11 @@ export const POST = handle(async (req: Request) => {
   const reposiciones = new Map<number, { name: string; slug: string }>();
 
   if (b.action === "remove-item") {
-    if (u.role !== "ADMIN") throw new HttpError(403, "Solo el administrador puede retirar productos de un pedido.");
-    if (o.status === "CANCELED" || o.status === "DELIVERED") throw new HttpError(409, "No se puede modificar un pedido cancelado o entregado.");
+    if (u.role !== "ADMIN") throw await errorPanel(403, "Solo el administrador puede retirar productos de un pedido.", "Only the administrator can remove products from an order.");
+    if (o.status === "CANCELED" || o.status === "DELIVERED") throw await errorPanel(409, "No se puede modificar un pedido cancelado o entregado.", "A canceled or delivered order cannot be modified.");
     const item = o.items.find((i) => i.id === b.itemId);
-    if (!item) throw new HttpError(404, "Ese producto no pertenece al pedido.");
-    if (o.items.length <= 1) throw new HttpError(409, "El pedido debe conservar al menos un producto. Cancela el pedido completo si ya no se puede servir.");
+    if (!item) throw await errorPanel(404, "Ese producto no pertenece al pedido.", "That product does not belong to the order.");
+    if (o.items.length <= 1) throw await errorPanel(409, "El pedido debe conservar al menos un producto. Cancela el pedido completo si ya no se puede servir.", "The order must keep at least one product. Cancel the whole order if it can no longer be fulfilled.");
     const r2 = (n: number) => Math.round(n * 100) / 100;
     await prisma.$transaction(async (tx) => {
       await tx.orderItem.delete({ where: { id: item.id } });
@@ -36,7 +36,7 @@ export const POST = handle(async (req: Request) => {
         data: {
           productId: item.productId, variantId: item.variantId, productName: prod.name, sku: prod.sku,
           kind: "DEVOLUCION", delta: item.qty, stockBefore: prod.stock - item.qty, stockAfter: prod.stock,
-          detail: `Retirado del pedido #${o.number}: ${item.name}`, orderId: o.id, orderNumber: o.number,
+          detail: await textoPanel(`Retirado del pedido #${o.number}: ${item.name}`, `Removed from order #${o.number}: ${item.name}`), orderId: o.id, orderNumber: o.number,
           actor: u.name, source: "admin",
         },
       });
@@ -60,16 +60,16 @@ export const POST = handle(async (req: Request) => {
   if (b.action === "confirm-payment") {
     await prisma.order.update({ where: { id: o.id }, data: { paid: true, paidAt: new Date(), status: "PAID" } });
   } else if (b.action === "deliver") {
-    if (o.status === "CANCELED") throw new HttpError(409, "No se puede entregar un pedido cancelado");
-    if (o.status === "DELIVERED") throw new HttpError(409, "El pedido ya está entregado");
-    if (o.delivery?.confirmationCode !== b.pin) throw new HttpError(422, "PIN incorrecto");
+    if (o.status === "CANCELED") throw await errorPanel(409, "No se puede entregar un pedido cancelado", "A canceled order cannot be delivered");
+    if (o.status === "DELIVERED") throw await errorPanel(409, "El pedido ya está entregado", "The order is already delivered");
+    if (o.delivery?.confirmationCode !== b.pin) throw await errorPanel(422, "PIN incorrecto", "Incorrect PIN");
     await prisma.$transaction([
       prisma.order.update({ where: { id: o.id }, data: { status: "DELIVERED" } }),
       prisma.orderDelivery.update({ where: { orderId: o.id }, data: { status: "DELIVERED", deliveredAt: new Date() } }),
     ]);
   } else {
-    if (o.status === "CANCELED") throw new HttpError(409, "El pedido ya está cancelado");
-    if (b.value === "DELIVERED") throw new HttpError(400, "Confirma la entrega con el PIN del cliente.");
+    if (o.status === "CANCELED") throw await errorPanel(409, "El pedido ya está cancelado", "The order is already canceled");
+    if (b.value === "DELIVERED") throw await errorPanel(400, "Confirma la entrega con el PIN del cliente.", "Confirm the delivery with the customer's PIN.");
     await prisma.$transaction(async (tx) => {
       await tx.order.update({ where: { id: o.id }, data: { status: b.value } });
       if (b.value === "CANCELED") { // devolver existencias y uso del cupón
@@ -81,7 +81,7 @@ export const POST = handle(async (req: Request) => {
             data: {
               productId: i.productId, variantId: i.variantId, productName: prod.name, sku: prod.sku,
               kind: "CANCELACION", delta: i.qty, stockBefore: prod.stock - i.qty, stockAfter: prod.stock,
-              detail: `Pedido #${o.number} cancelado: ${i.name}`, orderId: o.id, orderNumber: o.number,
+              detail: await textoPanel(`Pedido #${o.number} cancelado: ${i.name}`, `Order #${o.number} canceled: ${i.name}`), orderId: o.id, orderNumber: o.number,
               actor: u.name, source: "admin",
             },
           });

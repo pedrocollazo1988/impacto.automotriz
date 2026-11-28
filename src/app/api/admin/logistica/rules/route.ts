@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, handle, requireAdmin, HttpError } from "@/lib/auth";
+import { audit, handle, requireAdmin, errorPanel, textoPanel } from "@/lib/auth";
 
 const key = (p: number, m?: number | null) => `${p}:${m ?? "*"}`;
 
@@ -24,7 +24,7 @@ export const POST = handle(async (req: Request) => {
   const ids: (number | null)[] = municipalityIds?.length ? municipalityIds : [null];
   if (municipalityIds?.length) {
     const ok = await prisma.municipality.count({ where: { id: { in: municipalityIds }, provinceId } });
-    if (ok !== municipalityIds.length) throw new HttpError(400, "Municipios que no pertenecen a la provincia");
+    if (ok !== municipalityIds.length) throw await errorPanel(400, "Municipios que no pertenecen a la provincia", "Municipalities that do not belong to the province");
   }
   await prisma.$transaction(ids.map((municipalityId) =>
     prisma.deliveryRule.upsert({
@@ -32,7 +32,7 @@ export const POST = handle(async (req: Request) => {
       create: { methodId, provinceId, municipalityId, scopeKey: key(provinceId, municipalityId), ...f },
       update: f,
     })));
-  await audit(u, "zonas.guardar", `método ${methodId} provincia ${provinceId} (${ids.length})`);
+  await audit(u, "zonas.guardar", await textoPanel(`método ${methodId} provincia ${provinceId} (${ids.length})`, `method ${methodId} province ${provinceId} (${ids.length})`));
   return Response.json({ ok: true, updated: ids.length });
 });
 

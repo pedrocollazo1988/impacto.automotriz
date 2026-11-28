@@ -7,7 +7,7 @@ import { crearOtp, OTP_MAX_POR_HORA, type PropositoOtp } from "@/lib/otp";
 import { errorOtp, errorJson } from "@/lib/otp-http";
 import { estadoSms, proveedorSms } from "@/lib/sms";
 import { requireTurnstile, turnstileActivo } from "@/lib/turnstile";
-import { getLang } from "@/lib/i18n";
+import { idiomaDeCliente } from "@/lib/i18n";
 
 const Body = z.object({
   phone: z.string().min(4).max(30),
@@ -45,7 +45,7 @@ export const POST = handle(async (req: Request) => {
     await limitKey(telefono, "otp-sms-number", OTP_MAX_POR_HORA, 3600_000);
     await limit(req, "otp-sms-ip", OTP_MAX_POR_HORA * 2, 3600_000);
 
-    const c = await prisma.customer.findUnique({ where: { phoneE164: telefono }, select: { id: true, phoneVerifiedAt: true } });
+    const c = await prisma.customer.findUnique({ where: { phoneE164: telefono }, select: { id: true, phoneVerifiedAt: true, preferredLanguage: true } });
     const purpose: PropositoOtp = b.purpose === "reset" ? "reset" : c?.phoneVerifiedAt ? "login" : "register";
 
     // El canal es el teléfono: el mismo código sirve por SMS o por WhatsApp.
@@ -53,7 +53,8 @@ export const POST = handle(async (req: Request) => {
 
     let debugCode: string | undefined;
     if (c) {
-      const envio = await proveedorSms().enviarCodigo({ to: telefono, codigo, lang: await getLang() });
+      const lang = await idiomaDeCliente(c.preferredLanguage);
+      const envio = await proveedorSms().enviarCodigo({ to: telefono, codigo, lang });
       if (!envio.ok) return errorJson("AUTH_SMS_SEND_FAILED", 502);
       debugCode = envio.debugCode;
     }

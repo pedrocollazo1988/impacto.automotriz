@@ -9,7 +9,7 @@ import { sendVerificationPin, sendWelcomeEmail } from "@/lib/verify";
 import { requireTurnstile, turnstileActivo } from "@/lib/turnstile";
 import { verifyCaptcha } from "@/lib/captcha";
 import { consumeCaptchaToken } from "@/lib/captcha-use";
-import { getLang } from "@/lib/i18n";
+import { idiomaDeCliente } from "@/lib/i18n";
 
 const Body = z.object({
   name: z.string().min(2).max(120),
@@ -42,8 +42,9 @@ export const POST = handle(async (req: Request) => {
     throw await errorHttp(400, "codigo.usado");
   }
 
-  const lang = await getLang();
-  const c = await prisma.customer.create({ data: { name: b.name, email: b.email, phone: b.phone, passwordHash: hashPassword(b.password) } });
+  // Cuenta nueva: el idioma del visitante es su preferencia desde ya.
+  const lang = await idiomaDeCliente();
+  const c = await prisma.customer.create({ data: { name: b.name, email: b.email, phone: b.phone, passwordHash: hashPassword(b.password), preferredLanguage: lang } });
   if (b.marketing) { // doble confirmación: queda PENDIENTE hasta que confirme su correo
     await prisma.subscriber.upsert({ where: { email: b.email }, create: { email: b.email, name: b.name, status: "PENDING", consentAt: new Date(), source: "registro", lang }, update: { lang } });
     await prisma.subscriber.updateMany({ where: { email: b.email, status: "UNSUBSCRIBED" }, data: { status: "PENDING", consentAt: new Date() } });
