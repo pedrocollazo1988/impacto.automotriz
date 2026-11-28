@@ -59,6 +59,12 @@ export const prisma = base.$extends({
         return query(args);
       },
     },
+    staffUser: {
+      async $allOperations({ args, query }) {
+        await asegurarEsquema();
+        return query(args);
+      },
+    },
     address: {
       async $allOperations({ args, query }) {
         await asegurarEsquema();

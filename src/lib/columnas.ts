@@ -42,6 +42,8 @@ const COLUMNAS = [
   // Entrada con Telegram (gratis y sin restricción para Cuba).
   `ALTER TABLE "Customer" ADD COLUMN IF NOT EXISTS "telegramId" TEXT`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "Customer_telegramId_key" ON "Customer"("telegramId")`,
+  // Tema del panel guardado por usuario del equipo.
+  `ALTER TABLE "StaffUser" ADD COLUMN IF NOT EXISTS "theme" TEXT`,
 ];
 
 // Tablas nuevas. Se crean aquí por el mismo motivo: el despliegue no migra.
