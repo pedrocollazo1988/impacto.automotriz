@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Icon from "@/components/brand/Icon";
+import TelegramLogin from "@/components/TelegramLogin";
 import PasswordField from "@/components/PasswordField";
 import Turnstile from "@/components/Turnstile";
 import Captcha, { type CaptchaValue } from "@/components/site/Captcha";
@@ -12,7 +13,7 @@ type Canal = "email" | "phone";
 type Modo = "login" | "register" | "forgot" | "codigo";
 type Proposito = "register" | "login" | "reset";
 
-export default function AuthForm({ google = false, next }: { google?: boolean; next?: string }) {
+export default function AuthForm({ google = false, telegram = "", next }: { google?: boolean; telegram?: string; next?: string }) {
   const { t } = usePreferences();
   const destino = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
   const [modo, setModo] = useState<Modo>("login");
@@ -315,6 +316,13 @@ export default function AuthForm({ google = false, next }: { google?: boolean; n
 
           {google && modo !== "forgot" && (
             <a href="/api/account/google/start" className="btn btn-ghost w-full"><Icon name="user" size={16} /> {t("auth.google")}</a>
+          )}
+
+          {telegram && modo !== "forgot" && (
+            <div className="w-full">
+              <p className="mb-2 text-center text-xs text-slate-500">{t("auth.telegram")}</p>
+              <TelegramLogin usuario={telegram} />
+            </div>
           )}
           {msg && <p role="status" className={`rounded-lg p-3 text-sm ${msgOk ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>{msg}</p>}
         </div>

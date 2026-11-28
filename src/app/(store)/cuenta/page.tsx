@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getCustomer } from "@/lib/customer-auth";
 import { telefonoLegible } from "@/lib/phone";
 import AuthForm from "@/components/AuthForm";
+import TelegramLogin from "@/components/TelegramLogin";
+import { estadoTelegram } from "@/lib/telegram";
 import GarageManager from "@/components/GarageManager";
 import PerfilCuenta from "@/components/cuenta/PerfilCuenta";
 import Avatar from "@/components/cuenta/Avatar";
@@ -27,7 +29,11 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
   const me = await getCustomer();
   if (!me) return (
     <div className="container-x py-12">
-      {sp.error && <p className="mx-auto mb-4 max-w-md rounded-xl bg-red-50 p-3 text-sm text-red-700">No se pudo iniciar sesión con Google. Inténtalo de nuevo.</p>}
+      {sp.error && (
+        <p className="mx-auto mb-4 max-w-md rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          {sp.error === "telegram" ? "No se pudo iniciar sesión con Telegram. Inténtalo de nuevo." : "No se pudo iniciar sesión con Google. Inténtalo de nuevo."}
+        </p>
+      )}
       <div className="grid items-start gap-8 lg:grid-cols-2">
         <div>
           <span className="eyebrow">Tu cuenta</span>
@@ -39,7 +45,7 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
             ))}
           </ul>
         </div>
-        <AuthForm google={!!process.env.GOOGLE_CLIENT_ID} />
+        <AuthForm google={!!process.env.GOOGLE_CLIENT_ID} telegram={estadoTelegram().configurado ? estadoTelegram().usuario : ""} />
       </div>
     </div>
   );
@@ -56,7 +62,11 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Avatar url={me.avatarUrl} name={me.name} />
-            <div><h1 className="font-display text-2xl font-extrabold text-navy">Hola, {me.name.split(" ")[0]}</h1><p className="text-sm text-slate-500">{me.email ?? telefonoLegible(me.phoneE164)}</p></div>
+            <div>
+              <h1 className="font-display text-2xl font-extrabold text-navy">Hola, {me.name.split(" ")[0]}</h1>
+              <p className="text-sm text-slate-500">{me.email ?? (me.phoneE164 ? telefonoLegible(me.phoneE164) : "Cuenta de Telegram")}</p>
+              {me.telegramId && <p className="text-xs font-semibold text-[color:var(--color-ok)]">Telegram vinculado</p>}
+            </div>
           </div>
           <LogoutButton />
         </div>
