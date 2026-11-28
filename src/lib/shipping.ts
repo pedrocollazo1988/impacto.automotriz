@@ -5,6 +5,7 @@ import { HttpError } from "./auth";
 import { SITE } from "./site";
 import { calcularTarifaEntrega } from "./shipping-fee";
 import { textoMensaje, type IdiomaMensaje } from "./mensajes";
+import { descripcionEntrega, nombreEntrega } from "./datos-i18n";
 
 const num = (v: unknown) => (v == null ? null : Number(v));
 
@@ -39,7 +40,8 @@ export async function quoteDelivery(municipalityId: number, subtotalUsd: number,
 
   return methods.map((m) => {
     const base = {
-      methodId: m.id, code: m.code, name: m.name, kind: m.kind, description: m.description,
+      methodId: m.id, code: m.code, name: nombreEntrega(m, idioma), kind: m.kind,
+      description: descripcionEntrega(m, idioma),
       requiresAddress: m.requiresAddress, cashOnDelivery: m.cashOnDelivery,
       slots: m.slots.map((s) => ({ id: s.id, label: s.label, maxOrders: s.maxOrders })),
       pickupPoints: [] as { id: number; name: string; address: string; hours: string | null; readyHours: number }[],

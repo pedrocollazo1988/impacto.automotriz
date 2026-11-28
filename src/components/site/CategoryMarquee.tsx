@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@/components/brand/Icon";
 import { usePreferences } from "@/components/site/Preferences";
+import { nombreCategoria } from "@/lib/datos-i18n";
 
 export type CategoryMarqueeProps = {
-  categories: { slug: string; name: string }[];
+  categories: { slug: string; name: string; nameEn?: string | null }[];
   allLabel?: string;
 };
 
@@ -47,7 +48,7 @@ export default function CategoryMarquee({
   categories,
   allLabel,
 }: CategoryMarqueeProps) {
-  const { t } = usePreferences();
+  const { t, lang } = usePreferences();
   const unicas = useMemo(() => deduplicar(categories), [categories]);
   const regionRef = useRef<HTMLDivElement>(null);
   const listaRef = useRef<HTMLUListElement>(null);
@@ -126,7 +127,7 @@ export default function CategoryMarquee({
                         tabIndex={copy === 1 ? -1 : undefined}
                         className="chip whitespace-nowrap px-3 py-2 text-[12.5px]"
                       >
-                        {categoria.name}
+                        {nombreCategoria(categoria, lang)}
                       </Link>
                     </li>
                   ))}

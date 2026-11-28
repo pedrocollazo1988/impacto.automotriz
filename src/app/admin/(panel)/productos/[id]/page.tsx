@@ -19,11 +19,11 @@ export default async function Editar({ params }: { params: Promise<{ id: string 
       <PageHeader title={t("adm.prod.editTitle")} subtitle={p.name} />
       <PanelPad>
         <ProductForm categories={c.map((x) => x.name)} brands={b.map((x) => x.name)} blob={!!process.env.BLOB_READ_WRITE_TOKEN} initial={{
-          id: p.id, sku: p.sku, name: p.name, description: p.description, priceUsd: Number(p.priceUsd), compareAtUsd: p.compareAtUsd ? Number(p.compareAtUsd) : null, stock: p.stock, lowStockAt: p.lowStockAt,
+          id: p.id, sku: p.sku, name: p.name, description: p.description, nameEn: p.nameEn, descriptionEn: p.descriptionEn, priceUsd: Number(p.priceUsd), compareAtUsd: p.compareAtUsd ? Number(p.compareAtUsd) : null, stock: p.stock, lowStockAt: p.lowStockAt,
           variants: p.variants.map((v) => ({ sku: v.sku, name: v.name, priceUsd: v.priceUsd != null ? Number(v.priceUsd) : null, stock: v.stock })),
           images: p.images, videos: p.videos, model3dUrl: p.model3dUrl, model3dVideo: p.model3dVideo,
           spin360Frames: p.spin360Frames, spin360Video: p.spin360Video,
-          viewerMode: p.viewerMode, specs: (p.specs ?? null) as Record<string, string> | null, featured: p.featured, active: p.active, categoryName: p.category.name, brandName: p.brand?.name ?? "",
+          viewerMode: p.viewerMode, specs: (p.specs ?? null) as Record<string, string> | null, specsEn: (p.specsEn ?? null) as Record<string, string> | null, featured: p.featured, active: p.active, categoryName: p.category.name, brandName: p.brand?.name ?? "",
           fits: p.fits.map(({ make, model, yearFrom, yearTo }) => ({ make, model, yearFrom, yearTo })) }} />
         <div className="mt-6">
           <HistorialProducto movimientos={movimientos} stock={p.stock} creadoEn={p.createdAt} />

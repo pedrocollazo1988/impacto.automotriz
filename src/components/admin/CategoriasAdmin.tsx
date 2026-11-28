@@ -7,8 +7,10 @@ import { usePreferences } from "@/components/site/Preferences";
 type Categoria = {
   id: number;
   name: string;
+  nameEn: string | null;
   slug: string;
   description: string;
+  descriptionEn: string | null;
   icon: string;
   position: number;
   visible: boolean;
@@ -16,7 +18,7 @@ type Categoria = {
 };
 
 const ICONOS = NOMBRES_ICONO.filter((n) => n !== "spinner");
-const vacia = { id: undefined as number | undefined, name: "", description: "", icon: "box", position: 0, visible: true };
+const vacia = { id: undefined as number | undefined, name: "", nameEn: "", description: "", descriptionEn: "", icon: "box", position: 0, visible: true };
 
 export default function CategoriasAdmin({ iniciales }: { iniciales: Categoria[] }) {
   const { t } = usePreferences();
@@ -110,7 +112,7 @@ export default function CategoriasAdmin({ iniciales }: { iniciales: Categoria[] 
                   </td>
                   <td className="text-right">
                     <div className="flex justify-end gap-1">
-                      <button className="btn btn-quiet btn-xs" onClick={() => setEditando({ id: c.id, name: c.name, description: c.description, icon: c.icon, position: c.position, visible: c.visible })} aria-label={t("adm.cat.editAria").replace("{name}", c.name)}>
+                      <button className="btn btn-quiet btn-xs" onClick={() => setEditando({ id: c.id, name: c.name, nameEn: c.nameEn ?? "", description: c.description, descriptionEn: c.descriptionEn ?? "", icon: c.icon, position: c.position, visible: c.visible })} aria-label={t("adm.cat.editAria").replace("{name}", c.name)}>
                         <Icon name="edit" size={14} />
                       </button>
                       <button className="btn btn-quiet btn-xs text-red-600" onClick={() => setBorrando(c)} aria-label={t("adm.cat.deleteAria").replace("{name}", c.name)}>
@@ -134,6 +136,19 @@ export default function CategoriasAdmin({ iniciales }: { iniciales: Categoria[] 
             <Field label={t("adm.cat.description")} hint={t("adm.cat.descriptionHint")}>
               <textarea className={inputCls} rows={2} value={editando.description} onChange={(e) => setEditando({ ...editando, description: e.target.value })} />
             </Field>
+
+            <div className="rounded-xl border border-slate-200 p-3">
+              <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-navy"><Icon name="globe" size={13} /> English</p>
+              <p className="mb-3 text-[11px] text-slate-500">{t("adm.contenido.langHintEn")}</p>
+              <div className="space-y-3">
+                <Field label={t("adm.cat.name")}>
+                  <input className={inputCls} value={editando.nameEn} onChange={(e) => setEditando({ ...editando, nameEn: e.target.value })} />
+                </Field>
+                <Field label={t("adm.cat.description")}>
+                  <textarea className={inputCls} rows={2} value={editando.descriptionEn} onChange={(e) => setEditando({ ...editando, descriptionEn: e.target.value })} />
+                </Field>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <Field label={t("adm.cat.icon")}>
                 <select className={inputCls} value={editando.icon} onChange={(e) => setEditando({ ...editando, icon: e.target.value })}>

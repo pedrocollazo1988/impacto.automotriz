@@ -6,7 +6,10 @@ import { invalidarCacheCatalogo, slugify } from "@/lib/catalog";
 const Body = z.object({
   id: z.number().int().optional(),
   name: z.string().min(2).max(60),
+  // Inglés opcional; vacío = null para caer al español en la web.
+  nameEn: z.string().max(60).nullish(),
   description: z.string().max(300).optional(),
+  descriptionEn: z.string().max(300).nullish(),
   icon: z.string().max(40).optional(),
   position: z.number().int().min(0).max(999).optional(),
   visible: z.boolean().optional(),
@@ -36,6 +39,10 @@ export const POST = handle(async (req: Request) => {
     name: b.name.trim(),
     slug,
     description: b.description?.trim() ?? "",
+    // Solo se tocan si vienen en la petición: un cliente que no los envíe no
+    // borra la versión inglesa ya guardada.
+    ...(b.nameEn !== undefined ? { nameEn: b.nameEn?.trim() || null } : {}),
+    ...(b.descriptionEn !== undefined ? { descriptionEn: b.descriptionEn?.trim() || null } : {}),
     icon: b.icon?.trim() ?? "",
     position: b.position ?? 0,
     visible: b.visible ?? true,

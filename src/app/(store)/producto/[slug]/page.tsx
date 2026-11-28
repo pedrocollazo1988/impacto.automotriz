@@ -17,19 +17,20 @@ import { tieneVista360 } from "@/lib/vista360";
 import { esVista, type Vista } from "@/lib/viewer";
 import { waHref } from "@/lib/site";
 import { getT } from "@/lib/i18n";
+import { descripcionProducto, nombreCategoria, nombreMarca, nombreProducto, specsProducto } from "@/lib/datos-i18n";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const p = await getProductPageCached((await params).slug);
-  return p ? { title: p.name, description: p.description.slice(0, 150), openGraph: { images: p.images.slice(0, 1) } } : {};
+  const [p, { lang }] = await Promise.all([getProductPageCached((await params).slug), getT()]);
+  return p ? { title: nombreProducto(p, lang), description: descripcionProducto(p, lang).slice(0, 150), openGraph: { images: p.images.slice(0, 1) } } : {};
 }
 
 export default async function Producto({ params }: Props) {
   const [p, me] = await Promise.all([getProductPageCached((await params).slug), getCustomer()]);
   if (!p) notFound();
-  const { t } = await getT();
+  const { t, lang } = await getT();
   const txt = (key: string, vars: Record<string, string | number>) =>
     Object.entries(vars).reduce((s, [k, v]) => s.replace(`{${k}}`, String(v)), t(key));
 
@@ -51,10 +52,14 @@ export default async function Producto({ params }: Props) {
       ? fotos360(p.sku)
       : [];
   const vista: Vista = esVista(p.viewerMode) ? p.viewerMode : "photos";
-  const specs = Object.entries((p.specs ?? {}) as Record<string, string>);
+  const nombre = nombreProducto(p, lang);
+  const descripcion = descripcionProducto(p, lang);
+  const categoria = nombreCategoria(p.category, lang);
+  const marca = p.brand ? nombreMarca(p.brand, lang) : null;
+  const specs = specsProducto(p, lang);
   const off = p.compareAtUsd && Number(p.compareAtUsd) > Number(p.priceUsd) ? Math.round(((Number(p.compareAtUsd) - Number(p.priceUsd)) / Number(p.compareAtUsd)) * 100) : 0;
-  const ld = { "@context": "https://schema.org", "@type": "Product", name: p.name, sku: p.sku, description: p.description, image: p.images, brand: p.brand ? { "@type": "Brand", name: p.brand.name } : undefined,
-    ...(p.model3dUrl ? { subjectOf: { "@type": "3DModel", name: p.name, encoding: { "@type": "MediaObject", contentUrl: p.model3dUrl, encodingFormat: "model/gltf-binary" } } } : {}),
+  const ld = { "@context": "https://schema.org", "@type": "Product", name: nombre, sku: p.sku, description: descripcion, image: p.images, brand: marca ? { "@type": "Brand", name: marca } : undefined,
+    ...(p.model3dUrl ? { subjectOf: { "@type": "3DModel", name: nombre, encoding: { "@type": "MediaObject", contentUrl: p.model3dUrl, encodingFormat: "model/gltf-binary" } } } : {}),
     ...(reviews.length ? { aggregateRating: { "@type": "AggregateRating", ratingValue: avg.toFixed(1), reviewCount: reviews.length } } : {}),
     offers: { "@type": "Offer", priceCurrency: "USD", price: Number(p.priceUsd), availability: p.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" } };
 
@@ -65,8 +70,8 @@ export default async function Producto({ params }: Props) {
       <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
         <Link href="/" className="inline-flex min-h-12 items-center hover:text-navy lg:min-h-0">{t("nav.home")}</Link><Icon name="chevronRight" size={12} />
         <Link href="/catalogo" className="hover:text-navy">{t("nav.catalogo")}</Link><Icon name="chevronRight" size={12} />
-        <Link href={`/catalogo?categoria=${p.category.slug}`} className="hover:text-navy">{p.category.name}</Link><Icon name="chevronRight" size={12} />
-        <span className="text-slate-500">{p.name}</span>
+        <Link href={`/catalogo?categoria=${p.category.slug}`} className="hover:text-navy">{categoria}</Link><Icon name="chevronRight" size={12} />
+        <span className="text-slate-500">{nombre}</span>
       </nav>
 
       <div className="grid gap-8 lg:grid-cols-2">
@@ -74,7 +79,7 @@ export default async function Producto({ params }: Props) {
           <ProductViewer
             images={p.images}
             videos={p.videos}
-            name={p.name}
+            name={nombre}
             model3dUrl={p.model3dUrl}
             model3dVideo={p.model3dVideo}
             frames={frames}
@@ -90,13 +95,13 @@ export default async function Producto({ params }: Props) {
 
         <div className="space-y-5">
           <div className="flex flex-wrap items-center gap-2">
-            <Link href={`/catalogo?categoria=${p.category.slug}`} className="badge bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]">{p.category.name}</Link>
-            {p.brand && <span className="badge bg-slate-100 text-slate-600">{p.brand.name}</span>}
+            <Link href={`/catalogo?categoria=${p.category.slug}`} className="badge bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]">{categoria}</Link>
+            {marca && <span className="badge bg-slate-100 text-slate-600">{marca}</span>}
             {off > 0 && <span className="badge bg-[color:var(--color-action-hi)] text-[color:var(--color-navy-deep)]">-{off}%</span>}
             {p.featured && <span className="badge bg-[color:var(--color-navy)] text-white">{t("pdp.featured")}</span>}
           </div>
 
-          <h1 className="font-display text-3xl font-extrabold leading-tight text-navy">{p.name}</h1>
+          <h1 className="font-display text-3xl font-extrabold leading-tight text-navy">{nombre}</h1>
 
           <div className="flex flex-wrap items-center gap-3 text-sm">
             {reviews.length > 0 ? (
@@ -114,11 +119,11 @@ export default async function Producto({ params }: Props) {
             <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
               <WishlistButton productId={p.id} initial={inWish > 0} />
               <CompareToggle productId={p.id} />
-              <a className="btn btn-ghost !text-emerald-700" target="_blank" rel="noopener" href={waHref(txt("pdp.waMessage", { name: p.name, sku: p.sku }))}><Icon name="whatsapp" size={18} /> {t("pdp.ask")}</a>
+              <a className="btn btn-ghost !text-emerald-700" target="_blank" rel="noopener" href={waHref(txt("pdp.waMessage", { name: nombre, sku: p.sku }))}><Icon name="whatsapp" size={18} /> {t("pdp.ask")}</a>
             </div>
           </div>
 
-          <p className="leading-relaxed text-slate-600">{p.description}</p>
+          <p className="leading-relaxed text-slate-600">{descripcion}</p>
 
           <div className="grid gap-3 sm:grid-cols-3">
             {[["truck", t("pdp.trustDelivery")], ["shield", t("pdp.trustWarranty")], ["card", t("pdp.trustPayment")]].map(([ic, texto]) => (
@@ -163,7 +168,7 @@ export default async function Producto({ params }: Props) {
               <ul className="mt-2 space-y-1.5 text-sm">
                 {p.compatWith.map((c) => (
                   <li key={c.id}>
-                    <Link href={`/producto/${c.target.slug}`} className="font-semibold text-[color:var(--color-action-deep)] hover:underline">{c.target.name}</Link>
+                    <Link href={`/producto/${c.target.slug}`} className="font-semibold text-[color:var(--color-action-deep)] hover:underline">{nombreProducto(c.target, lang)}</Link>
                     <span className="font-mono text-[11px] text-slate-400"> · {c.target.sku}</span>
                     {c.note && <p className="text-xs text-slate-500">{c.note}</p>}
                   </li>
@@ -175,7 +180,7 @@ export default async function Producto({ params }: Props) {
           {p.connectorImage && (
             <div className="card overflow-hidden">
               <h3 className="flex items-center gap-2 border-b border-slate-100 px-4 py-3 font-display text-sm font-bold text-navy"><Icon name="bolt" size={16} /> {t("pdp.connectorsTitle")}</h3>
-              <Image src={p.connectorImage} alt={txt("pdp.connectorsAlt", { name: p.name })} width={800} height={800} sizes="(max-width:1024px) 100vw, 40vw" className="h-auto w-full bg-slate-50 object-contain" unoptimized={!p.connectorImage.startsWith("/") || p.connectorImage.endsWith(".svg")} />
+              <Image src={p.connectorImage} alt={txt("pdp.connectorsAlt", { name: nombre })} width={800} height={800} sizes="(max-width:1024px) 100vw, 40vw" className="h-auto w-full bg-slate-50 object-contain" unoptimized={!p.connectorImage.startsWith("/") || p.connectorImage.endsWith(".svg")} />
               <p className="px-4 py-2 text-xs text-slate-500">{t("pdp.connectorsNote")}</p>
             </div>
           )}

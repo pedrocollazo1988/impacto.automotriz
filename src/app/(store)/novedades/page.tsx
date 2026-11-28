@@ -19,7 +19,7 @@ export default async function Novedades() {
     where: { active: true },
     orderBy: { createdAt: "desc" },
     take: 16,
-    include: { brand: true, category: { select: { slug: true, name: true } } },
+    include: { brand: true, category: { select: { slug: true, name: true, nameEn: true } } },
   });
 
   return (

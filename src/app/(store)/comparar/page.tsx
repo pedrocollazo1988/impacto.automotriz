@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/brand/Icon";
 import { usePreferences } from "@/components/site/Preferences";
+import { nombreCategoria, nombreMarca, nombreProducto } from "@/lib/datos-i18n";
 
-type P = { id: number; slug: string; name: string; priceUsd: number; inStock: boolean; brand: string | null; category: string; specs: Record<string, string>; fits: string[] };
+type P = { id: number; slug: string; name: string; nameEn: string | null; priceUsd: number; inStock: boolean; brand: string | null; brandEn: string | null; category: string; categoryEn: string | null; specs: Record<string, string>; fits: string[] };
 
 export default function Comparar() {
-  const { t } = usePreferences();
+  const { t, lang } = usePreferences();
   const [ps, setPs] = useState<P[] | null>(null);
   useEffect(() => {
     let ids: number[] = []; try { ids = JSON.parse(localStorage.getItem("compare") ?? "[]"); } catch {}
@@ -44,13 +45,13 @@ export default function Comparar() {
         <table className="w-full min-w-[640px]"><tbody>
           {row(t("cmp.product"), (p) => (
             <div className="flex flex-col gap-1.5">
-              <Link className="font-semibold text-navy link-underline" href={`/producto/${p.slug}`}>{p.name}</Link>
+              <Link className="font-semibold text-navy link-underline" href={`/producto/${p.slug}`}>{nombreProducto(p, lang)}</Link>
               <button className="flex w-fit items-center gap-1 text-xs text-red-600 hover:underline" onClick={() => remove(p.id)}><Icon name="trash" size={12} /> {t("cmp.remove")}</button>
             </div>
           ), true)}
           {row(t("cmp.price"), (p) => <span className="font-display text-lg font-extrabold text-navy">{p.priceUsd.toFixed(2)} USD</span>)}
-          {row(t("cmp.brand"), (p) => p.brand ?? "—")}
-          {row(t("cmp.category"), (p) => <span className="badge bg-slate-100 text-slate-600">{p.category}</span>)}
+          {row(t("cmp.brand"), (p) => (p.brand ? nombreMarca({ name: p.brand, nameEn: p.brandEn }, lang) : "—"))}
+          {row(t("cmp.category"), (p) => <span className="badge bg-slate-100 text-slate-600">{nombreCategoria({ name: p.category, nameEn: p.categoryEn }, lang)}</span>)}
           {row(t("cmp.availability"), (p) => p.inStock
             ? <span className="flex items-center gap-1.5 text-emerald-700"><Icon name="check" size={14} /> {t("cmp.inStock")}</span>
             : <span className="text-red-600">{t("cmp.outOfStock")}</span>)}

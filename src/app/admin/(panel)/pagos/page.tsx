@@ -24,7 +24,9 @@ type Metodo = {
   key: string;
   provider: DriverId;
   name: string;
+  nameEn: string | null;
   description: string;
+  descriptionEn: string;
   kind: "online" | "manual";
   icon: string;
   enabled: boolean;
@@ -32,6 +34,7 @@ type Metodo = {
   sandbox: boolean;
   sortOrder: number;
   instructions: string;
+  instructionsEn: string;
   feePercent: number;
   minTotalUsd: number | null;
   maxTotalUsd: number | null;
@@ -44,12 +47,15 @@ type Formulario = {
   key?: string;
   provider: DriverId;
   name: string;
+  nameEn: string;
   description: string;
+  descriptionEn: string;
   icon: string;
   enabled: boolean;
   sandbox: boolean;
   sortOrder: number;
   instructions: string;
+  instructionsEn: string;
   feePercent: number;
   minTotalUsd: number | null;
   maxTotalUsd: number | null;
@@ -60,12 +66,15 @@ type Formulario = {
 const formularioVacio = (preset?: Preset): Formulario => ({
   provider: preset?.provider ?? "manual",
   name: preset?.nombre ?? "",
+  nameEn: "",
   description: preset?.descripcion ?? "",
+  descriptionEn: "",
   icon: preset?.icono ?? "bank",
   enabled: true,
   sandbox: true,
   sortOrder: 0,
   instructions: "",
+  instructionsEn: "",
   feePercent: 0,
   minTotalUsd: null,
   maxTotalUsd: null,
@@ -128,8 +137,8 @@ export default function Pagos() {
   const abrir = (m: Metodo) => {
     setEditando(m);
     setForm({
-      id: m.id, key: m.key, provider: m.provider, name: m.name, description: m.description, icon: m.icon,
-      enabled: m.enabled, sandbox: m.sandbox, sortOrder: m.sortOrder, instructions: m.instructions,
+      id: m.id, key: m.key, provider: m.provider, name: m.name, nameEn: m.nameEn ?? "", description: m.description, descriptionEn: m.descriptionEn, icon: m.icon,
+      enabled: m.enabled, sandbox: m.sandbox, sortOrder: m.sortOrder, instructions: m.instructions, instructionsEn: m.instructionsEn,
       feePercent: m.feePercent, minTotalUsd: m.minTotalUsd, maxTotalUsd: m.maxTotalUsd,
       config: { ...m.config }, creds: {},
     });
@@ -143,7 +152,7 @@ export default function Pagos() {
   };
 
   const aplicarPreset = (p: Preset) => {
-    setForm((f) => f ? { ...f, provider: p.provider, name: p.nombre, description: p.descripcion, icon: p.icono, config: { ...p.config } } : formularioVacio(p));
+    setForm((f) => f ? { ...f, provider: p.provider, name: p.nombre, nameEn: "", description: p.descripcion, descriptionEn: "", icon: p.icono, config: { ...p.config } } : formularioVacio(p));
   };
 
   const guardar = async () => {
@@ -154,12 +163,16 @@ export default function Pagos() {
     const body: Record<string, unknown> = {
       provider: form.provider,
       name: form.name.trim(),
+      // Vacío = null/"": la web cae al español. Nunca se traduce solo.
+      nameEn: form.nameEn.trim() || null,
       description: form.description,
+      descriptionEn: form.descriptionEn,
       icon: form.icon,
       enabled: form.enabled,
       sandbox: form.sandbox,
       sortOrder: Number(form.sortOrder) || 0,
       instructions: form.instructions,
+      instructionsEn: form.instructionsEn,
       feePercent: Number(form.feePercent) || 0,
       minTotalUsd: form.minTotalUsd === null || Number.isNaN(form.minTotalUsd) ? null : form.minTotalUsd,
       maxTotalUsd: form.maxTotalUsd === null || Number.isNaN(form.maxTotalUsd) ? null : form.maxTotalUsd,
@@ -417,6 +430,24 @@ export default function Pagos() {
                 <textarea className={inputCls} rows={4} value={form.instructions} onChange={(e) => setForm({ ...form, instructions: e.target.value })} />
               </Field>
             </div>
+
+            <section className="mt-4 rounded-xl border border-slate-200 p-3">
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-navy"><Icon name="globe" size={13} /> English</p>
+              <p className="mb-3 mt-0.5 text-[11px] text-slate-500">{t("adm.contenido.langHintEn")}</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label={t("adm.pagos.nameLabel")}>
+                  <input className={inputCls} value={form.nameEn} onChange={(e) => setForm({ ...form, nameEn: e.target.value })} />
+                </Field>
+                <Field label={t("adm.pagos.descLabel")}>
+                  <input className={inputCls} value={form.descriptionEn} onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })} />
+                </Field>
+                <div className="sm:col-span-2">
+                  <Field label={t("adm.pagos.instructionsLabel")}>
+                    <textarea className={inputCls} rows={3} value={form.instructionsEn} onChange={(e) => setForm({ ...form, instructionsEn: e.target.value })} />
+                  </Field>
+                </div>
+              </div>
+            </section>
 
             <div className="mt-4 flex flex-wrap items-center gap-4">
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">

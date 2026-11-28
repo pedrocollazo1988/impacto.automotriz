@@ -174,6 +174,20 @@ const AJUSTES = [
      END IF;
      EXECUTE 'CREATE UNIQUE INDEX IF NOT EXISTS "ContentBlock_key_key" ON "ContentBlock"("key", "lang")';
    END $$`,
+  // Textos en inglés de lo que escribe el negocio (categorías, productos,
+  // marcas, entregas y pagos). Van al final para no alterar el orden de las
+  // columnas existentes en una base ya desplegada.
+  `ALTER TABLE "Category" ADD COLUMN IF NOT EXISTS "nameEn" TEXT`,
+  `ALTER TABLE "Category" ADD COLUMN IF NOT EXISTS "descriptionEn" TEXT`,
+  `ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "nameEn" TEXT`,
+  `ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "descriptionEn" TEXT`,
+  `ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "specsEn" JSONB`,
+  `ALTER TABLE "Brand" ADD COLUMN IF NOT EXISTS "nameEn" TEXT`,
+  `ALTER TABLE "DeliveryMethod" ADD COLUMN IF NOT EXISTS "nameEn" TEXT`,
+  `ALTER TABLE "DeliveryMethod" ADD COLUMN IF NOT EXISTS "descriptionEn" TEXT`,
+  `ALTER TABLE "PaymentGateway" ADD COLUMN IF NOT EXISTS "nameEn" TEXT`,
+  `ALTER TABLE "PaymentGateway" ADD COLUMN IF NOT EXISTS "descriptionEn" TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE "PaymentGateway" ADD COLUMN IF NOT EXISTS "instructionsEn" TEXT NOT NULL DEFAULT ''`,
 ];
 
 type Cliente = { $executeRawUnsafe(sql: string): Promise<unknown> };

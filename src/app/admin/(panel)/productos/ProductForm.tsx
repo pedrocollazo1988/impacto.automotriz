@@ -8,12 +8,16 @@ import { ETIQUETA_VISTA, VISTAS } from "@/lib/viewer";
 import { MAX_FOTOGRAMAS_360, MAX_FOTOS, MAX_VIDEOS } from "@/lib/medios";
 import { usePreferences } from "@/components/site/Preferences";
 
-export type PInit = { id?: number; sku: string; name: string; description: string; priceUsd: number; compareAtUsd: number | null; stock: number; lowStockAt: number;
+export type PInit = { id?: number; sku: string; name: string; description: string; nameEn: string | null; descriptionEn: string | null; priceUsd: number; compareAtUsd: number | null; stock: number; lowStockAt: number;
   images: string[]; videos?: string[]; model3dUrl?: string | null; model3dVideo?: string | null; spin360Frames?: string[]; spin360Video?: string | null;
   viewerMode?: string;
-  variants: { sku: string; name: string; priceUsd: number | null; stock: number }[]; specs: Record<string, string> | null; featured: boolean; active: boolean; categoryName: string; brandName: string; fits: { make: string; model: string; yearFrom: number; yearTo: number }[] };
+  variants: { sku: string; name: string; priceUsd: number | null; stock: number }[]; specs: Record<string, string> | null; specsEn: Record<string, string> | null; featured: boolean; active: boolean; categoryName: string; brandName: string; fits: { make: string; model: string; yearFrom: number; yearTo: number }[] };
 
-const EMPTY: PInit = { sku: "", name: "", description: "", priceUsd: 0, compareAtUsd: null, stock: 0, lowStockAt: 3, images: [], videos: [], model3dUrl: null, model3dVideo: null, spin360Frames: [], spin360Video: null, viewerMode: "photos", variants: [], specs: null, featured: false, active: true, categoryName: "", brandName: "", fits: [] };
+const EMPTY: PInit = { sku: "", name: "", description: "", nameEn: null, descriptionEn: null, priceUsd: 0, compareAtUsd: null, stock: 0, lowStockAt: 3, images: [], videos: [], model3dUrl: null, model3dVideo: null, spin360Frames: [], spin360Video: null, viewerMode: "photos", variants: [], specs: null, specsEn: null, featured: false, active: true, categoryName: "", brandName: "", fits: [] };
+
+const parseSpecs = (texto: string) => Object.fromEntries(
+  texto.split("\n").map((l) => l.split(/:(.*)/s).map((s) => s.trim())).filter(([k, v]) => k && v),
+);
 
 // Vercel corta el cuerpo de una función en ~4,5 MB: un vídeo de 40 MB no pasa
 // por /api/admin/upload. Con Blob configurado se sube directo desde el navegador.
@@ -93,6 +97,7 @@ export default function ProductForm({ initial = EMPTY, categories, brands, blob 
   const [subiendo, setSubiendo] = useState<TipoSubida | null>(null);
   const [arrastrando, setArrastrando] = useState(false);
   const [specs, setSpecs] = useState(Object.entries(initial.specs ?? {}).map(([k, v]) => `${k}: ${v}`).join("\n"));
+  const [specsEn, setSpecsEn] = useState(Object.entries(initial.specsEn ?? {}).map(([k, v]) => `${k}: ${v}`).join("\n"));
   const [variants, setVariants] = useState(initial.variants.map((v) => `${v.sku};${v.name};${v.priceUsd ?? ""};${v.stock}`).join("\n"));
   const [up, setUp] = useState("");
   const [fits, setFits] = useState(initial.fits.map((x) => `${x.make};${x.model};${x.yearFrom};${x.yearTo}`).join("\n"));
@@ -146,7 +151,10 @@ export default function ProductForm({ initial = EMPTY, categories, brands, blob 
       const body = {
         ...f, images: fotos, videos, spin360Frames: frames360, brandName: f.brandName || null,
         model3dUrl: f.model3dUrl || null, model3dVideo: f.model3dVideo || null, spin360Video: f.spin360Video || null,
-        specs: Object.fromEntries(specs.split("\n").map((l) => l.split(/:(.*)/s).map((s) => s.trim())).filter(([k, v]) => k && v)),
+        // Vacío = null: la web muestra el español. Nunca se traduce solo.
+        nameEn: f.nameEn?.trim() || null, descriptionEn: f.descriptionEn?.trim() || null,
+        specs: parseSpecs(specs),
+        specsEn: Object.keys(parseSpecs(specsEn)).length ? parseSpecs(specsEn) : null,
         variants: variants.split("\n").map((l) => l.split(";").map((s) => s.trim())).filter((a) => a.length >= 4 && a[0] && a[1]).map(([sku, name, price, stock]) => ({ sku, name, priceUsd: price ? Number(price.replace(",", ".")) : null, stock: Number(stock) || 0 })),
         fits: fits.split("\n").map((l) => l.split(";").map((s) => s.trim())).filter((a) => a.length === 4).map(([make, model, a, b]) => ({ make, model, yearFrom: +a, yearTo: +b })),
       };
@@ -170,6 +178,18 @@ export default function ProductForm({ initial = EMPTY, categories, brands, blob 
       <L t={t("adm.prod.stock")}><input type="number" className={i} value={f.stock} onChange={(e) => set("stock", Number(e.target.value))} /></L>
       <L t={t("adm.prod.fieldLowStock")}><input type="number" className={i} value={f.lowStockAt} onChange={(e) => set("lowStockAt", Number(e.target.value))} /></L>
       <div className="md:col-span-2"><L t={t("adm.prod.fieldDescription")}><textarea rows={3} className={i} value={f.description} onChange={(e) => set("description", e.target.value)} /></L></div>
+
+      <section className="md:col-span-2 rounded-xl border border-slate-200 bg-white p-4">
+        <header className="mb-3">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-navy"><Icon name="globe" size={15} /> English</h3>
+          <p className="mt-0.5 text-xs text-slate-500">{t("adm.contenido.langHintEn")}</p>
+        </header>
+        <div className="grid gap-4 md:grid-cols-2">
+          <L t={t("adm.prod.fieldName")}><input className={i} value={f.nameEn ?? ""} onChange={(e) => set("nameEn", e.target.value)} /></L>
+          <div className="md:col-span-2"><L t={t("adm.prod.fieldDescription")}><textarea rows={3} className={i} value={f.descriptionEn ?? ""} onChange={(e) => set("descriptionEn", e.target.value)} /></L></div>
+          <div className="md:col-span-2"><L t={t("adm.prod.specsLabel")}><textarea rows={4} className={i} value={specsEn} onChange={(e) => setSpecsEn(e.target.value)} /></L></div>
+        </div>
+      </section>
 
       <section className="md:col-span-2 rounded-xl border border-slate-200 bg-white p-4">
         <header className="mb-3 flex flex-wrap items-center justify-between gap-3">

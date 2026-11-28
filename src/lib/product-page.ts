@@ -14,7 +14,7 @@ export const getProductPageCached = unstable_cache(
       brand: true, category: true, fits: true,
       variants: { where: { active: true }, orderBy: { id: "asc" } },
       system: true,
-      compatWith: { include: { target: { select: { slug: true, name: true, sku: true } } } },
+      compatWith: { include: { target: { select: { slug: true, name: true, nameEn: true, sku: true } } } },
       pins: {
         take: 3,
         include: { diagram: { include: { vehicle: { select: { slug: true, brand: true, model: true, version: true } }, system: { select: { slug: true, name: true } } } } },

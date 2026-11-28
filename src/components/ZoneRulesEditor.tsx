@@ -4,7 +4,7 @@ import { usePreferences } from "@/components/site/Preferences";
 
 type Opt = { id: number; name: string };
 type Rule = { id: number; municipalityId: number | null; available: boolean; feeUsd: string | null; etaMinDays: number | null; etaMaxDays: number | null };
-type Method = Opt & { code: string; kind: string; description: string | null; active: boolean; sortOrder: number; baseFee: string | number; freeFromUsd: string | number | null; etaMinDays: number; etaMaxDays: number; requiresAddress: boolean; cashOnDelivery: boolean };
+type Method = Opt & { code: string; kind: string; description: string | null; nameEn: string | null; descriptionEn: string | null; active: boolean; sortOrder: number; baseFee: string | number; freeFromUsd: string | number | null; etaMinDays: number; etaMaxDays: number; requiresAddress: boolean; cashOnDelivery: boolean };
 const api = async (url: string, method = "GET", body?: unknown, fallback = "") => {
   const r = await fetch(url, { method, cache: "no-store", headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
   const d = await r.json().catch(() => ({}));
@@ -20,28 +20,42 @@ const aNumero = (v: string) => {
 
 const TIPO_CLAVE: Record<string, string> = { HOME_DELIVERY: "adm.zonas.kindHome", STORE_PICKUP: "adm.zonas.kindPickup", COURIER: "adm.zonas.kindCourier", AGREED_POINT: "adm.zonas.kindAgreed" };
 
-function BaseFeeRow({ m, onSave }: { m: Method; onSave: (id: number, base: string, free: string) => Promise<void> }) {
+function BaseFeeRow({ m, onSave }: { m: Method; onSave: (id: number, base: string, free: string, nameEn: string, descriptionEn: string) => Promise<void> }) {
   const { t } = usePreferences();
   const [base, setBase] = useState(m.baseFee == null ? "" : String(m.baseFee));
   const [free, setFree] = useState(m.freeFromUsd == null ? "" : String(m.freeFromUsd));
+  const [nameEn, setNameEn] = useState(m.nameEn ?? "");
+  const [descriptionEn, setDescriptionEn] = useState(m.descriptionEn ?? "");
   const [busy, setBusy] = useState(false);
   return (
-    <div className="flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
-      <div className="min-w-40 flex-1">
-        <p className="text-sm font-semibold text-navy">{m.name}</p>
-        <p className="text-[11px] text-slate-500">{TIPO_CLAVE[m.kind] ? t(TIPO_CLAVE[m.kind]) : m.kind}{m.active ? "" : t("adm.zonas.inactive")}</p>
+    <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="min-w-40 flex-1">
+          <p className="text-sm font-semibold text-navy">{m.name}</p>
+          <p className="text-[11px] text-slate-500">{TIPO_CLAVE[m.kind] ? t(TIPO_CLAVE[m.kind]) : m.kind}{m.active ? "" : t("adm.zonas.inactive")}</p>
+        </div>
+        <label className="block">
+          <span className="mb-1 block text-[11px] font-semibold text-slate-500">{t("adm.zonas.baseFee")}</span>
+          <input className="input input-sm w-28" inputMode="decimal" placeholder="0" value={base} onChange={(e) => setBase(e.target.value)} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[11px] font-semibold text-slate-500">{t("adm.zonas.freeFrom")}</span>
+          <input className="input input-sm w-32" inputMode="decimal" placeholder={t("adm.zonas.optional")} value={free} onChange={(e) => setFree(e.target.value)} />
+        </label>
+        <button className="btn btn-primary btn-sm" disabled={busy} onClick={async () => { setBusy(true); await onSave(m.id, base, free, nameEn, descriptionEn); setBusy(false); }}>
+          {busy ? t("adm.zonas.saving") : t("adm.zonas.save")}
+        </button>
       </div>
-      <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-slate-500">{t("adm.zonas.baseFee")}</span>
-        <input className="input input-sm w-28" inputMode="decimal" placeholder="0" value={base} onChange={(e) => setBase(e.target.value)} />
-      </label>
-      <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-slate-500">{t("adm.zonas.freeFrom")}</span>
-        <input className="input input-sm w-32" inputMode="decimal" placeholder={t("adm.zonas.optional")} value={free} onChange={(e) => setFree(e.target.value)} />
-      </label>
-      <button className="btn btn-primary btn-sm" disabled={busy} onClick={async () => { setBusy(true); await onSave(m.id, base, free); setBusy(false); }}>
-        {busy ? t("adm.zonas.saving") : t("adm.zonas.save")}
-      </button>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1 block text-[11px] font-semibold text-slate-500">{t("adm.cat.name")} (English)</span>
+          <input className="input input-sm" value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[11px] font-semibold text-slate-500">{t("adm.cat.description")} (English)</span>
+          <input className="input input-sm" value={descriptionEn} onChange={(e) => setDescriptionEn(e.target.value)} />
+        </label>
+      </div>
     </div>
   );
 }
@@ -93,7 +107,7 @@ export default function ZoneRulesEditor() {
       setBaseMsg(`Error: ${e instanceof Error ? e.message : t("adm.zonas.errZoneSave")}`);
     }
   };
-  const saveBase = async (id: number, base: string, free: string) => {
+  const saveBase = async (id: number, base: string, free: string, nameEn: string, descriptionEn: string) => {
     const m = methods.find((x) => x.id === id);
     if (!m) return;
     const baseNum = aNumero(base) ?? 0;
@@ -106,6 +120,7 @@ export default function ZoneRulesEditor() {
       // del listado no rompen la validación del servidor.
       await api("/api/admin/logistica/methods", "POST", {
         id: m.id, code: m.code, name: m.name, kind: m.kind, description: m.description,
+        nameEn: nameEn.trim() || null, descriptionEn: descriptionEn.trim() || null,
         active: m.active, sortOrder: m.sortOrder, baseFee: baseNum,
         // 0 o vacío significan «sin umbral», no envío gratis desde 0.
         freeFromUsd: freeNum != null && freeNum > 0 ? freeNum : null,

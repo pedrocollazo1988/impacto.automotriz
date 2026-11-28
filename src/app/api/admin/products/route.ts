@@ -1,5 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { audit, handle, requireAdmin, puedeEliminarProducto, errorPanel, textoPanel } from "@/lib/auth";
 import { saveProduct } from "@/lib/catalog";
@@ -9,6 +10,9 @@ import { VISTAS } from "@/lib/viewer";
 const ProductBody = z.object({
   id: z.number().int().optional(), slug: z.string().max(80).optional(), sku: z.string().min(2).max(40), name: z.string().min(2).max(160),
   description: z.string().max(5000).default(""), priceUsd: z.number().min(0), compareAtUsd: z.number().min(0).nullish(),
+  // Textos ingleses: opcionales y sin traducción automática. Vacío = null para
+  // que la ficha caiga al español.
+  nameEn: z.string().max(160).nullish(), descriptionEn: z.string().max(5000).nullish(), specsEn: z.record(z.string()).nullish(),
   stock: z.number().int().min(0), lowStockAt: z.number().int().min(0).default(3),
   // Los topes se validan aquí además de en el panel: el formulario es comodidad,
   // la API es la que manda (una petición a mano no puede meter 200 fotos).
@@ -30,8 +34,23 @@ export const GET = handle(async (req: Request) => {
 });
 export const POST = handle(async (req: Request) => {
   const u = await requireAdmin(req, "products");
-  const { id, ...input } = ProductBody.parse(await req.json());
-  const row = (await saveProduct(input, id, { actor: u.name, source: "admin" })).row;
+  const crudo = await req.json();
+  const { id, nameEn, descriptionEn, specsEn, ...input } = ProductBody.parse(crudo);
+  const { row } = await saveProduct(input, id, { actor: u.name, source: "admin" });
+  // saveProduct no conoce las columnas inglesas: se escriben aquí, en la misma
+  // petición, y solo si el cliente las envió (no se borran en ediciones ajenas).
+  const traeIngles = ["nameEn", "descriptionEn", "specsEn"].some((k) => k in crudo);
+  if (traeIngles) {
+    await prisma.product.update({
+      where: { id: row.id },
+      data: {
+        nameEn: nameEn?.trim() || null,
+        descriptionEn: descriptionEn?.trim() || null,
+        specsEn: specsEn && Object.keys(specsEn).length ? specsEn : Prisma.DbNull,
+      },
+    });
+    revalidateTag("producto");
+  }
   await audit(u, "producto.guardar", row.sku);
   return Response.json(row);
 });

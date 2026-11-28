@@ -29,6 +29,18 @@ export const prisma = base.$extends({
         return query(args);
       },
     },
+    brand: {
+      async $allOperations({ args, query }) {
+        await asegurarEsquema();
+        return query(args);
+      },
+    },
+    deliveryMethod: {
+      async $allOperations({ args, query }) {
+        await asegurarEsquema();
+        return query(args);
+      },
+    },
     paymentGateway: {
       async $allOperations({ args, query }) {
         await asegurarEsquema();
