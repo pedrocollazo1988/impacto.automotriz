@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { put } from "@vercel/blob";
-import { HttpError } from "./auth";
+import { HttpError, textoPanel } from "./auth";
 import { prisma } from "./prisma";
 
 // Tipos permitidos, validados por los primeros bytes del archivo (no por la extensión ni el tipo que declara el navegador).
@@ -72,7 +72,7 @@ async function store(name: string, buf: Buffer, mime: string) {
 export async function saveUpload(file: File) {
   const buf = Buffer.from(await file.arrayBuffer());
   const kind = KINDS.find((k) => k.test(buf));
-  if (!kind) throw new HttpError(415, "Formato no admitido (usa JPG, PNG, WebP, GLB, glTF, MP4 o WebM)");
-  if (buf.length > kind.max * 1024 * 1024) throw new HttpError(413, `El archivo supera ${kind.max} MB`);
+  if (!kind) throw new HttpError(415, await textoPanel("Formato no admitido (usa JPG, PNG, WebP, GLB, glTF, MP4 o WebM)", "Unsupported format (use JPG, PNG, WebP, GLB, glTF, MP4 or WebM)"));
+  if (buf.length > kind.max * 1024 * 1024) throw new HttpError(413, await textoPanel(`El archivo supera ${kind.max} MB`, `The file exceeds ${kind.max} MB`));
   return store(`${crypto.randomUUID()}.${kind.ext}`, buf, kind.mime);
 }

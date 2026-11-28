@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, handle, requireAdmin } from "@/lib/auth";
+import { audit, handle, requireAdmin, textoPanel } from "@/lib/auth";
 import { buscarSeccion, limpiarItems } from "@/lib/contenido";
 import { invalidarContenido } from "@/lib/contenido-server";
 
@@ -17,8 +17,12 @@ const ItemBody = z.object({
   puntos: z.string().max(4000).optional(),
 });
 
+// Cada sección se guarda una vez por idioma: la clave es (key, lang).
+const Lang = z.enum(["es", "en"]);
+
 const Body = z.object({
   key: z.string().min(1).max(60),
+  lang: Lang.default("es"),
   eyebrow: z.string().max(120).optional(),
   title: z.string().max(300).optional(),
   subtitle: z.string().max(2000).optional(),
@@ -33,7 +37,7 @@ export const POST = handle(async (req: Request) => {
   // Solo se aceptan claves declaradas: evita que el panel llene la tabla de
   // secciones que ninguna página lee.
   const seccion = buscarSeccion(b.key);
-  if (!seccion) return Response.json({ error: "Sección desconocida" }, { status: 400 });
+  if (!seccion) return Response.json({ error: await textoPanel("Sección desconocida", "Unknown section") }, { status: 400 });
 
   const items = limpiarItems(b.items, seccion.maxItems);
   const datos = {
@@ -45,19 +49,26 @@ export const POST = handle(async (req: Request) => {
     updatedBy: u.name,
   };
 
-  await prisma.contentBlock.upsert({ where: { key: b.key }, create: { key: b.key, ...datos }, update: datos });
+  await prisma.contentBlock.upsert({
+    where: { key_lang: { key: b.key, lang: b.lang } },
+    create: { key: b.key, lang: b.lang, ...datos },
+    update: datos,
+  });
   invalidarContenido();
-  await audit(u, "contenido.guardar", `${b.key} (${items.length} elementos)`);
+  await audit(u, "contenido.guardar", `${b.key} [${b.lang}] (${await textoPanel(`${items.length} elementos`, `${items.length} items`)})`);
   return Response.json({ ok: true });
 });
 
 export const DELETE = handle(async (req: Request) => {
   const u = await requireAdmin(req, "content");
-  const key = new URL(req.url).searchParams.get("key") ?? "";
-  if (!buscarSeccion(key)) return Response.json({ error: "Sección desconocida" }, { status: 400 });
-  // Borrar la fila devuelve la sección al texto de fábrica, no la deja vacía.
-  await prisma.contentBlock.deleteMany({ where: { key } });
+  const params = new URL(req.url).searchParams;
+  const key = params.get("key") ?? "";
+  if (!buscarSeccion(key)) return Response.json({ error: await textoPanel("Sección desconocida", "Unknown section") }, { status: 400 });
+  const lang = Lang.safeParse(params.get("lang") ?? "es").data ?? "es";
+  // Borrar la fila devuelve la sección al texto de fábrica de ese idioma, no la
+  // deja vacía; el otro idioma conserva lo que tenga guardado.
+  await prisma.contentBlock.deleteMany({ where: { key, lang } });
   invalidarContenido();
-  await audit(u, "contenido.restaurar", key);
+  await audit(u, "contenido.restaurar", `${key} [${lang}]`);
   return Response.json({ ok: true });
 });

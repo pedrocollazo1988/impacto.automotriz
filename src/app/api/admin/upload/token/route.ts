@@ -1,5 +1,5 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
-import { HttpError, requireAdmin } from "@/lib/auth";
+import { HttpError, requireAdmin, textoPanel } from "@/lib/auth";
 
 // Vercel corta el cuerpo de una función en ~4,5 MB, así que un vídeo de 40 MB
 // nunca llega a /api/admin/upload. Con Blob configurado el navegador sube el
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     onBeforeGenerateToken: async (_pathname, clientPayload) => {
       const tipo = (clientPayload ?? "").split("|")[0];
       const max = LIMITES[tipo];
-      if (!max) throw new HttpError(415, "Tipo de archivo no admitido");
+      if (!max) throw new HttpError(415, await textoPanel("Tipo de archivo no admitido", "File type not allowed"));
       return {
         allowedContentTypes: [tipo],
         maximumSizeInBytes: max * 1024 * 1024,

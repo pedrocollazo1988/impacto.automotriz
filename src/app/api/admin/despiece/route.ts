@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, handle, requireAdmin, HttpError } from "@/lib/auth";
+import { audit, handle, requireAdmin, errorPanel, textoPanel } from "@/lib/auth";
 import { invalidarCacheDespiece } from "@/lib/despiece";
 
 // GET ?vehicle=slug → láminas y pines de un vehículo; sin parámetro → todos los vehículos.
@@ -40,10 +40,10 @@ export const POST = handle(async (req: Request) => {
   const u = await requireAdmin(req, "products");
   const b = PinBody.parse(await req.json());
   const taken = await prisma.diagramPin.findFirst({ where: { diagramId: b.diagramId, number: b.number } });
-  if (taken) throw new HttpError(409, `El número ${b.number} ya está usado en esta lámina`);
+  if (taken) throw await errorPanel(409, `El número ${b.number} ya está usado en esta lámina`, `Number ${b.number} is already used on this diagram`);
   const row = await prisma.diagramPin.create({ data: { ...b, svgId: b.svgId ?? null, label: b.label ?? null } });
   invalidarCacheDespiece();
-  await audit(u, "despiece.pin.crear", `lámina ${b.diagramId} · nº ${b.number}`);
+  await audit(u, "despiece.pin.crear", await textoPanel(`lámina ${b.diagramId} · nº ${b.number}`, `sheet ${b.diagramId} · no. ${b.number}`));
   return Response.json(row);
 });
 
@@ -60,9 +60,9 @@ export const PATCH = handle(async (req: Request) => {
   const { id, ...d } = PinPatch.parse(await req.json());
   if (d.number != null) {
     const pin = await prisma.diagramPin.findUnique({ where: { id } });
-    if (!pin) throw new HttpError(404, "Pin no encontrado");
+    if (!pin) throw await errorPanel(404, "Pin no encontrado", "Pin not found");
     const clash = await prisma.diagramPin.findFirst({ where: { diagramId: pin.diagramId, number: d.number, id: { not: id } } });
-    if (clash) throw new HttpError(409, `El número ${d.number} ya está usado`);
+    if (clash) throw await errorPanel(409, `El número ${d.number} ya está usado`, `Number ${d.number} is already used`);
   }
   const row = await prisma.diagramPin.update({ where: { id }, data: d });
   invalidarCacheDespiece();
@@ -73,7 +73,7 @@ export const PATCH = handle(async (req: Request) => {
 export const DELETE = handle(async (req: Request) => {
   const u = await requireAdmin(req, "products");
   const id = Number(new URL(req.url).searchParams.get("id"));
-  if (!id) throw new HttpError(400, "Falta id");
+  if (!id) throw await errorPanel(400, "Falta id", "Missing id");
   await prisma.diagramPin.delete({ where: { id } });
   invalidarCacheDespiece();
   await audit(u, "despiece.pin.borrar", String(id));

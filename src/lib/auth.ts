@@ -6,9 +6,20 @@ import { prisma } from "./prisma";
 import { hashPassword, verifyPassword } from "./password";
 
 import { mensaje } from "./mensajes";
+import { idiomaDeCookie } from "./i18n";
 
 export class HttpError extends Error {
   constructor(public status: number, message: string) { super(message); }
+}
+
+/** Texto del panel en el idioma elegido en la cookie `lang` (español por defecto). */
+export async function textoPanel(es: string, en: string): Promise<string> {
+  return (await idiomaDeCookie()) === "en" ? en : es;
+}
+
+/** HttpError con el mensaje ya traducido para el panel. */
+export async function errorPanel(status: number, es: string, en: string): Promise<HttpError> {
+  return new HttpError(status, await textoPanel(es, en));
 }
 
 // ───────── Equipo: roles y permisos ─────────
@@ -40,12 +51,13 @@ export function assertStaffAuthConfigured() {
 
 // El primer administrador se crea al iniciar sesión con ADMIN_EMAIL + ADMIN_PASSWORD (solo si no hay equipo aún).
 export async function loginStaff(emailIn: string, password: string) {
-  assertStaffAuthConfigured();
+  try { assertStaffAuthConfigured(); }
+  catch { throw await errorPanel(500, "El servidor no tiene configurada APP_SECRET: el panel no funciona hasta definirla.", "The server has no APP_SECRET configured: the panel won't work until it is set."); }
   const email = emailIn.trim().toLowerCase();
   let staff = await prisma.staffUser.findUnique({ where: { email } });
   if (!staff && (await prisma.staffUser.count()) === 0 && process.env.ADMIN_EMAIL?.toLowerCase() === email && process.env.ADMIN_PASSWORD && safeEq(sha(password), sha(process.env.ADMIN_PASSWORD)))
     staff = await prisma.staffUser.create({ data: { email, name: "Administrador", role: "ADMIN", passwordHash: hashPassword(password) } });
-  if (!staff || !staff.active || !verifyPassword(password, staff.passwordHash)) throw new HttpError(401, "Credenciales incorrectas");
+  if (!staff || !staff.active || !verifyPassword(password, staff.passwordHash)) throw new HttpError(401, await textoPanel("Correo o contraseña incorrectos.", "Wrong email or password."));
   await prisma.staffUser.update({ where: { id: staff.id }, data: { lastLoginAt: new Date() } });
   return staff;
 }
@@ -59,8 +71,8 @@ export async function getSessionUser(_req?: Request): Promise<StaffSession | nul
 }
 export async function requireAdmin(req?: Request, perm?: Perm) {
   const u = await getSessionUser(req);
-  if (!u) throw new HttpError(401, "No autenticado");
-  if (perm && !can(u, perm)) throw new HttpError(403, "Tu rol no tiene permiso para esto");
+  if (!u) throw new HttpError(401, await textoPanel("Sesión caducada. Vuelve a iniciar sesión.", "Your session has expired. Please sign in again."));
+  if (perm && !can(u, perm)) throw new HttpError(403, await textoPanel("No autorizado: tu rol no tiene permiso para esto.", "Not allowed: your role does not have permission for this."));
   return u;
 }
 // Para páginas del panel (redirige en vez de lanzar error)

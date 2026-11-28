@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getSessionUser, handle, HttpError } from "@/lib/auth";
+import { getSessionUser, handle, errorPanel } from "@/lib/auth";
 
 const Tema = z.enum(["light", "dark", "system"]);
 
@@ -13,7 +13,7 @@ export const GET = handle(async () => {
 
 export const PATCH = handle(async (req: Request) => {
   const u = await getSessionUser();
-  if (!u) throw new HttpError(401, "Sesión requerida");
+  if (!u) throw await errorPanel(401, "Sesión requerida", "Sign-in required");
   const { theme } = z.object({ theme: Tema }).parse(await req.json());
   await prisma.staffUser.update({ where: { id: u.id }, data: { theme } });
   return Response.json({ ok: true });

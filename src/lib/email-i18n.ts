@@ -1,4 +1,4 @@
-import type { Idioma } from "./i18n-dict";
+import { idiomaDe, type Idioma } from "./i18n-dict";
 
 // Textos de los correos. Se mantienen aparte del diccionario web para que un
 // cambio de copy en la tienda no altere los correos ya enviados.
@@ -198,5 +198,5 @@ export const emailT = (lang: Idioma, key: string, vars: Record<string, string | 
   return raw.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? `{${k}}`));
 };
 
-export const emailLang = (value: string | null | undefined): Idioma => (value === "en" ? "en" : "es");
+export const emailLang = (value: string | null | undefined): Idioma => idiomaDe(value) ?? "es";
 export const orderStatusEmailLabel = (lang: Idioma, status: string) => emailT(lang, `status.${status}`);

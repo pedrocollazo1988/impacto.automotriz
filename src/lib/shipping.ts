@@ -9,13 +9,16 @@ import { textoMensaje, type IdiomaMensaje } from "./mensajes";
 const num = (v: unknown) => (v == null ? null : Number(v));
 
 // Punto de recogida por defecto cuando todavía no se han creado puntos en el panel.
-const PUNTO_TIENDA = {
-  id: 0,
-  name: "Recogida en tienda",
-  address: SITE.direccion,
-  hours: SITE.horario,
-  readyHours: 24,
-};
+// La dirección postal no cambia con el idioma; el nombre y el horario sí.
+const PUNTO_TIENDA = { id: 0, address: SITE.direccion, readyHours: 24 } as const;
+const NOMBRE_PUNTO: Record<IdiomaMensaje, string> = { es: "Recogida en tienda", en: "Store pickup" };
+const HORARIO_PUNTO: Record<IdiomaMensaje, string> = { es: SITE.horario, en: SITE.horarioEn };
+
+const puntoTienda = (idioma: IdiomaMensaje) => ({
+  ...PUNTO_TIENDA,
+  name: NOMBRE_PUNTO[idioma],
+  hours: HORARIO_PUNTO[idioma],
+});
 
 // Calcula qué métodos de entrega están disponibles para un municipio y a qué precio.
 // Prioridad: regla del municipio > regla de la provincia > tarifa base del método.
@@ -45,7 +48,7 @@ export async function quoteDelivery(municipalityId: number, subtotalUsd: number,
     if (m.kind === "STORE_PICKUP") {
       const pp = points.length
         ? points.map((p) => ({ id: p.id, name: p.name, address: p.address, hours: p.hours, readyHours: p.readyHours }))
-        : [PUNTO_TIENDA];
+        : [puntoTienda(idioma)];
       return { ...base, pickupPoints: pp, available: true, feeUsd: Number(m.baseFee), reason: undefined };
     }
     const rule = m.rules.find((r) => r.municipalityId === mun.id) ?? m.rules.find((r) => r.municipalityId === null);

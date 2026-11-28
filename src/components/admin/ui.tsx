@@ -53,20 +53,6 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
 export const inputCls = "input";
 export const inputSmCls = "input input-sm";
 
-// Diálogo simple y accesible. Se usa en lugar de prompt()/confirm() nativos.
-export function Modal({ open, title, onClose, children, size = "sm" }: { open: boolean; title: string; onClose: () => void; children: ReactNode; size?: "sm" | "md" | "lg" }) {
-  if (!open) return null;
-  const ancho = size === "lg" ? "max-w-3xl" : size === "md" ? "max-w-xl" : "max-w-sm";
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto p-4" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="fixed inset-0 bg-[rgb(6_24_51_/_0.55)] backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative my-6 w-full ${ancho} rounded-2xl bg-white p-5 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.5)]`}>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-base font-bold text-navy">{title}</h2>
-          <button className="btn btn-quiet btn-xs" onClick={onClose} aria-label="Cerrar"><Icon name="close" size={16} /></button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
+// El modal es cliente (usa el idioma del panel), pero se reexporta aquí para
+// conservar el mismo punto de importación en las páginas de servidor.
+export { default as Modal, type ModalProps } from "./Modal";

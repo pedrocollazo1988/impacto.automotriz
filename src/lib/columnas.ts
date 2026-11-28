@@ -69,6 +69,7 @@ const TABLAS = [
   `CREATE TABLE IF NOT EXISTS "ContentBlock" (
      "id" SERIAL NOT NULL,
      "key" TEXT NOT NULL,
+     "lang" TEXT NOT NULL DEFAULT 'es',
      "eyebrow" TEXT NOT NULL DEFAULT '',
      "title" TEXT NOT NULL DEFAULT '',
      "subtitle" TEXT NOT NULL DEFAULT '',
@@ -78,7 +79,6 @@ const TABLAS = [
      "updatedBy" TEXT NOT NULL DEFAULT '',
      CONSTRAINT "ContentBlock_pkey" PRIMARY KEY ("id")
    )`,
-  `CREATE UNIQUE INDEX IF NOT EXISTS "ContentBlock_key_key" ON "ContentBlock"("key")`,
   `CREATE TABLE IF NOT EXISTS "ProductMovement" (
      "id" SERIAL NOT NULL,
      "productId" INTEGER NOT NULL,
@@ -150,6 +150,32 @@ const TABLAS = [
   `CREATE UNIQUE INDEX IF NOT EXISTS "TelegramLogin_nonce_key" ON "TelegramLogin"("nonce")`,
 ];
 
+// Ajustes que van al final, después de TABLAS: la tabla tiene que existir antes
+// de tocar sus columnas o índices.
+const AJUSTES = [
+  // El contenido editable pasa a existir por idioma: una fila en español y otra
+  // en inglés para la misma sección.
+  `ALTER TABLE "ContentBlock" ADD COLUMN IF NOT EXISTS "lang" TEXT NOT NULL DEFAULT 'es'`,
+  // La clave de las secciones deja de ser única por sí sola: ahora lo es junto al
+  // idioma, para que la misma sección exista en español y en inglés. El índice
+  // conserva su nombre original para actualizar en sitio una base ya desplegada,
+  // donde era único solo por «key»; si ya cubre las dos columnas, no se toca.
+  `DO $$
+   BEGIN
+     ALTER TABLE "ContentBlock" DROP CONSTRAINT IF EXISTS "ContentBlock_key_key";
+     IF EXISTS (
+       SELECT 1
+       FROM pg_index i
+       JOIN pg_class idx ON idx.oid = i.indexrelid
+       JOIN pg_class tbl ON tbl.oid = i.indrelid
+       WHERE idx.relname = 'ContentBlock_key_key' AND tbl.relname = 'ContentBlock' AND i.indnatts = 1
+     ) THEN
+       EXECUTE 'DROP INDEX "ContentBlock_key_key"';
+     END IF;
+     EXECUTE 'CREATE UNIQUE INDEX IF NOT EXISTS "ContentBlock_key_key" ON "ContentBlock"("key", "lang")';
+   END $$`,
+];
+
 type Cliente = { $executeRawUnsafe(sql: string): Promise<unknown> };
 
 // La caché va por cliente, no global: si fuera global, un cliente distinto (otra
@@ -162,7 +188,7 @@ export function aplicarColumnas(cliente: Cliente): Promise<void> {
   const previo = hechos.get(cliente);
   if (previo) return previo;
   const hecho = (async () => {
-    for (const sql of [...COLUMNAS, ...TABLAS]) await cliente.$executeRawUnsafe(sql);
+    for (const sql of [...COLUMNAS, ...TABLAS, ...AJUSTES]) await cliente.$executeRawUnsafe(sql);
   })().catch((e) => {
     hechos.delete(cliente);
     console.warn("[columnas] no se pudo asegurar el esquema:", e instanceof Error ? e.message : e);

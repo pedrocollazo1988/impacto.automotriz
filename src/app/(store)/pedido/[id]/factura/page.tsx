@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { canViewOrder } from "@/lib/order-access";
 import { leerSeccion } from "@/lib/contenido-server";
+import { pagoTexto } from "@/lib/pagos-i18n";
 import { getT } from "@/lib/i18n";
 import PrintButton from "@/components/PrintButton";
 import Logo from "@/components/brand/Logo";
@@ -24,7 +25,7 @@ export default async function Factura({ params, searchParams }: { params: Promis
     leerSeccion("facturacion").catch(() => null),
   ]);
   if (!o || !(await canViewOrder(o, (await searchParams).t))) notFound();
-  const { t } = await getT();
+  const { t, lang } = await getT();
   const m = (n: unknown) => `${Number(n).toFixed(2)} USD`;
   const filas = (datos?.items ?? []).filter((i) => i.titulo);
   const valor = (nombre: string) => filas.find((i) => i.titulo?.toLowerCase().includes(nombre.toLowerCase()))?.texto ?? "";
@@ -95,7 +96,7 @@ export default async function Factura({ params, searchParams }: { params: Promis
         <div className="max-w-[55%] text-[10px] text-slate-500">
           {o.delivery && <p>{t("order.receives")} <b className="text-slate-700">{o.delivery.recipientName}</b> · {o.delivery.recipientPhone}{o.delivery.recipientCi ? ` · CI ${o.delivery.recipientCi}` : ""}</p>}
           {pin && <p className="mt-1">{t("order.deliveryPin")}: <b className="font-mono text-sm tracking-widest text-navy">{pin}</b></p>}
-          <p className="mt-1">{t("order.payment")}: {o.paymentMethodName ?? o.paymentMethod}</p>
+          <p className="mt-1">{t("order.payment")}: {pagoTexto(o.paymentMethodName ?? o.paymentMethod, lang)}</p>
           {datos?.subtitle && <p className="mt-2">{datos.subtitle}</p>}
         </div>
         <div className="w-56 space-y-0.5 text-[11px]">

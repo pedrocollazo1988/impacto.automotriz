@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, handle, requireAdmin, HttpError } from "@/lib/auth";
+import { audit, handle, requireAdmin, errorPanel } from "@/lib/auth";
 import { audienceWhere, sendTest, type Segment } from "@/lib/mailer";
 
 export const GET = handle(async (req: Request) => {
@@ -25,7 +25,7 @@ export const POST = handle(async (req: Request) => {
     const data = { name: b.name, subject: b.subject, html: b.html, segment: b.segment ?? undefined };
     if (!b.id) return Response.json(await prisma.campaign.create({ data }));
     const cur = await prisma.campaign.findUniqueOrThrow({ where: { id: b.id } });
-    if (cur.status !== "DRAFT") throw new HttpError(409, "Solo se editan borradores");
+    if (cur.status !== "DRAFT") throw await errorPanel(409, "Solo se editan borradores", "Only drafts can be edited");
     return Response.json(await prisma.campaign.update({ where: { id: b.id }, data }));
   }
   const c = await prisma.campaign.findUniqueOrThrow({ where: { id: b.id } });
@@ -33,7 +33,7 @@ export const POST = handle(async (req: Request) => {
   if (b.action === "test") { await sendTest(b.to, c.subject, c.html); return Response.json({ ok: true }); }
   if (b.action === "send" || b.action === "cancel") await audit(u, `campana.${b.action}`, c.name);
   if (b.action === "send") {
-    if (c.status !== "DRAFT") throw new HttpError(409, "La campaña ya fue enviada o está en curso");
+    if (c.status !== "DRAFT") throw await errorPanel(409, "La campaña ya fue enviada o está en curso", "The campaign has already been sent or is in progress");
     return Response.json(await prisma.campaign.update({ where: { id: c.id }, data: { status: "SENDING" } }));
   }
   return Response.json(await prisma.campaign.update({ where: { id: c.id }, data: { status: "CANCELED" } }));

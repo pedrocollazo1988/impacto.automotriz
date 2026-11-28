@@ -24,7 +24,11 @@ export const plantillaSms = (lang: Idioma, codigo: string) =>
     : `Impacto Automotriz: tu código de verificación es ${codigo}. Caduca en 5 minutos. No lo compartas.`;
 
 /** Texto de la prueba de configuración que se envía desde el panel. */
-export const MENSAJE_PRUEBA = "Impacto Automotriz: prueba de configuración de SMS. Si recibes este mensaje, el envío funciona.";
+export const mensajePrueba = (lang: Idioma) =>
+  lang === "en"
+    ? "Impacto Automotriz: SMS configuration test. If you receive this message, sending works."
+    : "Impacto Automotriz: prueba de configuración de SMS. Si recibes este mensaje, el envío funciona.";
+export const MENSAJE_PRUEBA = mensajePrueba("es");
 
 export const cuerpoSms = (envio: SmsEnvio) => envio.texto ?? plantillaSms(envio.lang, envio.codigo);
 

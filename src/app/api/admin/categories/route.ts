@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, handle, requireAdmin } from "@/lib/auth";
+import { audit, handle, requireAdmin, textoPanel } from "@/lib/auth";
 import { invalidarCacheCatalogo, slugify } from "@/lib/catalog";
 
 const Body = z.object({
@@ -30,7 +30,7 @@ export const POST = handle(async (req: Request) => {
   // a un nombre ya existente lanzaría un error de Postgres poco claro.
   const choque = await prisma.category.findUnique({ where: { slug } });
   if (choque && choque.id !== b.id)
-    return Response.json({ error: "Ya existe una categoría con ese nombre" }, { status: 409 });
+    return Response.json({ error: await textoPanel("Ya existe una categoría con ese nombre", "A category with that name already exists") }, { status: 409 });
 
   const datos = {
     name: b.name.trim(),
@@ -52,14 +52,14 @@ export const POST = handle(async (req: Request) => {
 export const DELETE = handle(async (req: Request) => {
   const u = await requireAdmin(req, "products");
   const id = Number(new URL(req.url).searchParams.get("id"));
-  if (!Number.isInteger(id)) return Response.json({ error: "Id inválido" }, { status: 400 });
+  if (!Number.isInteger(id)) return Response.json({ error: await textoPanel("Id inválido", "Invalid id") }, { status: 400 });
 
   const cat = await prisma.category.findUnique({ where: { id }, include: { _count: { select: { products: true } } } });
-  if (!cat) return Response.json({ error: "No existe" }, { status: 404 });
+  if (!cat) return Response.json({ error: await textoPanel("No existe", "Not found") }, { status: 404 });
   // Borrar una categoría con productos los dejaría sin clasificar en silencio.
   if (cat._count.products > 0)
     return Response.json(
-      { error: `«${cat.name}» tiene ${cat._count.products} productos. Ocúltala en vez de borrarla, o muévelos antes a otra categoría.` },
+      { error: await textoPanel(`«${cat.name}» tiene ${cat._count.products} productos. Ocúltala en vez de borrarla, o muévelos antes a otra categoría.`, `“${cat.name}” has ${cat._count.products} products. Hide it instead of deleting it, or move them to another category first.`) },
       { status: 409 },
     );
 

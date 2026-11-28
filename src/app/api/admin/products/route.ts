@@ -1,7 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, handle, requireAdmin, puedeEliminarProducto, HttpError } from "@/lib/auth";
+import { audit, handle, requireAdmin, puedeEliminarProducto, errorPanel, textoPanel } from "@/lib/auth";
 import { saveProduct } from "@/lib/catalog";
 import { MAX_FOTOGRAMAS_360, MAX_FOTOS, MAX_VIDEOS } from "@/lib/medios";
 import { VISTAS } from "@/lib/viewer";
@@ -37,20 +37,20 @@ export const POST = handle(async (req: Request) => {
 });
 export const DELETE = handle(async (req: Request) => {
   const u = await requireAdmin(req, "products");
-  if (!puedeEliminarProducto(u)) throw new HttpError(403, "Solo el administrador puede eliminar productos.");
+  if (!puedeEliminarProducto(u)) throw await errorPanel(403, "Solo el administrador puede eliminar productos.", "Only the administrator can delete products.");
   const url = new URL(req.url);
   const pid = Number(url.searchParams.get("id"));
-  if (!Number.isInteger(pid) || pid <= 0) throw new HttpError(400, "Producto inválido");
-  const motivo = (url.searchParams.get("motivo") ?? "Sin motivo indicado").slice(0, 120);
+  if (!Number.isInteger(pid) || pid <= 0) throw await errorPanel(400, "Producto inválido", "Invalid product");
+  const motivo = (url.searchParams.get("motivo") ?? (await textoPanel("Sin motivo indicado", "No reason given"))).slice(0, 120);
   const detalle = (url.searchParams.get("detalle") ?? "").slice(0, 300);
   const p = await prisma.product.findUnique({ where: { id: pid }, select: { sku: true, name: true, stock: true } });
-  if (!p) throw new HttpError(404, "Producto no encontrado");
+  if (!p) throw await errorPanel(404, "Producto no encontrado", "Product not found");
   await prisma.product.update({ where: { id: pid }, data: { active: false } }); // baja lógica: conserva el historial
   await prisma.productMovement.create({
     data: {
       productId: pid, productName: p.name, sku: p.sku, kind: "BAJA", delta: 0,
       stockBefore: p.stock, stockAfter: p.stock,
-      detail: `Baja lógica: ${motivo}${detalle ? ` · ${detalle}` : ""}`, actor: u.name, source: "admin",
+      detail: await textoPanel(`Baja lógica: ${motivo}${detalle ? ` · ${detalle}` : ""}`, `Soft delete: ${motivo}${detalle ? ` · ${detalle}` : ""}`), actor: u.name, source: "admin",
     },
   });
   revalidateTag("producto");

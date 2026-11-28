@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Icon, { NOMBRES_ICONO } from "@/components/brand/Icon";
 import { EmptyState, Field, inputCls, Modal, PageHeader, Panel } from "@/components/admin/ui";
+import { usePreferences } from "@/components/site/Preferences";
 
 type Categoria = {
   id: number;
@@ -18,6 +19,7 @@ const ICONOS = NOMBRES_ICONO.filter((n) => n !== "spinner");
 const vacia = { id: undefined as number | undefined, name: "", description: "", icon: "box", position: 0, visible: true };
 
 export default function CategoriasAdmin({ iniciales }: { iniciales: Categoria[] }) {
+  const { t } = usePreferences();
   const [cats, setCats] = useState(iniciales);
   const [editando, setEditando] = useState<typeof vacia | null>(null);
   const [borrando, setBorrando] = useState<Categoria | null>(null);
@@ -39,12 +41,12 @@ export default function CategoriasAdmin({ iniciales }: { iniciales: Categoria[] 
         body: JSON.stringify(editando),
       });
       const d = await r.json();
-      if (!r.ok) throw new Error(d.error ?? "No se pudo guardar");
+      if (!r.ok) throw new Error(d.error ?? t("adm.cat.errSave"));
       await recargar();
       setEditando(null);
-      setAviso({ tipo: "ok", texto: "Categoría guardada." });
+      setAviso({ tipo: "ok", texto: t("adm.cat.saved") });
     } catch (e) {
-      setAviso({ tipo: "error", texto: e instanceof Error ? e.message : "Error al guardar" });
+      setAviso({ tipo: "error", texto: e instanceof Error ? e.message : t("adm.cat.errSaving") });
     } finally { setOcupado(false); }
   };
 
@@ -54,20 +56,20 @@ export default function CategoriasAdmin({ iniciales }: { iniciales: Categoria[] 
     try {
       const r = await fetch(`/api/admin/categories?id=${borrando.id}`, { method: "DELETE" });
       const d = await r.json();
-      if (!r.ok) throw new Error(d.error ?? "No se pudo borrar");
+      if (!r.ok) throw new Error(d.error ?? t("adm.cat.errDelete"));
       await recargar();
-      setAviso({ tipo: "ok", texto: `«${borrando.name}» eliminada.` });
+      setAviso({ tipo: "ok", texto: t("adm.cat.deleted").replace("{name}", borrando.name) });
     } catch (e) {
-      setAviso({ tipo: "error", texto: e instanceof Error ? e.message : "Error al borrar" });
+      setAviso({ tipo: "error", texto: e instanceof Error ? e.message : t("adm.cat.errDeleting") });
     } finally { setBorrando(null); setOcupado(false); }
   };
 
   return (
     <>
       <PageHeader
-        title="Categorías"
-        subtitle="Ordenan la portada y el catálogo. El nombre genera la dirección /catalogo?categoria=…"
-        actions={<button className="btn btn-primary btn-sm" onClick={() => setEditando({ ...vacia, position: cats.length })}><Icon name="plus" size={15} /> Nueva categoría</button>}
+        title={t("adm.cat.title")}
+        subtitle={t("adm.cat.subtitle")}
+        actions={<button className="btn btn-primary btn-sm" onClick={() => setEditando({ ...vacia, position: cats.length })}><Icon name="plus" size={15} /> {t("adm.cat.new")}</button>}
       />
 
       {aviso && (
@@ -78,18 +80,18 @@ export default function CategoriasAdmin({ iniciales }: { iniciales: Categoria[] 
 
       <Panel>
         {cats.length === 0 ? (
-          <EmptyState icon="grid" title="Aún no hay categorías" hint="Crea la primera para organizar el catálogo." />
+          <EmptyState icon="grid" title={t("adm.cat.emptyTitle")} hint={t("adm.cat.emptyHint")} />
         ) : (
           <table className="adm-table w-full">
             <thead>
               <tr>
                 <th className="w-10"></th>
-                <th>Nombre</th>
-                <th className="hidden sm:table-cell">Descripción</th>
-                <th className="w-24 text-right">Productos</th>
-                <th className="w-20 text-right">Orden</th>
-                <th className="w-24">Estado</th>
-                <th className="w-24 text-right">Acciones</th>
+                <th>{t("adm.cat.name")}</th>
+                <th className="hidden sm:table-cell">{t("adm.cat.description")}</th>
+                <th className="w-24 text-right">{t("adm.cat.products")}</th>
+                <th className="w-20 text-right">{t("adm.cat.order")}</th>
+                <th className="w-24">{t("adm.cat.status")}</th>
+                <th className="w-24 text-right">{t("adm.cat.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -104,14 +106,14 @@ export default function CategoriasAdmin({ iniciales }: { iniciales: Categoria[] 
                   <td className="text-right font-mono text-sm">{c._count.products}</td>
                   <td className="text-right font-mono text-sm">{c.position}</td>
                   <td>
-                    <span className={`badge badge-${c.visible || c._count.products > 0 ? "ok" : "mute"}`}>{c.visible || c._count.products > 0 ? "Visible" : "Oculta"}</span>
+                    <span className={`badge badge-${c.visible || c._count.products > 0 ? "ok" : "mute"}`}>{c.visible || c._count.products > 0 ? t("adm.cat.visible") : t("adm.cat.hidden")}</span>
                   </td>
                   <td className="text-right">
                     <div className="flex justify-end gap-1">
-                      <button className="btn btn-quiet btn-xs" onClick={() => setEditando({ id: c.id, name: c.name, description: c.description, icon: c.icon, position: c.position, visible: c.visible })} aria-label={`Editar ${c.name}`}>
+                      <button className="btn btn-quiet btn-xs" onClick={() => setEditando({ id: c.id, name: c.name, description: c.description, icon: c.icon, position: c.position, visible: c.visible })} aria-label={t("adm.cat.editAria").replace("{name}", c.name)}>
                         <Icon name="edit" size={14} />
                       </button>
-                      <button className="btn btn-quiet btn-xs text-red-600" onClick={() => setBorrando(c)} aria-label={`Borrar ${c.name}`}>
+                      <button className="btn btn-quiet btn-xs text-red-600" onClick={() => setBorrando(c)} aria-label={t("adm.cat.deleteAria").replace("{name}", c.name)}>
                         <Icon name="trash" size={14} />
                       </button>
                     </div>
@@ -123,45 +125,45 @@ export default function CategoriasAdmin({ iniciales }: { iniciales: Categoria[] 
         )}
       </Panel>
 
-      <Modal open={!!editando} title={editando?.id ? "Editar categoría" : "Nueva categoría"} onClose={() => setEditando(null)}>
+      <Modal open={!!editando} title={editando?.id ? t("adm.cat.editTitle") : t("adm.cat.new")} onClose={() => setEditando(null)}>
         {editando && (
           <div className="space-y-3">
-            <Field label="Nombre">
+            <Field label={t("adm.cat.name")}>
               <input className={inputCls} value={editando.name} onChange={(e) => setEditando({ ...editando, name: e.target.value })} />
             </Field>
-            <Field label="Descripción" hint="Opcional. Aparece bajo el nombre en la portada.">
+            <Field label={t("adm.cat.description")} hint={t("adm.cat.descriptionHint")}>
               <textarea className={inputCls} rows={2} value={editando.description} onChange={(e) => setEditando({ ...editando, description: e.target.value })} />
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Icono">
+              <Field label={t("adm.cat.icon")}>
                 <select className={inputCls} value={editando.icon} onChange={(e) => setEditando({ ...editando, icon: e.target.value })}>
                   {ICONOS.map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
               </Field>
-              <Field label="Orden" hint="Menor va primero.">
+              <Field label={t("adm.cat.order")} hint={t("adm.cat.orderHint")}>
                 <input type="number" className={inputCls} value={editando.position} onChange={(e) => setEditando({ ...editando, position: Number(e.target.value) || 0 })} />
               </Field>
             </div>
             <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
               <input type="checkbox" checked={editando.visible} onChange={(e) => setEditando({ ...editando, visible: e.target.checked })} />
-              Visible en la tienda
+              {t("adm.cat.visibleStore")}
             </label>
-            <p className="text-[11px] text-slate-500">Una categoría con productos activos sigue apareciendo en el filtro del catálogo.</p>
+            <p className="text-[11px] text-slate-500">{t("adm.cat.visibleNote")}</p>
             <div className="flex justify-end gap-2 pt-1">
-              <button className="btn btn-ghost btn-sm" onClick={() => setEditando(null)}>Cancelar</button>
-              <button className="btn btn-primary btn-sm" onClick={guardar} disabled={ocupado}>{ocupado ? "Guardando…" : "Guardar"}</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setEditando(null)}>{t("adm.cat.cancel")}</button>
+              <button className="btn btn-primary btn-sm" onClick={guardar} disabled={ocupado}>{ocupado ? t("adm.cat.saving") : t("adm.cat.save")}</button>
             </div>
           </div>
         )}
       </Modal>
 
-      <Modal open={!!borrando} title="Borrar categoría" onClose={() => setBorrando(null)}>
+      <Modal open={!!borrando} title={t("adm.cat.deleteTitle")} onClose={() => setBorrando(null)}>
         <p className="text-sm text-slate-600">
-          ¿Seguro que quieres borrar «{borrando?.name}»? Esta acción no se puede deshacer.
+          {t("adm.cat.deleteConfirm").replace("{name}", borrando?.name ?? "")}
         </p>
         <div className="mt-4 flex justify-end gap-2">
-          <button className="btn btn-ghost btn-sm" onClick={() => setBorrando(null)}>Cancelar</button>
-          <button className="btn btn-primary btn-sm" onClick={borrar} disabled={ocupado}>Borrar</button>
+          <button className="btn btn-ghost btn-sm" onClick={() => setBorrando(null)}>{t("adm.cat.cancel")}</button>
+          <button className="btn btn-primary btn-sm" onClick={borrar} disabled={ocupado}>{t("adm.cat.delete")}</button>
         </div>
       </Modal>
     </>

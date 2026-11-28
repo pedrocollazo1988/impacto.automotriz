@@ -700,12 +700,16 @@ model MediaFile {
 }
 
 // Contenido editable de la web pública (textos de portada, servicios, contacto,
-// preguntas frecuentes...). Una fila por sección: `key` es el ancla que usan las
-// páginas y `items` guarda la lista en JSON para no crear una tabla por sección.
-// Si una sección no existe, la página usa el texto por defecto del código.
+// preguntas frecuentes...). Una fila por sección e idioma: `key` es el ancla que
+// usan las páginas, `lang` el idioma en que se escribió y `items` guarda la lista
+// en JSON para no crear una tabla por sección. Si una sección no existe en un
+// idioma, la página usa el texto por defecto del código (traducido si hace falta).
 model ContentBlock {
   id        Int      @id @default(autoincrement())
-  key       String   @unique
+  key       String
+  // Idioma del bloque. Las filas anteriores a este cambio quedan en "es" por el
+  // valor por defecto, así que no se pierde nada.
+  lang      String   @default("es")
   eyebrow   String   @default("")
   title     String   @default("")
   subtitle  String   @default("")
@@ -713,6 +717,8 @@ model ContentBlock {
   visible   Boolean  @default(true)
   updatedAt DateTime @updatedAt
   updatedBy String   @default("")
+
+  @@unique([key, lang])
 }
 
 /// Enlace de entrada por Telegram: se crea al pulsar el botón y lo confirma el

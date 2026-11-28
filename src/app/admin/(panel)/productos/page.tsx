@@ -4,9 +4,11 @@ import Icon from "@/components/brand/Icon";
 import { PageHeader, Panel, EmptyState } from "@/components/admin/ui";
 import TablaProductos from "./TablaProductos";
 import { puedeEliminarProducto, requirePage } from "@/lib/auth";
+import { getT } from "@/lib/i18n";
 export const dynamic = "force-dynamic";
 
 export default async function Productos() {
+  const { t } = await getT();
   const u = await requirePage("products");
   const ps = await prisma.product.findMany({ where: { active: true }, orderBy: { stock: "asc" }, include: { category: true } });
   const filas = ps.map((p) => ({
@@ -20,14 +22,14 @@ export default async function Productos() {
   }));
   return (
     <>
-      <PageHeader title="Productos e inventario" subtitle={`${ps.length} producto${ps.length === 1 ? "" : "s"} activo${ps.length === 1 ? "" : "s"}`}
+      <PageHeader title={t("adm.prod.title")} subtitle={`${ps.length} ${t(ps.length === 1 ? "adm.prod.activeOne" : "adm.prod.activeMany")}`}
         actions={<>
-          <Link className="btn btn-ghost btn-sm" href="/admin/productos/importar"><Icon name="layers" size={15} /> Carga masiva (CSV)</Link>
-          <Link className="btn btn-primary btn-sm" href="/admin/productos/nuevo"><Icon name="plus" size={15} /> Nuevo producto</Link>
+          <Link className="btn btn-ghost btn-sm" href="/admin/productos/importar"><Icon name="layers" size={15} /> {t("adm.prod.bulkCsv")}</Link>
+          <Link className="btn btn-primary btn-sm" href="/admin/productos/nuevo"><Icon name="plus" size={15} /> {t("adm.prod.new")}</Link>
         </>} />
       <Panel>
         {!ps.length ? (
-          <EmptyState icon="cube" title="Aún no hay productos" hint="Crea uno con «Nuevo producto» o súbelos en lote desde un CSV." />
+          <EmptyState icon="cube" title={t("adm.prod.emptyTitle")} hint={t("adm.prod.emptyHint")} />
         ) : (
           <TablaProductos filas={filas} puedeEliminar={puedeEliminarProducto(u)} />
         )}
