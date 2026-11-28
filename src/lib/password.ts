@@ -1,4 +1,6 @@
 import crypto from "node:crypto";
+export { MIN_CLAVE, esContrasenaValida } from "./password-policy";
+
 export function hashPassword(pw: string) {
   const salt = crypto.randomBytes(16).toString("hex");
   return `${salt}:${crypto.scryptSync(pw, salt, 64).toString("hex")}`;

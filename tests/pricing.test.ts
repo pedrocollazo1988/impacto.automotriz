@@ -25,4 +25,27 @@ describe("priceCart", () => {
     expect(r.lines[0]).toMatchObject({ stock: 2, ok: true });
     expect(r.allOk).toBe(true);
   });
+
+  it("devuelve la línea de un producto que ya no existe para poder quitarlo", async () => {
+    db.product.findMany.mockResolvedValue([]);
+    const r = await priceCart([{ productId: 99, variantId: null, qty: 1 }]);
+    expect(r.lines).toHaveLength(1);
+    expect(r.lines[0]).toMatchObject({ productId: 99, disponible: false, ok: false, totalUsd: 0 });
+    expect(r.subtotalUsd).toBe(0);
+    expect(r.allOk).toBe(false);
+  });
+
+  it("marca no disponible si el carrito no eligió la variante obligatoria", async () => {
+    db.product.findMany.mockResolvedValue([producto(10, 5)]);
+    const r = await priceCart([{ productId: 1, variantId: null, qty: 1 }]);
+    expect(r.lines[0]).toMatchObject({ disponible: false, ok: false });
+    expect(r.allOk).toBe(false);
+  });
+
+  it("marca no disponible si la variante ya no está activa", async () => {
+    db.product.findMany.mockResolvedValue([producto(10, 5)]);
+    const r = await priceCart([{ productId: 1, variantId: 404, qty: 1 }]);
+    expect(r.lines[0]).toMatchObject({ productId: 1, variantId: 404, disponible: false });
+    expect(r.allOk).toBe(false);
+  });
 });

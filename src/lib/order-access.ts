@@ -63,5 +63,5 @@ export async function canViewOrder(order: { id: string; customerId: string | nul
   // Pedido de invitado: solo lo ve la cuenta con ese correo y, además, con el
   // correo ya verificado. Sin esa condición bastaba registrarse con la dirección
   // de otra persona para leer sus pedidos.
-  return me.emailVerified && order.customerEmail.toLowerCase() === me.email.toLowerCase();
+  return me.emailVerified && !!me.email && order.customerEmail.toLowerCase() === me.email.toLowerCase();
 }

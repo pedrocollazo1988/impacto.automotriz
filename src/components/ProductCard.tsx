@@ -17,7 +17,10 @@ function discountPct(price: unknown, compare: unknown) {
   return Math.round(((c - p) / c) * 100);
 }
 
-export default function ProductCard({ p }: { p: CardProduct }) {
+// `priority` solo para las tarjetas de la primera fila: son la imagen más grande
+// del pliegue y, en `next/image`, lo demás va con carga diferida (si el LCP está
+// en diferido, se retrasa hasta que el navegador lo descubre).
+export default function ProductCard({ p, priority = false }: { p: CardProduct; priority?: boolean }) {
   const img = p.images[0] ?? "/placeholder.svg";
   // El vídeo manda si existe: enseña la pieza en movimiento en la propia parrilla.
   // Sin foto de portada se usa igualmente, con el vídeo como póster de respaldo.
@@ -30,7 +33,7 @@ export default function ProductCard({ p }: { p: CardProduct }) {
         {video ? (
           <CardVideo src={video} poster={img} alt={p.name} />
         ) : (
-          <Image src={img} alt={p.name} fill sizes="(max-width:768px) calc(50vw - 1.5rem), (max-width:1024px) calc(33vw - 1.5rem), calc(25vw - 1.5rem)" className="object-cover transition-transform duration-500 group-hover:scale-[1.06]" unoptimized={img.endsWith(".svg")} />
+          <Image src={img} alt={p.name} fill sizes="(max-width:768px) calc(50vw - 1.5rem), (max-width:1024px) calc(33vw - 1.5rem), calc(25vw - 1.5rem)" className="object-cover transition-transform duration-500 group-hover:scale-[1.06]" unoptimized={img.endsWith(".svg")} priority={priority} />
         )}
         <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
           {off > 0 && <span className="badge bg-[color:var(--color-action-hi)] text-[color:var(--color-navy-deep)] shadow">-{off}%</span>}

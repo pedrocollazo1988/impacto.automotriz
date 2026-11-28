@@ -44,8 +44,8 @@ export const POST = handle(async (req: Request) => {
     await prisma.subscriber.updateMany({ where: { email: b.email, status: "UNSUBSCRIBED" }, data: { status: "PENDING", consentAt: new Date() } });
   }
   const [email] = await Promise.all([
-    sendVerificationPin(c, lang),
-    sendWelcomeEmail(c, lang).catch(() => null),
+    sendVerificationPin({ id: c.id, email: b.email, name: c.name }, lang),
+    sendWelcomeEmail({ email: b.email, name: c.name }, lang).catch(() => null),
   ]);
   await startCustomerSession(c.id);
   return Response.json({ ok: true, pin: true, emailSent: email.ok, ...(email.ok ? {} : { emailError: "No se pudo enviar el código. Revisa la configuración de correo o pide un reenvío." }) });

@@ -98,7 +98,7 @@ export function LanguageToggle({ compact = false }: { compact?: boolean }) {
       onClick={() => setLang(lang === "es" ? "en" : "es")}
       className="flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition hover:bg-white/10"
       title={t("lang.change")}
-      aria-label={t("lang.change")}
+      aria-label={`${t("lang.change")} (${lang.toUpperCase()})`}
     >
       <Icon name="globe" size={14} />
       {!compact && <span>{lang.toUpperCase()}</span>}

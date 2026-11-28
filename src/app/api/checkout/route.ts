@@ -34,6 +34,7 @@ export const POST = handle(async (req: Request) => {
   // 1) Todo se recalcula en el servidor: precios, existencias, cupón y envío.
   const cart = await priceCart(b.items);
   if (!cart.allOk) throw new HttpError(409, "Algún producto ya no está disponible en la cantidad pedida");
+  const lineas = cart.lines.filter((l) => l.disponible);
   const coupon = await evaluateCoupon(b.coupon, cart.subtotalUsd);
   const { cashOnDelivery, ...delivery } = await buildOrderDelivery(b.delivery, r2(cart.subtotalUsd - coupon.discountUsd));
   const baseUsd = r2(cart.subtotalUsd - coupon.discountUsd + delivery.feeUsd);
@@ -55,13 +56,13 @@ export const POST = handle(async (req: Request) => {
     // El pedido se crea primero para tener número y poder enlazar cada movimiento.
     const created = await tx.order.create({
       data: {
-        paymentMethod: gw.key, paymentMethodName: gw.name, customerName: b.customer.name || me.name, customerEmail: me.email, customerPhone: b.customer.phone || me.phone || "", customerId: me.id, lang,
+        paymentMethod: gw.key, paymentMethodName: gw.name, customerName: b.customer.name || me.name, customerEmail: me.email ?? "", customerPhone: b.customer.phone || me.phone || "", customerId: me.id, lang,
         subtotalUsd: cart.subtotalUsd, discountUsd: coupon.discountUsd, couponCode: coupon.code, shippingUsd: delivery.feeUsd, paymentFeeUsd: feeUsd, totalUsd,
-        items: { create: cart.lines.map((l) => ({ productId: l.productId, variantId: l.variantId, name: l.name, unitUsd: l.unitUsd, qty: l.qty })) },
+        items: { create: lineas.map((l) => ({ productId: l.productId, variantId: l.variantId, name: l.name, unitUsd: l.unitUsd, qty: l.qty })) },
         delivery: { create: delivery },
       },
     });
-    for (const l of cart.lines) {
+    for (const l of lineas) {
       if (l.variantId) { // el stock del producto es la suma de sus variantes: se descuentan ambos
         const rv = await tx.productVariant.updateMany({ where: { id: l.variantId, stock: { gte: l.qty } }, data: { stock: { decrement: l.qty } } });
         if (rv.count === 0) throw new HttpError(409, `Sin existencias suficientes: ${l.name}`);
@@ -100,11 +101,11 @@ export const POST = handle(async (req: Request) => {
     paymentUrl = gw.config.url;
     await prisma.order.update({ where: { id: order.id }, data: { paymentRef: paymentUrl } });
   }
-  await sendTransactional(me.email, emailT(lang, "order.subject", { number: order.number }), orderConfirmationEmail({
+  if (me.email) await sendTransactional(me.email, emailT(lang, "order.subject", { number: order.number }), orderConfirmationEmail({
     name: b.customer.name || me.name,
     orderNumber: order.number,
     total: `${totalUsd.toFixed(2)} USD`,
-    items: cart.lines.map((l) => ({ name: l.name, qty: l.qty, price: `${l.totalUsd.toFixed(2)} USD` })),
+    items: lineas.map((l) => ({ name: l.name, qty: l.qty, price: `${l.totalUsd.toFixed(2)} USD` })),
     trackingUrl: `${process.env.PUBLIC_URL}/pedido/${order.id}?t=${orderToken(order.id)}`,
     deliveryPin: delivery.confirmationCode,
     lang,
@@ -114,9 +115,9 @@ export const POST = handle(async (req: Request) => {
     await sendTransactional(adminEmail, emailT("es", "adminOrder.subject", { number: order.number }), adminOrderEmail({
       orderNumber: order.number,
       customerName: b.customer.name || me.name,
-      customerEmail: me.email,
+      customerEmail: me.email ?? "",
       total: `${totalUsd.toFixed(2)} USD`,
-      items: cart.lines.map((l) => ({ name: l.name, qty: l.qty, price: `${l.totalUsd.toFixed(2)} USD` })),
+      items: lineas.map((l) => ({ name: l.name, qty: l.qty, price: `${l.totalUsd.toFixed(2)} USD` })),
       proformaUrl: `${process.env.PUBLIC_URL}/admin/pedidos/${order.id}/prefactura`,
       lang: "es",
     })).catch(() => null);

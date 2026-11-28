@@ -18,7 +18,8 @@ export const pinHash = (customerId: string, pin: string) => {
   return crypto.createHmac("sha256", process.env.APP_SECRET).update(`verify-pin:${customerId}:${pin}`).digest("hex");
 };
 
-export async function sendVerificationPin(c: { id: string; email: string; name: string }, lang: Idioma = "es"): Promise<SendResult> {
+export async function sendVerificationPin(c: { id: string; email: string | null; name: string }, lang: Idioma = "es"): Promise<SendResult> {
+  if (!c.email) return { ok: false, error: "sin_correo" };
   const pin = String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
   await prisma.authToken.deleteMany({ where: { customerId: c.id, kind: "VERIFY_PIN", usedAt: null } });
   await prisma.authToken.create({
@@ -36,7 +37,8 @@ export async function sendVerificationPin(c: { id: string; email: string; name: 
   );
 }
 
-export function sendWelcomeEmail(c: { email: string; name: string }, lang: Idioma = "es"): Promise<SendResult> {
+export function sendWelcomeEmail(c: { email: string | null; name: string }, lang: Idioma = "es"): Promise<SendResult> {
+  if (!c.email) return Promise.resolve({ ok: false, error: "sin_correo" });
   return sendTransactional(
     c.email,
     emailT(lang, "welcome.subject"),
@@ -49,9 +51,11 @@ export async function verifyCustomerPin(customerId: string, pin: string) {
   const t = await prisma.authToken.findUnique({ where: { tokenHash: pinHash(customerId, pin) }, include: { customer: true } });
   if (!t || t.customerId !== customerId || t.kind !== "VERIFY_PIN" || t.usedAt || t.expiresAt < new Date()) return false;
   await prisma.$transaction([
-    prisma.customer.update({ where: { id: customerId }, data: { emailVerified: true } }),
+    prisma.customer.update({ where: { id: customerId }, data: { emailVerified: true, emailVerifiedAt: new Date() } }),
     prisma.authToken.updateMany({ where: { customerId, kind: { in: ["VERIFY", "VERIFY_PIN"] }, usedAt: null }, data: { usedAt: new Date() } }),
-    prisma.subscriber.updateMany({ where: { email: t.customer.email, status: "PENDING" }, data: { status: "ACTIVE", consentAt: new Date() } }),
+    ...(t.customer.email
+      ? [prisma.subscriber.updateMany({ where: { email: t.customer.email, status: "PENDING" }, data: { status: "ACTIVE", consentAt: new Date() } })]
+      : []),
   ]);
   return true;
 }

@@ -5,8 +5,11 @@ import { useVehicle, type MiVehiculo } from "@/components/VehicleProvider";
 
 // Barra compacta que recuerda el vehículo del cliente en todo el sitio.
 export default function MiVehiculoBar({ vehicles }: { vehicles: MiVehiculo[] }) {
-  const { vehicle, setVehicle, ready } = useVehicle();
-  if (!ready || vehicles.length === 0) return null;
+  const { vehicle, setVehicle } = useVehicle();
+  // La barra se pinta desde el servidor con el mismo alto que tendrá luego: si
+  // esperase a leer localStorage para aparecer, empujaría la página 42 px y
+  // todo lo de abajo contaría como CLS en cada visita.
+  if (vehicles.length === 0) return null;
 
   return (
     <div className="border-b border-slate-200 bg-slate-50/80 print:hidden">
@@ -33,7 +36,9 @@ export default function MiVehiculoBar({ vehicles }: { vehicles: MiVehiculo[] }) 
             <span className="hidden items-center gap-1 font-semibold text-emerald-700 sm:flex">
               <Icon name="check" size={12} /> Verás la compatibilidad marcada
             </span>
-            <Link href={`/despiece/${vehicle.slug}`} className="font-semibold text-[color:var(--color-action-deep)] hover:underline">
+            {/* Oculto en móvil: el desplegable ya lleva al vehículo y así la
+                fila no gana una segunda línea cuando se elige uno. */}
+            <Link href={`/despiece/${vehicle.slug}`} className="hidden font-semibold text-[color:var(--color-action-deep)] hover:underline sm:inline">
               Ir a mi despiece
             </Link>
             <button onClick={() => setVehicle(null)} className="ml-auto text-slate-400 hover:text-slate-600" aria-label="Quitar mi vehículo">
@@ -41,7 +46,7 @@ export default function MiVehiculoBar({ vehicles }: { vehicles: MiVehiculo[] }) 
             </button>
           </>
         ) : (
-          <span className="text-slate-500">Elígelo una vez y te lo recordamos.</span>
+          <span className="hidden text-slate-500 sm:inline">Elígelo una vez y te lo recordamos.</span>
         )}
       </div>
     </div>
