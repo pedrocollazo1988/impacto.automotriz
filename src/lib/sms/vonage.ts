@@ -18,7 +18,9 @@ export class VonageSms implements SmsProvider {
       text: plantillaSms(lang, codigo),
       type: "unicode",
     });
-    const r = await fetch("https://rest.nexmo.com/sms/json", {
+    // VONAGE_API_BASE permite apuntar a un servidor de pruebas.
+    const base = (process.env.VONAGE_API_BASE ?? "https://rest.nexmo.com").replace(/\/+$/, "");
+    const r = await fetch(`${base}/sms/json`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: cuerpo,

@@ -20,7 +20,9 @@ export class TwilioSms implements SmsProvider {
     if (servicio) cuerpo.set("MessagingServiceSid", servicio);
     else cuerpo.set("From", from!);
 
-    const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+    // TWILIO_API_BASE permite apuntar a un servidor de pruebas.
+    const base = (process.env.TWILIO_API_BASE ?? "https://api.twilio.com").replace(/\/+$/, "");
+    const r = await fetch(`${base}/2010-04-01/Accounts/${sid}/Messages.json`, {
       method: "POST",
       headers: {
         Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString("base64")}`,

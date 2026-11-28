@@ -28,7 +28,7 @@ export async function getCustomer() {
   const [id, exp, s] = raw.split("."); if (!id || !exp || !s || Number(exp) < Date.now()) return null;
   const a = Buffer.from(sig(`${id}.${exp}`)), b = Buffer.from(s);
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
-  return prisma.customer.findUnique({ where: { id }, select: { id: true, email: true, name: true, phone: true, phoneE164: true, emailVerified: true, phoneVerifiedAt: true } });
+  return prisma.customer.findUnique({ where: { id }, select: { id: true, email: true, name: true, phone: true, phoneE164: true, emailVerified: true, phoneVerifiedAt: true, avatarUrl: true, preferredLanguage: true } });
 }
 export async function requireCustomer() {
   const c = await getCustomer(); if (!c) throw new HttpError(401, "Inicia sesión"); return c;

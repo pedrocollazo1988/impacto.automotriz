@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { startCustomerSession, assertCustomerAuthConfigured } from "@/lib/customer-auth";
+import { urlAvatar } from "@/lib/avatar";
 
 const back = (p: string) => Response.redirect(new URL(p, process.env.PUBLIC_URL), 302);
 export async function GET(req: Request) {
@@ -16,10 +17,11 @@ export async function GET(req: Request) {
     if (!u.sub || !u.email || u.email_verified !== true) return back("/cuenta?error=google");
     const email = String(u.email).toLowerCase();
     // Google ya verificó el correo: se vincula con la cuenta existente o se crea una nueva.
+    const foto = urlAvatar(u.picture);
     const c = (await prisma.customer.findUnique({ where: { googleId: u.sub } })) ?? (await prisma.customer.findUnique({ where: { email } }));
     const cust = c
-      ? await prisma.customer.update({ where: { id: c.id }, data: { googleId: u.sub, emailVerified: true } })
-      : await prisma.customer.create({ data: { email, name: String(u.name ?? email.split("@")[0]).slice(0, 120), googleId: u.sub, emailVerified: true } });
+      ? await prisma.customer.update({ where: { id: c.id }, data: { googleId: u.sub, emailVerified: true, ...(foto ? { avatarUrl: foto } : {}) } })
+      : await prisma.customer.create({ data: { email, name: String(u.name ?? email.split("@")[0]).slice(0, 120), googleId: u.sub, emailVerified: true, ...(foto ? { avatarUrl: foto } : {}) } });
     await startCustomerSession(cust.id);
     return back("/cuenta");
   } catch { return back("/cuenta?error=google"); }
