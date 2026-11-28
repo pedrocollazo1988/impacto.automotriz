@@ -7,6 +7,7 @@ import Icon from "@/components/brand/Icon";
 import { useCart } from "@/components/CartProvider";
 import { NAV_PRINCIPAL, NAV_EMPRESA, SITE, telefono, waHref, type Enlace } from "@/lib/site";
 import { LanguageToggle, ThemeToggle, usePreferences } from "@/components/site/Preferences";
+import UserMenu from "@/components/site/UserMenu";
 
 const CLAVE_NAV: Record<string, string> = {
   "/catalogo": "nav.catalogo", "/ofertas": "nav.ofertas", "/marcas-y-modelos": "nav.marcas",
@@ -117,9 +118,7 @@ export default function SiteHeader({
             <Link href="/cuenta#deseos" aria-label={t("header.wishlist")} title={t("header.wishlist")} className="hidden h-12 w-12 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 hover:text-[color:var(--color-action)] sm:grid lg:h-11 lg:w-11">
               <Icon name="heart" size={20} />
             </Link>
-            <Link href="/cuenta" aria-label={t("header.account")} title={t("header.account")} className="grid h-10 w-10 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 hover:text-navy sm:h-12 sm:w-12 lg:h-11 lg:w-11">
-              <Icon name="user" size={20} />
-            </Link>
+            <UserMenu />
             <button onClick={() => setOpen((v) => !v)} aria-label={t("header.menu")} aria-expanded={open} className="grid h-10 w-10 place-items-center rounded-xl text-navy transition hover:bg-slate-100 sm:h-12 sm:w-12 lg:hidden">
               <Icon name={open ? "close" : "menu"} size={22} />
             </button>
@@ -173,6 +172,7 @@ export default function SiteHeader({
               {tr(l.href, l.label)}<Icon name="chevronRight" size={16} className="text-slate-400" />
             </Link>
           ))}
+          <div className="mt-2 border-t border-slate-100 pt-2"><UserMenu variante="lista" /></div>
           <a href={waHref("Hola, quiero hacer una consulta sobre sus productos")} target="_blank" rel="noopener" className="mt-1 flex min-h-12 items-center gap-2 rounded-lg px-2 py-3 text-sm font-semibold text-emerald-700 hover:bg-emerald-50">
             <Icon name="whatsapp" size={18} /> Consultar por WhatsApp
           </a>

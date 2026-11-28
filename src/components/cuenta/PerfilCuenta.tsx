@@ -108,7 +108,7 @@ export default function PerfilCuenta(props: Props) {
   const etiqueta = "text-xs font-semibold uppercase tracking-wide text-slate-500";
 
   return (
-    <section className="mt-8">
+    <section id="perfil" className="mt-8 scroll-mt-28">
       <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="user" size={18} /> {t("cuenta.data")}</h2>
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <div className="card p-5">
