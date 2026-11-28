@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { handle, HttpError } from "@/lib/auth";
 import { limit } from "@/lib/ratelimit";
 import { hashPassword, startCustomerSession, assertCustomerAuthConfigured } from "@/lib/customer-auth";
+import { mailStatus } from "@/lib/mailer";
 import { sendVerificationPin, sendWelcomeEmail } from "@/lib/verify";
 import { requireTurnstile, turnstileActivo } from "@/lib/turnstile";
 import { verifyCaptcha } from "@/lib/captcha";
@@ -24,6 +25,9 @@ const Body = z.object({
 
 export const POST = handle(async (req: Request) => {
   assertCustomerAuthConfigured(); // antes de crear nada: sin APP_SECRET no se puede iniciar sesión
+  // Sin servidor de correo la cuenta quedaría creada pero sin confirmar, y el
+  // cliente no podría ni entrar ni volver a registrarse.
+  if (!(await mailStatus()).configured) throw new HttpError(503, "MAIL_SIN_CONFIGURAR");
   await limit(req, "register", 5);
   const b = Body.parse(await req.json());
   if (turnstileActivo()) {

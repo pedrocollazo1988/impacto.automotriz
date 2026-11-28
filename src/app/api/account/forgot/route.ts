@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { handle } from "@/lib/auth";
 import { limit, limitKey } from "@/lib/ratelimit";
-import { sendTransactional } from "@/lib/mailer";
+import { mailStatus, sendTransactional } from "@/lib/mailer";
 import { requireTurnstile } from "@/lib/turnstile";
 import { getLang } from "@/lib/i18n";
 import { passwordResetEmail } from "@/lib/email-templates";
@@ -18,6 +18,9 @@ export const POST = handle(async (req: Request) => {
   }).parse(await req.json());
   await requireTurnstile(req, b.turnstileToken);
   await limitKey(b.email, "forgot-email", 3, 15 * 60_000);
+  // Sin servidor de correo el enlace no llegaría nunca. Se comprueba antes de
+  // mirar la cuenta para no revelar qué correos están registrados.
+  if (!(await mailStatus()).configured) return Response.json({ error: "MAIL_SIN_CONFIGURAR" }, { status: 503 });
   const c = await prisma.customer.findUnique({ where: { email: b.email } });
   const lang = await getLang();
   if (c) {

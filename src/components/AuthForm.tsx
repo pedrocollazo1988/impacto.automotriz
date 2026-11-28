@@ -34,6 +34,18 @@ export default function AuthForm({ google = false, next }: { google?: boolean; n
   const [codigo, setCodigo] = useState("");
   const [otp, setOtp] = useState<{ telefono: string; proposito: Proposito } | null>(null);
   const [espera, setEspera] = useState(0);
+  // El teléfono solo se ofrece si hay un proveedor de SMS real: en modo prueba
+  // el código no llega y el cliente se quedaría fuera sin saber por qué.
+  const [smsListo, setSmsListo] = useState(false);
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/account/phone/otp")
+      .then((r) => r.json())
+      .then((j) => { if (vivo) setSmsListo(j?.disponible === true); })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, []);
+  useEffect(() => { if (!smsListo && canal === "phone") setCanal("email"); }, [smsListo, canal]);
 
   const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
 
@@ -183,7 +195,13 @@ export default function AuthForm({ google = false, next }: { google?: boolean; n
 
       <h2 className="font-display text-xl font-bold text-navy">{titulos[modo]}</h2>
 
-      {(modo === "login" || modo === "register") && (
+      {(modo === "login" || modo === "register") && !smsListo && (
+        <p className="mt-3 flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
+          <Icon name="info" size={14} /> {t("auth.phoneProximamente")}
+        </p>
+      )}
+
+      {(modo === "login" || modo === "register") && smsListo && (
         <div className="mt-3 grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("auth.byPhone")}>
           {(["email", "phone"] as const).map((c) => (
             <button

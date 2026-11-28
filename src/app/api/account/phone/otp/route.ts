@@ -5,7 +5,7 @@ import { limit, limitKey } from "@/lib/ratelimit";
 import { normalizarTelefono } from "@/lib/phone";
 import { crearOtp, OTP_MAX_POR_HORA, type PropositoOtp } from "@/lib/otp";
 import { errorOtp, errorJson } from "@/lib/otp-http";
-import { proveedorSms } from "@/lib/sms";
+import { estadoSms, proveedorSms } from "@/lib/sms";
 import { requireTurnstile, turnstileActivo } from "@/lib/turnstile";
 import { getLang } from "@/lib/i18n";
 
@@ -21,9 +21,17 @@ const Body = z.object({
  * cliente se crea igual el código y no se envía nada, así el enfriamiento y
  * los tiempos no delatan qué números están registrados.
  */
+/**
+ * El formulario de acceso consulta aquí si puede ofrecer el teléfono. En modo
+ * prueba el código nunca llega al cliente, así que la pestaña se oculta.
+ */
+export const GET = handle(async () => Response.json({ disponible: estadoSms().listo }));
+
 export const POST = handle(async (req: Request) => {
   try {
     await limit(req, "otp-request", 8);
+    // En producción un código que solo queda en el registro no le sirve a nadie.
+    if (process.env.NODE_ENV === "production" && !estadoSms().listo) return errorJson("SMS_SIN_CONFIGURAR", 503);
     const b = Body.parse(await req.json());
     if (turnstileActivo()) await requireTurnstile(req, b.turnstileToken);
 
