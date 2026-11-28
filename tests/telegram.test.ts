@@ -70,3 +70,43 @@ describe("estadoTelegram", () => {
     expect(estadoTelegram({ TELEGRAM_BOT_TOKEN: "abc", TELEGRAM_BOT_USERNAME: "x" }).configurado).toBe(false);
   });
 });
+
+import { comandoStart, urlBot, generarNonce, NONCE_MINUTOS } from "@/lib/telegram";
+
+describe("comandoStart", () => {
+  it("saca el nonce de /start con parámetro", () => {
+    expect(comandoStart("/start abcdefghijklmnopqrstuvwx")).toBe("abcdefghijklmnopqrstuvwx");
+  });
+
+  it("acepta la forma con @nombre del bot", () => {
+    expect(comandoStart("/start@impacto_automotriz_bot abcdefghijklmnopqrstuvwx")).toBe("abcdefghijklmnopqrstuvwx");
+  });
+
+  it("ignora /start sin parámetro y cualquier otro texto", () => {
+    expect(comandoStart("/start")).toBeNull();
+    expect(comandoStart("hola")).toBeNull();
+    expect(comandoStart("")).toBeNull();
+    expect(comandoStart(undefined)).toBeNull();
+  });
+
+  it("rechaza un nonce demasiado corto", () => {
+    expect(comandoStart("/start corto")).toBeNull();
+  });
+});
+
+describe("enlaces de Telegram", () => {
+  it("construye el enlace al bot con el nonce", () => {
+    expect(urlBot("impacto_bot", "abc")).toBe("https://t.me/impacto_bot?start=abc");
+  });
+
+  it("el nonce es aleatorio, largo y seguro para URL", () => {
+    const a = generarNonce();
+    const b = generarNonce();
+    expect(a).not.toBe(b);
+    expect(a).toMatch(/^[\w-]{16,64}$/);
+  });
+
+  it("el enlace caduca en 10 minutos", () => {
+    expect(NONCE_MINUTOS).toBe(10);
+  });
+});

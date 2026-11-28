@@ -1,14 +1,39 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const TEXTOS = {
+  es: {
+    enlace: "¿No se abre en el móvil? Entra con el bot",
+    esperando: "Abre Telegram, pulsa Iniciar y vuelve aquí. Esperando…",
+    error: "No se pudo completar. Inténtalo otra vez.",
+    listo: "Listo. Entrando…",
+  },
+  en: {
+    enlace: "Not opening on your phone? Sign in with the bot",
+    esperando: "Open Telegram, tap Start and come back here. Waiting…",
+    error: "Could not complete. Please try again.",
+    listo: "Done. Signing you in…",
+  },
+};
 
 /**
- * Botón oficial de Telegram (widget de acceso). Se inyecta a mano porque el
- * script no se puede cargar con next/script sin perder los atributos data-*.
- * Sin dominio configurado en @BotFather el widget no dibuja nada.
+ * Dos caminos para entrar con Telegram:
+ *  - el widget oficial (cómodo en escritorio);
+ *  - un enlace al bot con nonce, que es el que funciona bien en el móvil: el
+ *    bot confirma el enlace y esta página lo detecta preguntando cada pocos
+ *    segundos.
  */
 export default function TelegramLogin({ usuario, lang = "es" }: { usuario: string; lang?: "es" | "en" }) {
   const caja = useRef<HTMLDivElement>(null);
+  const vivo = useRef(true);
+  const [fase, setFase] = useState<"inicio" | "esperando" | "listo" | "error">("inicio");
+  const t = TEXTOS[lang] ?? TEXTOS.es;
+
+  useEffect(() => {
+    vivo.current = true;
+    return () => { vivo.current = false; };
+  }, []);
 
   useEffect(() => {
     const contenedor = caja.current;
@@ -26,5 +51,45 @@ export default function TelegramLogin({ usuario, lang = "es" }: { usuario: strin
     return () => { contenedor.replaceChildren(); };
   }, [usuario, lang]);
 
-  return <div ref={caja} className="flex justify-center" />;
+  async function porEnlace() {
+    setFase("esperando");
+    const ventana = window.open("about:blank", "_blank");
+    const r = await fetch("/api/account/telegram/enlace", { method: "POST" });
+    const d = await r.json().catch(() => null);
+    if (!d?.ok) {
+      ventana?.close();
+      setFase("error");
+      return;
+    }
+    if (ventana) ventana.location.href = d.url;
+    else window.location.href = d.url;
+
+    const limite = Date.now() + 5 * 60_000;
+    while (vivo.current && Date.now() < limite) {
+      await new Promise((res) => setTimeout(res, 2500));
+      if (!vivo.current) return;
+      const s = await fetch(`/api/account/telegram/estado?nonce=${encodeURIComponent(d.nonce)}`)
+        .then((x) => x.json())
+        .catch(() => null);
+      if (s?.estado === "listo") {
+        setFase("listo");
+        window.location.href = s.redirect ?? "/cuenta";
+        return;
+      }
+      if (s?.estado === "caducado" || s?.estado === "ocupado") { setFase("error"); return; }
+    }
+    if (vivo.current) setFase("error");
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div ref={caja} className="flex justify-center" />
+      <button type="button" onClick={porEnlace} disabled={fase === "esperando" || fase === "listo"} className="text-xs font-semibold text-slate-500 hover:text-navy disabled:opacity-60">
+        {t.enlace}
+      </button>
+      {fase === "esperando" && <p role="status" className="text-xs text-slate-500">{t.esperando}</p>}
+      {fase === "listo" && <p role="status" className="text-xs text-[color:var(--color-ok)]">{t.listo}</p>}
+      {fase === "error" && <p role="alert" className="text-xs text-red-600">{t.error}</p>}
+    </div>
+  );
 }

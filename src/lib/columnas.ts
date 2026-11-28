@@ -112,6 +112,22 @@ const TABLAS = [
    )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "AuthSession_refreshTokenHash_key" ON "AuthSession"("refreshTokenHash")`,
   `CREATE INDEX IF NOT EXISTS "AuthSession_customerId_idx" ON "AuthSession"("customerId")`,
+  // Entrada por enlace de Telegram (el bot confirma el nonce desde el móvil).
+  `CREATE TABLE IF NOT EXISTS "TelegramLogin" (
+     "id" SERIAL NOT NULL,
+     "nonce" TEXT NOT NULL,
+     "estado" TEXT NOT NULL DEFAULT 'pendiente',
+     "telegramId" TEXT,
+     "chatId" TEXT,
+     "nombre" TEXT NOT NULL DEFAULT '',
+     "usuario" TEXT,
+     "foto" TEXT,
+     "creadoEn" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     "confirmadoEn" TIMESTAMP(3),
+     "usadoEn" TIMESTAMP(3),
+     CONSTRAINT "TelegramLogin_pkey" PRIMARY KEY ("id")
+   )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "TelegramLogin_nonce_key" ON "TelegramLogin"("nonce")`,
 ];
 
 type Cliente = { $executeRawUnsafe(sql: string): Promise<unknown> };
