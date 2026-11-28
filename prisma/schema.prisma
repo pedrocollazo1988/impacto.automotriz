@@ -558,6 +558,8 @@ model StaffUser {
   active       Boolean   @default(true)
   createdAt    DateTime  @default(now())
   lastLoginAt  DateTime?
+  // Preferencia de tema del panel: light | dark | system (null = la del navegador).
+  theme        String?
 }
 
 model AuditLog {

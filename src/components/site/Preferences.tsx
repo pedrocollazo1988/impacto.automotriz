@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/brand/Icon";
 import { DICCIONARIO, type Idioma } from "@/lib/i18n-dict";
@@ -61,7 +61,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     }
   }, [lang, ready, router]);
 
-  const setTheme = (t: Tema) => setThemeState(t);
+  // Estable: los efectos que dependen de él no deben repetirse en cada render.
+  const setTheme = useCallback((t: Tema) => setThemeState(t), []);
   const setLang = (l: Idioma) => {
     setLangState(l);
     document.cookie = `lang=${l};path=/;max-age=31536000;samesite=lax`;

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCustomer } from "@/lib/customer-auth";
 import { telefonoLegible } from "@/lib/phone";
@@ -7,6 +6,7 @@ import TelegramLogin from "@/components/TelegramLogin";
 import { estadoTelegram } from "@/lib/telegram";
 import GarageManager from "@/components/GarageManager";
 import DireccionesCuenta from "@/components/cuenta/DireccionesCuenta";
+import PedidosCuenta from "@/components/cuenta/PedidosCuenta";
 import { ordenarDirecciones } from "@/lib/direcciones";
 import PerfilCuenta from "@/components/cuenta/PerfilCuenta";
 import Avatar from "@/components/cuenta/Avatar";
@@ -17,14 +17,6 @@ import LogoutButton from "./LogoutButton";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Mi cuenta", robots: { index: false } };
 
-const L: Record<string, [string, string]> = {
-  PENDING_PAYMENT: ["Pendiente de pago", "bg-amber-100 text-amber-700"],
-  PAID: ["Pagado", "bg-blue-100 text-blue-700"],
-  PREPARING: ["En preparación", "bg-indigo-100 text-indigo-700"],
-  SHIPPED: ["Enviado", "bg-violet-100 text-violet-700"],
-  DELIVERED: ["Entregado", "bg-green-100 text-green-700"],
-  CANCELED: ["Cancelado", "bg-slate-200 text-slate-600"],
-};
 
 export default async function Cuenta({ searchParams }: { searchParams: Promise<{ verificado?: string; error?: string }> }) {
   const sp = await searchParams;
@@ -90,22 +82,7 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
 
       <section id="pedidos" className="mt-8 scroll-mt-28">
         <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="box" size={18} /> Mis pedidos</h2>
-        {orders.length ? (
-          <div className="mt-4 space-y-3">
-            {orders.map((o) => {
-              const [label, cls] = L[o.status] ?? [o.status, "bg-slate-100 text-slate-600"];
-              return (
-                <Link key={o.id} href={`/pedido/${o.id}`} className="card card-hover flex flex-wrap items-center gap-4 p-4">
-                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-navy)]/8 text-[color:var(--color-action-deep)]"><Icon name="box" size={20} /></span>
-                  <div className="min-w-0 flex-1"><p className="font-semibold text-slate-800">Pedido #{o.number}</p><p className="text-xs text-slate-400">{o.createdAt.toLocaleDateString("es-CU")}</p></div>
-                  <span className={`badge ${cls}`}>{label}</span>
-                  <span className="font-display font-extrabold text-navy">{Number(o.totalUsd).toFixed(2)} USD</span>
-                  <Icon name="chevronRight" size={18} className="text-slate-300" />
-                </Link>
-              );
-            })}
-          </div>
-        ) : <p className="mt-3 text-sm text-slate-500">Aún no tienes pedidos.</p>}
+        <PedidosCuenta pedidos={orders.map((o) => ({ id: o.id, number: o.number, status: o.status, createdAt: o.createdAt.toISOString(), totalUsd: Number(o.totalUsd) }))} />
       </section>
 
       <section className="mt-8">
