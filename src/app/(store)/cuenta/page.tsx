@@ -5,6 +5,7 @@ import { telefonoLegible } from "@/lib/phone";
 import AuthForm from "@/components/AuthForm";
 import GarageManager from "@/components/GarageManager";
 import PerfilCuenta from "@/components/cuenta/PerfilCuenta";
+import Avatar from "@/components/cuenta/Avatar";
 import ProductCard from "@/components/ProductCard";
 import VerifyBanner from "@/components/VerifyBanner";
 import Icon from "@/components/brand/Icon";
@@ -54,7 +55,7 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
         <div aria-hidden className="absolute inset-0 blueprint-dark" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[color:var(--color-navy)] to-[color:var(--color-action)] font-display text-xl font-extrabold text-white">{me.name.slice(0, 1)}</span>
+            <Avatar url={me.avatarUrl} name={me.name} />
             <div><h1 className="font-display text-2xl font-extrabold text-navy">Hola, {me.name.split(" ")[0]}</h1><p className="text-sm text-slate-500">{me.email ?? telefonoLegible(me.phoneE164)}</p></div>
           </div>
           <LogoutButton />

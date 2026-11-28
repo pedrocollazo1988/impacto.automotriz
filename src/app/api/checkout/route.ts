@@ -11,7 +11,8 @@ import { comision, esCobroAutomatico, estaOperativa, redirigeAlPagar, requiereCo
 import { sendTransactional } from "@/lib/mailer";
 import { adminOrderEmail, orderConfirmationEmail } from "@/lib/email-templates";
 import { emailT } from "@/lib/email-i18n";
-import { getLang } from "@/lib/i18n";
+import { idiomaDeCookie, type Idioma } from "@/lib/i18n";
+import { idiomaDe } from "@/lib/i18n-dict";
 import { orderToken, rememberOrder } from "@/lib/order-access";
 import { requireTurnstile } from "@/lib/turnstile";
 
@@ -50,7 +51,13 @@ export const POST = handle(async (req: Request) => {
   const feeUsd = comision(gw, baseUsd);
   const totalUsd = r2(baseUsd + feeUsd);
 
-  const lang = await getLang();
+  // El idioma del pedido sigue al de esta visita; si no hay cookie se usa el que
+  // el cliente guardó en su cuenta. Al comprar se sincroniza esa preferencia.
+  const idiomaVisita = await idiomaDeCookie();
+  const lang: Idioma = idiomaVisita ?? idiomaDe(me.preferredLanguage) ?? "es";
+  if (idiomaVisita && idiomaVisita !== me.preferredLanguage) {
+    await prisma.customer.update({ where: { id: me.id }, data: { preferredLanguage: idiomaVisita } }).catch(() => {});
+  }
   // 2) Pedido + stock + cupón en una sola transacción (si algo falla, se revierte todo).
   const order = await prisma.$transaction(async (tx) => {
     // El pedido se crea primero para tener número y poder enlazar cada movimiento.
