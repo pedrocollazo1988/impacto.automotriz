@@ -1,8 +1,10 @@
 "use client";
 import Icon from "@/components/brand/Icon";
 import { useVehicle, type MiVehiculo } from "@/components/VehicleProvider";
+import { usePreferences } from "@/components/site/Preferences";
 
 export default function VehiclePicker({ vehicle }: { vehicle: MiVehiculo }) {
+  const { t } = usePreferences();
   const { vehicle: actual, setVehicle } = useVehicle();
   const esMio = actual?.slug === vehicle.slug;
   return (
@@ -12,7 +14,7 @@ export default function VehiclePicker({ vehicle }: { vehicle: MiVehiculo }) {
       aria-pressed={esMio}
     >
       <Icon name={esMio ? "check" : "car"} size={13} />
-      {esMio ? "Es mi vehículo" : "Es mi vehículo"}
+      {t("parts.myVehicle")}
     </button>
   );
 }

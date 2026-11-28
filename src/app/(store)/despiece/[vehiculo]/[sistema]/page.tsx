@@ -4,21 +4,31 @@ import type { Metadata } from "next";
 import { getDiagram } from "@/lib/despiece";
 import Icon from "@/components/brand/Icon";
 import DespieceViewer from "@/components/despiece/DespieceViewer";
+import { getT } from "@/lib/i18n";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ vehiculo: string; sistema: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { t } = await getT();
   const { vehiculo, sistema } = await params;
   const d = await getDiagram(vehiculo, sistema);
   if (!d) return {};
   return {
-    title: `${d.system.name} · Despiece ${d.vehicle.brand} ${d.vehicle.model}`,
-    description: `${d.pins.length} piezas del sistema de ${d.system.name.toLowerCase()} del ${d.vehicle.brand} ${d.vehicle.model} con código SKU y compra directa.`,
+    title: t("parts.systemMeta")
+      .replace("{system}", d.system.name)
+      .replace("{brand}", d.vehicle.brand)
+      .replace("{model}", d.vehicle.model),
+    description: t("parts.systemMetaDesc")
+      .replace("{n}", String(d.pins.length))
+      .replace("{system}", d.system.name.toLowerCase())
+      .replace("{brand}", d.vehicle.brand)
+      .replace("{model}", d.vehicle.model),
   };
 }
 
 export default async function LaminaDespiece({ params }: Props) {
+  const { t } = await getT();
   const { vehiculo, sistema } = await params;
   const d = await getDiagram(vehiculo, sistema);
   if (!d) notFound();
@@ -27,7 +37,10 @@ export default async function LaminaDespiece({ params }: Props) {
   const ld = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `Despiece ${d.vehicle.brand} ${d.vehicle.model} · ${d.system.name}`,
+    name: t("parts.ldName")
+      .replace("{brand}", d.vehicle.brand)
+      .replace("{model}", d.vehicle.model)
+      .replace("{system}", d.system.name),
     numberOfItems: d.pins.length,
     itemListElement: d.pins.map((p, i) => ({
       "@type": "ListItem",
@@ -46,7 +59,7 @@ export default async function LaminaDespiece({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />
 
       <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
-        <Link href="/despiece" className="hover:text-navy">Despiece</Link><Icon name="chevronRight" size={12} />
+        <Link href="/despiece" className="hover:text-navy">{t("nav.despiece")}</Link><Icon name="chevronRight" size={12} />
         <Link href={`/despiece/${d.vehicle.slug}`} className="hover:text-navy">{d.vehicle.brand} {d.vehicle.model}</Link><Icon name="chevronRight" size={12} />
         <span className="text-slate-500">{d.system.name}</span>
       </nav>
@@ -57,7 +70,7 @@ export default async function LaminaDespiece({ params }: Props) {
         </h1>
         <p className="mt-1 text-sm text-slate-500">
           {d.vehicle.brand} {d.vehicle.model} · {d.vehicle.version}
-          {d.vehicle.voltage ? ` · ${d.vehicle.voltage}` : ""} — {d.pins.length} piezas numeradas.
+          {d.vehicle.voltage ? ` · ${d.vehicle.voltage}` : ""} — {t("parts.numberedPieces").replace("{n}", String(d.pins.length))}
         </p>
       </header>
 
@@ -80,13 +93,13 @@ export default async function LaminaDespiece({ params }: Props) {
       {d.diagram.notes && (
         <p className="mt-6 flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-relaxed text-slate-600">
           <Icon name="info" size={14} className="mt-0.5 shrink-0 text-[color:var(--color-action)]" />
-          <span><b className="text-navy">Nota del técnico.</b> {d.diagram.notes}</span>
+          <span><b className="text-navy">{t("parts.techNote")}</b> {d.diagram.notes}</span>
         </p>
       )}
 
       <p className="mt-4 flex items-center gap-2 text-xs text-slate-500">
         <Icon name="shield" size={14} className="text-[color:var(--color-ok)]" />
-        Antes de pedir una pieza eléctrica, compara la foto del conector en su ficha. Es la causa más común de devolución.
+        {t("parts.connectorTip")}
       </p>
     </div>
   );

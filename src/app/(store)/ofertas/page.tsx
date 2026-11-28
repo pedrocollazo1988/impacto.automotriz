@@ -1,12 +1,19 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import ProductCard from "@/components/ProductCard";
 import Icon from "@/components/brand/Icon";
 import { leerSeccion } from "@/lib/contenido-server";
+import { getT } from "@/lib/i18n";
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Ofertas y precios rebajados" };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return { title: t("deals.meta") };
+}
 
 export default async function Ofertas() {
+  const { t } = await getT();
   const [products, hero, vacio] = await Promise.all([
     prisma.product.findMany({ where: { active: true, compareAtUsd: { not: null } }, orderBy: { id: "desc" }, take: 48, include: { brand: true, category: { select: { slug: true } } } }),
     leerSeccion("ofertas-hero"),
@@ -30,7 +37,7 @@ export default async function Ofertas() {
             <span className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-slate-400"><Icon name="tag" size={26} /></span>
             <h2 className="mt-4 font-display text-lg font-bold text-navy">{vacio.title}</h2>
             <p className="mt-1 max-w-sm text-sm text-slate-500">{vacio.subtitle}</p>
-            <Link href="/catalogo" className="btn btn-primary mt-4">Ver catálogo</Link>
+            <Link href="/catalogo" className="btn btn-primary mt-4">{t("deals.viewCatalog")}</Link>
           </div>
         )}
       </section>

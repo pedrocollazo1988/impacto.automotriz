@@ -4,14 +4,16 @@ import { getVehiclesConLaminasCached } from "@/lib/despiece";
 import Icon from "@/components/brand/Icon";
 import VehiclePicker from "@/components/despiece/VehiclePicker";
 import { leerSeccion } from "@/lib/contenido-server";
+import { getT } from "@/lib/i18n";
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Despiece de vehículos",
-  description: "Diagramas interactivos por sistema con SKU, especificaciones y compra directa de cada pieza.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return { title: t("parts.meta"), description: t("parts.metaDesc") };
+}
 
 export default async function DespieceIndex() {
+  const { t } = await getT();
   const [vehicles, hero] = await Promise.all([getVehiclesConLaminasCached(), leerSeccion("despiece-hero")]);
 
   if (vehicles.length === 0) {
@@ -19,9 +21,9 @@ export default async function DespieceIndex() {
       <div className="container-x py-16">
         <div className="adm-empty">
           <Icon name="layers" size={40} />
-          <h1 className="font-display text-2xl font-extrabold text-navy">Aún no hay despieces publicados</h1>
-          <p className="text-sm">Estamos cargando los diagramas de los primeros modelos.</p>
-          <Link href="/catalogo" className="btn btn-primary mt-3">Ver catálogo</Link>
+          <h1 className="font-display text-2xl font-extrabold text-navy">{t("parts.emptyTitle")}</h1>
+          <p className="text-sm">{t("parts.emptyText")}</p>
+          <Link href="/catalogo" className="btn btn-primary mt-3">{t("parts.viewCatalog")}</Link>
         </div>
       </div>
     );
@@ -48,7 +50,7 @@ export default async function DespieceIndex() {
                 </div>
                 <div className="text-right">
                   <p className="font-display text-2xl font-extrabold text-navy">{piezas}</p>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500">piezas</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">{t("parts.pieces")}</p>
                 </div>
               </div>
               {v.summary && <p className="border-b border-slate-100 p-4 text-sm leading-relaxed text-slate-600">{v.summary}</p>}
@@ -58,7 +60,9 @@ export default async function DespieceIndex() {
                     <Link href={`/despiece/${v.slug}/${dg.system.slug}`} className="flex h-full flex-col gap-1 bg-white p-3 transition hover:bg-slate-50">
                       <Icon name={dg.system.icon} size={16} className="text-[color:var(--color-action)]" />
                       <span className="text-xs font-bold leading-tight text-navy">{dg.system.name}</span>
-                      <span className="font-mono text-[10px] text-slate-500">{dg._count.pins} piezas</span>
+                      <span className="font-mono text-[10px] text-slate-500">
+                        {t("parts.piecesCount").replace("{n}", String(dg._count.pins))}
+                      </span>
                     </Link>
                   </li>
                 ))}
@@ -66,7 +70,7 @@ export default async function DespieceIndex() {
               <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 p-3">
                 <VehiclePicker vehicle={{ slug: v.slug, brand: v.brand, model: v.model, version: v.version }} />
                 <Link href={`/despiece/${v.slug}`} className="btn btn-primary btn-sm">
-                  Ver despiece <Icon name="arrowRight" size={14} />
+                  {t("parts.viewDiagram")} <Icon name="arrowRight" size={14} />
                 </Link>
               </div>
             </article>

@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import Icon from "@/components/brand/Icon";
+import { usePreferences } from "@/components/site/Preferences";
 
 type Estado = "idle" | "loading" | "ok" | "error";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function SubscribeForm() {
+  const { t } = usePreferences();
   const [email, setEmail] = useState("");
   const [estado, setEstado] = useState<Estado>("idle");
   const [mensaje, setMensaje] = useState("");
@@ -19,7 +21,7 @@ export default function SubscribeForm() {
     const valor = email.trim();
     if (!EMAIL_RE.test(valor)) {
       setEstado("error");
-      setMensaje("Escribe un correo válido, por ejemplo nombre@correo.com.");
+      setMensaje(t("subs.invalidEmail"));
       return;
     }
 
@@ -36,16 +38,16 @@ export default function SubscribeForm() {
 
       if (!r.ok) {
         setEstado("error");
-        setMensaje(data?.error ?? "No pudimos completar la suscripción. Inténtalo de nuevo.");
+        setMensaje(data?.error ?? t("subs.error"));
         return;
       }
 
       setEstado("ok");
-      setMensaje("Casi listo: revisa tu correo y confirma la suscripción.");
+      setMensaje(t("subs.checkEmail"));
       setEmail("");
     } catch {
       setEstado("error");
-      setMensaje("No pudimos conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.");
+      setMensaje(t("subs.networkError"));
     }
   };
 
@@ -55,7 +57,7 @@ export default function SubscribeForm() {
     <form onSubmit={enviar} className="w-full" noValidate aria-busy={cargando}>
       <div className="flex flex-col gap-2 sm:flex-row">
         <label htmlFor="blog-subscribe-email" className="sr-only">
-          Correo electrónico
+          {t("subs.emailLabel")}
         </label>
         <input
           id="blog-subscribe-email"
@@ -64,7 +66,7 @@ export default function SubscribeForm() {
           name="email"
           inputMode="email"
           autoComplete="email"
-          placeholder="tu@correo.com"
+          placeholder={t("subs.placeholder")}
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);
@@ -81,19 +83,19 @@ export default function SubscribeForm() {
           {cargando ? (
             <>
               <Icon name="spinner" size={16} className="animate-spin" />
-              Enviando…
+              {t("subs.sending")}
             </>
           ) : (
             <>
               <Icon name="mail" size={16} />
-              Suscribirme
+              {t("subs.submit")}
             </>
           )}
         </button>
       </div>
 
       <p id="blog-subscribe-help" className="mt-2 text-xs leading-relaxed text-slate-500">
-        Te enviaremos un correo para confirmar la suscripción. Puedes darte de baja cuando quieras.
+        {t("subs.help")}
       </p>
 
       <p
