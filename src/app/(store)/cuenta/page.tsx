@@ -8,6 +8,7 @@ import GarageManager from "@/components/GarageManager";
 import DireccionesCuenta from "@/components/cuenta/DireccionesCuenta";
 import PedidosCuenta from "@/components/cuenta/PedidosCuenta";
 import { ordenarDirecciones } from "@/lib/direcciones";
+import { getT } from "@/lib/i18n";
 import PerfilCuenta from "@/components/cuenta/PerfilCuenta";
 import Avatar from "@/components/cuenta/Avatar";
 import ProductCard from "@/components/ProductCard";
@@ -15,27 +16,31 @@ import VerifyBanner from "@/components/VerifyBanner";
 import Icon from "@/components/brand/Icon";
 import LogoutButton from "./LogoutButton";
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Mi cuenta", robots: { index: false } };
+export async function generateMetadata() {
+  const { t } = await getT();
+  return { title: t("cuenta.miCuenta"), robots: { index: false } };
+}
 
 
 export default async function Cuenta({ searchParams }: { searchParams: Promise<{ verificado?: string; error?: string }> }) {
   const sp = await searchParams;
+  const { t } = await getT();
   const me = await getCustomer();
   if (!me) return (
     <div className="container-x py-12">
       {sp.error && (
         <p className="mx-auto mb-4 max-w-md rounded-xl bg-red-50 p-3 text-sm text-red-700">
-          {sp.error === "telegram" ? "No se pudo iniciar sesión con Telegram. Inténtalo de nuevo." : "No se pudo iniciar sesión con Google. Inténtalo de nuevo."}
+          {sp.error === "telegram" ? t("cuenta.errorTelegram") : t("cuenta.errorGoogle")}
         </p>
       )}
       <div className="grid items-start gap-8 lg:grid-cols-2">
         <div>
-          <span className="eyebrow">Tu cuenta</span>
-          <h1 className="mt-2 font-display text-3xl font-extrabold text-navy">Bienvenido de nuevo</h1>
-          <p className="mt-3 text-slate-500">Inicia sesión para seguir tus pedidos, guardar tu garaje, tu lista de deseos y valorar los productos que compres.</p>
+          <span className="eyebrow">{t("cuenta.eyebrow")}</span>
+          <h1 className="mt-2 font-display text-3xl font-extrabold text-navy">{t("cuenta.bienvenido")}</h1>
+          <p className="mt-3 text-slate-500">{t("cuenta.intro")}</p>
           <ul className="mt-6 space-y-3 text-sm text-slate-600">
-            {["Sigue el estado de tus pedidos", "Guarda tus vehículos y ve piezas compatibles", "Lista de deseos y comparaciones", "Historial de compras y comprobantes"].map((t) => (
-              <li key={t} className="flex items-center gap-2"><Icon name="check" size={16} className="text-[color:var(--color-ok)]" /> {t}</li>
+            {["cuenta.ventaja1", "cuenta.ventaja2", "cuenta.ventaja3", "cuenta.ventaja4"].map((clave) => (
+              <li key={clave} className="flex items-center gap-2"><Icon name="check" size={16} className="text-[color:var(--color-ok)]" /> {t(clave)}</li>
             ))}
           </ul>
         </div>
@@ -58,17 +63,17 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
           <div className="flex items-center gap-4">
             <Avatar url={me.avatarUrl} name={me.name} />
             <div>
-              <h1 className="font-display text-2xl font-extrabold text-navy">Hola, {me.name.split(" ")[0]}</h1>
-              <p className="text-sm text-slate-500">{me.email ?? (me.phoneE164 ? telefonoLegible(me.phoneE164) : "Cuenta de Telegram")}</p>
-              {me.telegramId && <p className="text-xs font-semibold text-[color:var(--color-ok)]">Telegram vinculado</p>}
+              <h1 className="font-display text-2xl font-extrabold text-navy">{t("cuenta.hola")}, {me.name.split(" ")[0]}</h1>
+              <p className="text-sm text-slate-500">{me.email ?? (me.phoneE164 ? telefonoLegible(me.phoneE164) : t("cuenta.cuentaTelegram"))}</p>
+              {me.telegramId && <p className="text-xs font-semibold text-[color:var(--color-ok)]">{t("cuenta.telegramVinculado")}</p>}
             </div>
           </div>
           <LogoutButton />
         </div>
       </div>
       <div className="mt-4 space-y-3">
-        {sp.verificado === "1" && <p className="rounded-xl bg-green-50 p-3 text-sm text-green-700">¡Correo confirmado!</p>}
-        {sp.verificado === "0" && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">El enlace de confirmación no es válido o venció.</p>}
+        {sp.verificado === "1" && <p className="rounded-xl bg-green-50 p-3 text-sm text-green-700">{t("cuenta.correoConfirmado")}</p>}
+        {sp.verificado === "0" && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{t("cuenta.enlaceInvalido")}</p>}
         {me.email && !me.emailVerified && <VerifyBanner />}
       </div>
 
@@ -81,24 +86,24 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
       />
 
       <section id="pedidos" className="mt-8 scroll-mt-28">
-        <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="box" size={18} /> Mis pedidos</h2>
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="box" size={18} /> {t("cuenta.pedidos")}</h2>
         <PedidosCuenta pedidos={orders.map((o) => ({ id: o.id, number: o.number, status: o.status, createdAt: o.createdAt.toISOString(), totalUsd: Number(o.totalUsd) }))} />
       </section>
 
       <section className="mt-8">
-        <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="car" size={18} /> Mi garaje</h2>
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="car" size={18} /> {t("cuenta.garaje")}</h2>
         <div className="mt-4"><GarageManager vehicles={garage} /></div>
       </section>
 
       <section id="direcciones" className="mt-8 scroll-mt-28">
-        <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="pin" size={18} /> Direcciones de entrega</h2>
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="pin" size={18} /> {t("cuenta.direcciones")}</h2>
         <div className="mt-4"><DireccionesCuenta iniciales={direcciones} /></div>
       </section>
 
       <section id="deseos" className="mt-8 scroll-mt-28">
-        <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="heart" size={18} /> Lista de deseos</h2>
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="heart" size={18} /> {t("cuenta.deseos")}</h2>
         {wish.length ? <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">{wish.map((w) => <ProductCard key={w.id} p={w.product} />)}</div>
-          : <p className="mt-3 text-sm text-slate-500">Guarda productos con el botón ♡ de cada ficha.</p>}
+          : <p className="mt-3 text-sm text-slate-500">{t("cuenta.deseosVacio")}</p>}
       </section>
     </div>
   );

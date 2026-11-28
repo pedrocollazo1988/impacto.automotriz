@@ -40,5 +40,5 @@ export default function Logo({ variant = "dark", size = "md", href = "/", taglin
     </span>
   );
   // Sin aria-label: el nombre accesible sale del texto visible (WCAG 2.5.3).
-  return href ? <Link href={href} className="flex min-h-12 min-w-0 shrink items-center lg:min-h-0"><span className="sr-only">Inicio — </span>{inner}</Link> : inner;
+  return href ? <Link href={href} className="flex min-h-12 min-w-0 shrink items-center lg:min-h-0"><span className="sr-only">Home — </span>{inner}</Link> : inner;
 }

@@ -13,25 +13,25 @@ const CLAVE_MENU: Record<string, string> = {
 };
 
 const TIENDA: [string, string][] = [
-  ["/catalogo", "Catálogo completo"],
-  ["/ofertas", "Ofertas"],
-  ["/marcas-y-modelos", "Marcas y modelos"],
-  ["/despiece", "Despiece interactivo"],
-  ["/comparar", "Comparador"],
-  ["/blog", "Blog de marcas"],
+  ["/catalogo", "footer.shopAll"],
+  ["/ofertas", "nav.ofertas"],
+  ["/marcas-y-modelos", "nav.marcas"],
+  ["/despiece", "footer.partsDiagram"],
+  ["/comparar", "footer.compare"],
+  ["/blog", "footer.brandBlog"],
 ];
 
 const AYUDA: [string, string][] = [
-  ["/rastrear-pedido", "Rastrear mi pedido"],
-  ["/garantia", "Reclamar garantía"],
-  ["/preguntas-frecuentes", "Preguntas frecuentes"],
-  ["/politicas/envios", "Envíos y entrega"],
-  ["/politicas/devoluciones", "Devoluciones y garantía"],
-  ["/contacto", "Contacto"],
+  ["/rastrear-pedido", "footer.track"],
+  ["/garantia", "footer.warranty"],
+  ["/preguntas-frecuentes", "nav.faq"],
+  ["/politicas/envios", "footer.shipping"],
+  ["/politicas/devoluciones", "footer.returns"],
+  ["/contacto", "nav.contacto"],
 ];
 
 export default async function SiteFooter() {
-  const [{ t }, menuEmpresa] = await Promise.all([getT(), getMenuEmpresa().catch(() => [])]);
+  const [{ t, lang }, menuEmpresa] = await Promise.all([getT(), getMenuEmpresa().catch(() => [])]);
   const menuEmpresaUnico = Array.from(new Map(menuEmpresa.map((l) => [l.href, l])).values());
   return (
     <footer className="mt-12 bg-[#0b1220] text-white/75 print:hidden">
@@ -42,7 +42,7 @@ export default async function SiteFooter() {
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[color:var(--color-action)]/20 text-[color:var(--color-action-hi)]"><Icon name="clock" size={19} /></span>
             <div>
               <p className="font-display text-sm font-bold text-white">{t("footer.hours")}</p>
-              <p className="mt-1 text-sm text-white/65">{SITE.horario}</p>
+              <p className="mt-1 text-sm text-white/65">{lang === "en" ? SITE.horarioEn : SITE.horario}</p>
             </div>
           </div>
           <div className="flex gap-3">
@@ -81,7 +81,7 @@ export default async function SiteFooter() {
         <div>
           <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-white/50">{t("footer.shop")}</h2>
           <ul className="mt-4 space-y-2.5 text-sm">
-            {TIENDA.map(([h, l]) => <li key={h}><Link href={h} className="text-white/70 transition hover:text-[color:var(--color-action-hi)]">{l}</Link></li>)}
+            {TIENDA.map(([h, c]) => <li key={h}><Link href={h} className="text-white/70 transition hover:text-[color:var(--color-action-hi)]">{t(c)}</Link></li>)}
           </ul>
         </div>
 
@@ -95,7 +95,7 @@ export default async function SiteFooter() {
         <div>
           <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-white/50">{t("footer.help")}</h2>
           <ul className="mt-4 space-y-2.5 text-sm">
-            {AYUDA.map(([h, l]) => <li key={h}><Link href={h} className="text-white/70 transition hover:text-[color:var(--color-action-hi)]">{l}</Link></li>)}
+            {AYUDA.map(([h, c]) => <li key={h}><Link href={h} className="text-white/70 transition hover:text-[color:var(--color-action-hi)]">{t(c)}</Link></li>)}
           </ul>
         </div>
       </div>

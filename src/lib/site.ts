@@ -7,6 +7,7 @@ export const SITE = {
   direccion: "Calle 29 No. 5408 e/ 54 y 56, Artemisa, Cuba",
   email: "ventas@impactoautomotriz.cu",
   horario: "Lunes a viernes de 8:30 a 16:30",
+  horarioEn: "Monday to Friday, 8:30 am to 4:30 pm",
 } as const;
 
 /** Número de WhatsApp de atención, en formato internacional sin signos. */
