@@ -46,6 +46,24 @@ const COLUMNAS = [
 
 // Tablas nuevas. Se crean aquí por el mismo motivo: el despliegue no migra.
 const TABLAS = [
+  `CREATE TABLE IF NOT EXISTS "Address" (
+     "id" SERIAL NOT NULL,
+     "customerId" TEXT NOT NULL,
+     "label" TEXT NOT NULL DEFAULT 'Casa',
+     "recipientName" TEXT NOT NULL,
+     "recipientPhone" TEXT NOT NULL,
+     "provinceId" INTEGER NOT NULL,
+     "provinceName" TEXT NOT NULL,
+     "municipalityId" INTEGER NOT NULL,
+     "municipalityName" TEXT NOT NULL,
+     "address" TEXT NOT NULL,
+     "reference" TEXT,
+     "isDefault" BOOLEAN NOT NULL DEFAULT false,
+     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     CONSTRAINT "Address_pkey" PRIMARY KEY ("id")
+   )`,
+  `CREATE INDEX IF NOT EXISTS "Address_customerId_idx" ON "Address"("customerId")`,
   `CREATE TABLE IF NOT EXISTS "ContentBlock" (
      "id" SERIAL NOT NULL,
      "key" TEXT NOT NULL,
