@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma, asegurarEsquema } from "@/lib/prisma";
+import { errorHttp } from "@/lib/mensajes";
 import { handle, HttpError } from "@/lib/auth";
 import { priceCart } from "@/lib/pricing";
 import { buildOrderDelivery, deliveryInput } from "@/lib/shipping";
@@ -34,7 +35,7 @@ export const POST = handle(async (req: Request) => {
   await asegurarEsquema();
   // 1) Todo se recalcula en el servidor: precios, existencias, cupón y envío.
   const cart = await priceCart(b.items);
-  if (!cart.allOk) throw new HttpError(409, "Algún producto ya no está disponible en la cantidad pedida");
+  if (!cart.allOk) throw await errorHttp(409, "carrito.noDisponible");
   const lineas = cart.lines.filter((l) => l.disponible);
   const coupon = await evaluateCoupon(b.coupon, cart.subtotalUsd);
   const { cashOnDelivery, ...delivery } = await buildOrderDelivery(b.delivery, r2(cart.subtotalUsd - coupon.discountUsd));
@@ -43,11 +44,11 @@ export const POST = handle(async (req: Request) => {
   // o sin lo obligatorio, no se acepta el pedido con ese método.
   const pasarelas = await leerPasarelas();
   const gw = pasarelas.find((p) => p.key === b.paymentMethod);
-  if (!gw || !gw.enabled || gw.archived) throw new HttpError(422, "Ese método de pago no está disponible");
+  if (!gw || !gw.enabled || gw.archived) throw await errorHttp(422, "pago.metodoNoDisponible");
   if (gw.minTotalUsd != null && baseUsd < gw.minTotalUsd) throw new HttpError(422, `Ese método requiere un mínimo de ${gw.minTotalUsd} USD`);
   if (gw.maxTotalUsd != null && baseUsd > gw.maxTotalUsd) throw new HttpError(422, `Ese método admite hasta ${gw.maxTotalUsd} USD`);
-  if (!estaOperativa(gw, gw.creds)) throw new HttpError(422, "Ese método de pago no está configurado todavía");
-  if (requiereContraEntrega(gw) && !cashOnDelivery) throw new HttpError(422, "Este método de entrega no admite pago contra entrega");
+  if (!estaOperativa(gw, gw.creds)) throw await errorHttp(422, "pago.metodoSinConfigurar");
+  if (requiereContraEntrega(gw) && !cashOnDelivery) throw await errorHttp(422, "entrega.sinContraEntrega");
   const feeUsd = comision(gw, baseUsd);
   const totalUsd = r2(baseUsd + feeUsd);
 
@@ -89,7 +90,7 @@ export const POST = handle(async (req: Request) => {
     }
     if (coupon.id) {
       const r = await tx.coupon.updateMany({ where: { id: coupon.id, ...(coupon.maxUses != null ? { used: { lt: coupon.maxUses } } : {}) }, data: { used: { increment: 1 } } });
-      if (r.count === 0) throw new HttpError(422, "Cupón agotado");
+      if (r.count === 0) throw await errorHttp(422, "cupon.agotado");
     }
     return created;
   });

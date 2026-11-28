@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { errorHttp } from "@/lib/mensajes";
 import { handle, HttpError } from "@/lib/auth";
 import { limit, limitKey } from "@/lib/ratelimit";
 import { assertCustomerAuthConfigured, hashPassword } from "@/lib/customer-auth";
@@ -36,11 +37,11 @@ export const POST = handle(async (req: Request) => {
 
     if (turnstileActivo()) await requireTurnstile(req, b.turnstileToken);
     else if (!verifyCaptcha(b.captchaToken ?? "", b.captchaAnswer ?? ""))
-      throw new HttpError(400, "El código de seguridad no es válido o venció. Pide otro e inténtalo de nuevo.");
+      throw await errorHttp(400, "codigo.invalido");
 
     if (b.website) return Response.json({ ok: true }); // honeypot
     if (!turnstileActivo() && !(await consumeCaptchaToken(b.captchaToken ?? "")))
-      throw new HttpError(400, "Ese código de seguridad ya se usó. Pide otro e inténtalo de nuevo.");
+      throw await errorHttp(400, "codigo.usado");
 
     const telefono = normalizarTelefono(b.phone);
     if (!telefono) return errorJson("AUTH_PHONE_INVALID", 400);
