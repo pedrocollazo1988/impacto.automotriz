@@ -25,7 +25,10 @@ const Body = z.object({
  * El formulario de acceso consulta aquí si puede ofrecer el teléfono. En modo
  * prueba el código nunca llega al cliente, así que la pestaña se oculta.
  */
-export const GET = handle(async () => Response.json({ disponible: estadoSms().listo }));
+export const GET = handle(async () => {
+  const { listo, proveedor } = estadoSms();
+  return Response.json({ disponible: listo, proveedor });
+});
 
 export const POST = handle(async (req: Request) => {
   try {
@@ -45,6 +48,7 @@ export const POST = handle(async (req: Request) => {
     const c = await prisma.customer.findUnique({ where: { phoneE164: telefono }, select: { id: true, phoneVerifiedAt: true } });
     const purpose: PropositoOtp = b.purpose === "reset" ? "reset" : c?.phoneVerifiedAt ? "login" : "register";
 
+    // El canal es el teléfono: el mismo código sirve por SMS o por WhatsApp.
     const { codigo } = await crearOtp({ identifier: telefono, channel: "sms", purpose, customerId: c?.id, ip });
 
     let debugCode: string | undefined;

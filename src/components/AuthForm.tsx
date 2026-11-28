@@ -36,16 +36,19 @@ export default function AuthForm({ google = false, next }: { google?: boolean; n
   const [espera, setEspera] = useState(0);
   // El teléfono solo se ofrece si hay un proveedor de SMS real: en modo prueba
   // el código no llega y el cliente se quedaría fuera sin saber por qué.
-  const [smsListo, setSmsListo] = useState(false);
+  const [smsListo, setSmsListo] = useState<boolean | null>(null); // null = aún no se sabe
+  const [smsProveedor, setSmsProveedor] = useState("");
   useEffect(() => {
     let vivo = true;
     fetch("/api/account/phone/otp")
       .then((r) => r.json())
-      .then((j) => { if (vivo) setSmsListo(j?.disponible === true); })
+      .then((j) => { if (vivo) { setSmsListo(j?.disponible === true); setSmsProveedor(typeof j?.proveedor === "string" ? j.proveedor : ""); } })
       .catch(() => {});
     return () => { vivo = false; };
   }, []);
-  useEffect(() => { if (!smsListo && canal === "phone") setCanal("email"); }, [smsListo, canal]);
+  const whatsapp = smsProveedor === "whatsapp";
+  const puedeTelefono = smsListo === true;
+  useEffect(() => { if (!puedeTelefono && canal === "phone") setCanal("email"); }, [puedeTelefono, canal]);
 
   const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
 
@@ -195,13 +198,13 @@ export default function AuthForm({ google = false, next }: { google?: boolean; n
 
       <h2 className="font-display text-xl font-bold text-navy">{titulos[modo]}</h2>
 
-      {(modo === "login" || modo === "register") && !smsListo && (
+      {(modo === "login" || modo === "register") && smsListo === false && (
         <p className="mt-3 flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
           <Icon name="info" size={14} /> {t("auth.phoneProximamente")}
         </p>
       )}
 
-      {(modo === "login" || modo === "register") && smsListo && (
+      {(modo === "login" || modo === "register") && puedeTelefono && (
         <div className="mt-3 grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("auth.byPhone")}>
           {(["email", "phone"] as const).map((c) => (
             <button
@@ -214,7 +217,7 @@ export default function AuthForm({ google = false, next }: { google?: boolean; n
                 canal === c ? "border-[color:var(--color-action)] bg-[color:var(--color-action)]/5 text-[color:var(--color-action-deep)]" : "border-slate-200 text-slate-600 hover:border-slate-300"
               }`}
             >
-              <Icon name={c === "email" ? "mail" : "mobile"} size={15} /> {c === "email" ? t("auth.byEmail") : t("auth.byPhone")}
+              <Icon name={c === "email" ? "mail" : "mobile"} size={15} /> {c === "email" ? t("auth.byEmail") : whatsapp ? "WhatsApp" : t("auth.byPhone")}
             </button>
           ))}
         </div>
@@ -262,7 +265,7 @@ export default function AuthForm({ google = false, next }: { google?: boolean; n
           ) : (
             <>
               <PhoneField value={f.phone} onChange={(v) => set("phone", v)} error={intento && errores.phone ? errores.phone : ""} autoFocus />
-              {modo !== "forgot" && <p className="text-xs text-slate-500">{t("auth.byPhoneHint")}</p>}
+              {modo !== "forgot" && <p className="text-xs text-slate-500">{whatsapp ? t("auth.byWhatsappHint") : t("auth.byPhoneHint")}</p>}
             </>
           )}
 
