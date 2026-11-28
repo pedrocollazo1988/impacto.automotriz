@@ -30,15 +30,17 @@ const config: NextConfig = {
       "default-src 'self'",
       // 'wasm-unsafe-eval' lo exige el visor 3D de Google: compila WebAssembly
       // para decodificar el glTF. No abre eval() de JavaScript, solo WASM.
-      // googletagmanager sirve el script de GA4; challenges.cloudflare.com, Turnstile.
-      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com https://challenges.cloudflare.com",
+      // googletagmanager sirve el script de GA4; challenges.cloudflare.com, Turnstile;
+      // telegram.org, el botón oficial de acceso con Telegram.
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com https://challenges.cloudflare.com https://telegram.org",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
       "connect-src 'self' https:",
       "form-action 'self'",
-      // Turnstile pinta el desafío en un iframe de Cloudflare.
-      `frame-src 'self' https://challenges.cloudflare.com${process.env.VERCEL_ENV === "production" ? "" : " https://vercel.live"}`,
+      // Turnstile pinta el desafío en un iframe de Cloudflare; el botón de
+      // Telegram, en uno de oauth.telegram.org.
+      `frame-src 'self' https://challenges.cloudflare.com https://oauth.telegram.org${process.env.VERCEL_ENV === "production" ? "" : " https://vercel.live"}`,
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "object-src 'none'",
