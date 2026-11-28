@@ -85,7 +85,7 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
         tieneClave={!!credencial?.passwordHash}
       />
 
-      <section className="mt-8">
+      <section id="pedidos" className="mt-8 scroll-mt-28">
         <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="box" size={18} /> Mis pedidos</h2>
         {orders.length ? (
           <div className="mt-4 space-y-3">

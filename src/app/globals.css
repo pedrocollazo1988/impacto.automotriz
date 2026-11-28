@@ -46,8 +46,17 @@
   /* 4 · superficie */
   --color-canvas: #f4f6f9;
 
+  /* Acento / énfasis (Fase 4). Es el mismo cian de acción con los nombres
+     estándar: --color-accent*, para que un componente nuevo pueda usar
+     text-accent / bg-accent / ring-accent sin conocer los nombres históricos.
+     Contraste medido: 5,36:1 sobre blanco y 4,95:1 sobre el fondo (AA en texto).
+     --color-accent-soft es solo superficie (hover, badges suaves), nunca texto. */
+  --color-accent: #0e7490;
+  --color-accent-hover: #155e75;
+  --color-accent-soft: #effafc;
+  --color-on-accent: #ffffff;
+
   /* Nombres heredados: apuntan al acento nuevo, salvo los dos que usa el logo. */
-  --color-accent: #153462;
   --color-accent-ink: #0e7490;
   --color-accent-deep: #155e75;
   --color-volt: #67e8f9;
@@ -322,13 +331,33 @@
    En vez de duplicar cada componente con dark:, se reasignan aquí las
    superficies y los textos más usados. Las tarjetas de marca y los
    botones de acción conservan su color. */
+/* Acento en oscuro: el cian de acción no se lee como texto sobre #0b1220
+   (3,4:1), así que se sube al tono claro (9,6:1) y el texto encima pasa a tinta
+   oscura (8,9:1) para no perder contraste al rellenar botones. */
+.dark {
+  --color-accent: #22d3ee;
+  --color-accent-hover: #67e8f9;
+  --color-accent-soft: #0e2a33;
+  --color-on-accent: #04222a;
+}
 .dark body { background: #0b1220; color: #e2e8f0; }
 .dark .card, .dark .panel, .dark .adm-panel, .dark .adm-shell { background: #101a2e; border-color: #24314a; }
+.dark .adm-topbar { background: rgb(16 26 46 / 0.85); border-color: #24314a; }
+.dark .adm-topbar .bg-slate-50, .dark .adm-topbar .bg-white { background-color: #0f172a !important; }
+.dark .adm-sidebar { background: linear-gradient(180deg, #0a1a33, #061428); }
+.dark .adm-table thead, .dark .adm-table th { background: #0f172a; }
+.dark .adm-table tr:hover { background: rgb(34 211 238 / 0.06); }
 .dark .bg-white { background-color: #101a2e !important; }
 .dark .bg-slate-50, .dark .bg-slate-50\/60, .dark .bg-slate-50\/80, .dark .bg-slate-100, .dark .bg-slate-100\/60 { background-color: #0f172a !important; }
 .dark .bg-white\/90, .dark .bg-white\/95, .dark .bg-white\/80, .dark .bg-white\/70, .dark .bg-white\/60 { background-color: rgb(16 26 46 / 0.95) !important; }
 .dark .bg-slate-200, .dark .bg-slate-300 { background-color: #1e293b !important; }
 .dark .text-navy, .dark .text-slate-800, .dark .text-slate-700, .dark .text-slate-600, .dark .text-ink { color: #e2e8f0 !important; }
+/* Los títulos del panel usan el token navy con valor arbitrario de Tailwind
+   (text-[color:var(--color-navy)]), que no cae en .text-navy. Sin esto, en
+   modo noche el título quedaba azul marino sobre fondo oscuro. */
+.dark :is(h1, h2, h3, h4):not(.adm-sidebar *, .brand *),
+.dark .text-\[color\:var\(--color-navy\)\],
+.dark .text-\[color\:var\(--color-navy-deep\)\] { color: #e2e8f0 !important; }
 .dark .text-slate-500, .dark .text-slate-400, .dark .text-slate-300 { color: #94a3b8 !important; }
 .dark .border-slate-200, .dark .border-slate-100, .dark .border-slate-50, .dark .border-slate-200\/80, .dark .border-slate-300 { border-color: #24314a !important; }
 /* Avisos y estados: el fondo claro se apaga y el texto se aclara para que

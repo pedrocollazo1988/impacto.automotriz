@@ -9,6 +9,8 @@ const paths: Record<string, React.ReactNode> = {
   close: <><path d="M6 6l12 12M18 6 6 18" /></>,
   chevronRight: <><path d="m9 6 6 6-6 6" /></>,
   chevronLeft: <><path d="m15 6-6 6 6 6" /></>,
+  chevronDown: <><path d="m6 9 6 6 6-6" /></>,
+  logout: <><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H15" /><path d="M10 8l-4 4 4 4M6 12h9" /></>,
   arrowRight: <><path d="M5 12h14M13 6l6 6-6 6" /></>,
   cube: <><path d="M12 2.5 21 7v10l-9 4.5L3 17V7z" /><path d="M3 7l9 4.5L21 7M12 21.5V11.5" /></>,
   car: <><path d="M4 13l1.6-4.4A2 2 0 0 1 7.5 7h9a2 2 0 0 1 1.9 1.6L20 13" /><path d="M3 13h18v4a1 1 0 0 1-1 1h-1.5M3 13v4a1 1 0 0 0 1 1h1.5" /><circle cx="7" cy="17.5" r="1.6" /><circle cx="17" cy="17.5" r="1.6" /></>,

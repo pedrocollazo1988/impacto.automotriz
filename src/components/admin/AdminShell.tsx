@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Icon from "@/components/brand/Icon";
 import Logo from "@/components/brand/Logo";
 import LogoutAdmin from "@/app/admin/(panel)/LogoutAdmin";
+import AdminThemeSwitch from "@/components/admin/AdminThemeSwitch";
 
 export type NavLink = { href: string; label: string; icon: string; exact?: boolean };
 
@@ -49,6 +50,7 @@ export default function AdminShell({ links, userName, role, children }: { links:
           <span className="lg:hidden"><Logo variant="dark" size="sm" href="/admin" tagline={false} className="[&_.font-display]:hidden sm:[&_.font-display]:block sm:[&_.font-display]:text-[12px]" /></span>
           <span className="hidden font-display text-sm font-bold text-navy lg:inline">{current?.label ?? "Panel"}</span>
           <div className="ml-auto flex items-center gap-2">
+            <AdminThemeSwitch />
             <Link href="/" className="btn btn-ghost btn-sm"><Icon name="cart" size={15} /> Ver tienda</Link>
             <LogoutAdmin />
           </div>
