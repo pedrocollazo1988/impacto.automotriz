@@ -1,6 +1,9 @@
-export default function CargandoProducto() {
+import { getT } from "@/lib/i18n";
+
+export default async function CargandoProducto() {
+  const { t } = await getT();
   return (
-    <div className="container-x py-8" aria-busy="true" aria-label="Cargando producto">
+    <div className="container-x py-8" aria-busy="true" aria-label={t("pdp.loading")}>
       <div className="mb-4 h-4 w-64 animate-pulse rounded bg-slate-200" />
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="aspect-square animate-pulse rounded-2xl bg-slate-200" />

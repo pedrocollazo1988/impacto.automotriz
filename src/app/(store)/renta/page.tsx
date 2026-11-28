@@ -2,10 +2,16 @@ import Link from "next/link";
 import Icon from "@/components/brand/Icon";
 import { SITE, telefono, waHref } from "@/lib/site";
 import { leerSeccion } from "@/lib/contenido-server";
+import { getT } from "@/lib/i18n";
 
-export const metadata = { title: "Renta y leasing" };
+export async function generateMetadata() {
+  const { t } = await getT();
+  return { title: t("rent.metaTitle") };
+}
 
 export default async function Renta() {
+  const { t } = await getT();
+  const whatsappMsg = waHref(t("rent.whatsappMessage"));
   const [hero, modalidades, cierre] = await Promise.all([
     leerSeccion("renta-hero"),
     leerSeccion("renta-modalidades"),
@@ -21,11 +27,11 @@ export default async function Renta() {
           <h1 className="mt-2 max-w-3xl font-display text-4xl font-extrabold leading-tight">{hero.title}</h1>
           <p className="mt-4 max-w-2xl text-lg text-white/75">{hero.subtitle}</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/contacto" className="btn btn-accent text-base">Pedir una propuesta</Link>
+            <Link href="/contacto" className="btn btn-accent text-base">{t("rent.quote")}</Link>
             {hero.items.map((it) => (
               <Link key={it.titulo} href={it.href || "/contacto"} className="btn btn-outline-light text-base"><Icon name={it.icono || "arrowRight"} size={18} /> {it.titulo}</Link>
             ))}
-            {telefono && <a href={waHref()} target="_blank" rel="noopener" className="btn btn-outline-light text-base"><Icon name="whatsapp" size={18} /> Hablar por WhatsApp</a>}
+            {telefono && <a href={whatsappMsg} target="_blank" rel="noopener" className="btn btn-outline-light text-base"><Icon name="whatsapp" size={18} /> {t("rent.whatsappCta")}</a>}
           </div>
         </div>
       </section>
@@ -47,7 +53,7 @@ export default async function Renta() {
                       <li key={p} className="flex gap-2"><Icon name="check" size={16} className="mt-0.5 shrink-0 text-[color:var(--color-ok)]" />{p}</li>
                     ))}
                   </ul>
-                  <Link href={plan.href || "/contacto"} className="btn btn-ghost mt-6 w-full">Solicitar información</Link>
+                  <Link href={plan.href || "/contacto"} className="btn btn-ghost mt-6 w-full">{t("rent.requestInfo")}</Link>
                 </div>
               );
             })}
@@ -62,7 +68,7 @@ export default async function Renta() {
             <div className="relative max-w-2xl">
               <h2 className="font-display text-2xl font-extrabold text-navy">{cierre.title}</h2>
               <p className="mt-3 text-slate-500">
-                {cierre.subtitle} Escríbenos a{" "}
+                {cierre.subtitle} {t("rent.writeUs")}{" "}
                 <a href={`mailto:${SITE.email}`} className="link-underline font-semibold text-navy">{SITE.email}</a>.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">

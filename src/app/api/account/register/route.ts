@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { errorHttp } from "@/lib/mensajes";
+import { errorHttp, textoMensaje } from "@/lib/mensajes";
 import { handle, HttpError } from "@/lib/auth";
 import { limit } from "@/lib/ratelimit";
 import { hashPassword, startCustomerSession, assertCustomerAuthConfigured } from "@/lib/customer-auth";
@@ -53,5 +53,5 @@ export const POST = handle(async (req: Request) => {
     sendWelcomeEmail({ email: b.email, name: c.name }, lang).catch(() => null),
   ]);
   await startCustomerSession(c.id);
-  return Response.json({ ok: true, pin: true, emailSent: email.ok, ...(email.ok ? {} : { emailError: "No se pudo enviar el código. Revisa la configuración de correo o pide un reenvío." }) });
+  return Response.json({ ok: true, pin: true, emailSent: email.ok, ...(email.ok ? {} : { emailError: textoMensaje("msg.registro.emailError", lang) }) });
 });

@@ -1,4 +1,5 @@
 import { createCaptcha } from "@/lib/captcha";
+import { mensaje } from "@/lib/mensajes";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -14,7 +15,7 @@ export async function GET() {
   } catch (e) {
     console.error("captcha: no se pudo crear el reto", e);
     return Response.json(
-      { error: "El captcha no está disponible: falta configurar APP_SECRET en el servidor." },
+      { error: await mensaje("msg.captcha.noDisponible") },
       { status: 500, headers: SIN_CACHE },
     );
   }

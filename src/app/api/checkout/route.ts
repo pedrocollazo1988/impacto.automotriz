@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma, asegurarEsquema } from "@/lib/prisma";
-import { errorHttp } from "@/lib/mensajes";
+import { errorHttp, textoMensaje } from "@/lib/mensajes";
 import { handle, HttpError } from "@/lib/auth";
 import { priceCart } from "@/lib/pricing";
 import { buildOrderDelivery, deliveryInput } from "@/lib/shipping";
@@ -31,31 +31,33 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
 export const POST = handle(async (req: Request) => {
   const me = await requireCustomer(); // comprar exige una cuenta con sesión iniciada
   const b = Body.parse(await req.json());
-  await requireTurnstile(req, b.turnstileToken);
+  // El idioma de esta visita manda también en los errores; si no hay cookie se usa
+  // el que el cliente guardó en su cuenta.
+  const idiomaVisita = await idiomaDeCookie();
+  const idioma: Idioma = idiomaVisita ?? idiomaDe(me.preferredLanguage) ?? "es";
+  await requireTurnstile(req, b.turnstileToken, idioma);
   await asegurarEsquema();
   // 1) Todo se recalcula en el servidor: precios, existencias, cupón y envío.
   const cart = await priceCart(b.items);
   if (!cart.allOk) throw await errorHttp(409, "carrito.noDisponible");
   const lineas = cart.lines.filter((l) => l.disponible);
-  const coupon = await evaluateCoupon(b.coupon, cart.subtotalUsd);
-  const { cashOnDelivery, ...delivery } = await buildOrderDelivery(b.delivery, r2(cart.subtotalUsd - coupon.discountUsd));
+  const coupon = await evaluateCoupon(b.coupon, cart.subtotalUsd, idioma);
+  const { cashOnDelivery, ...delivery } = await buildOrderDelivery(b.delivery, r2(cart.subtotalUsd - coupon.discountUsd), idioma);
   const baseUsd = r2(cart.subtotalUsd - coupon.discountUsd + delivery.feeUsd);
   // El método lo define el panel: si está desactivado, archivado, fuera de rango
   // o sin lo obligatorio, no se acepta el pedido con ese método.
   const pasarelas = await leerPasarelas();
   const gw = pasarelas.find((p) => p.key === b.paymentMethod);
   if (!gw || !gw.enabled || gw.archived) throw await errorHttp(422, "pago.metodoNoDisponible");
-  if (gw.minTotalUsd != null && baseUsd < gw.minTotalUsd) throw new HttpError(422, `Ese método requiere un mínimo de ${gw.minTotalUsd} USD`);
-  if (gw.maxTotalUsd != null && baseUsd > gw.maxTotalUsd) throw new HttpError(422, `Ese método admite hasta ${gw.maxTotalUsd} USD`);
+  if (gw.minTotalUsd != null && baseUsd < gw.minTotalUsd) throw new HttpError(422, textoMensaje("msg.pago.minimo", idioma).replace("{min}", String(gw.minTotalUsd)));
+  if (gw.maxTotalUsd != null && baseUsd > gw.maxTotalUsd) throw new HttpError(422, textoMensaje("msg.pago.maximo", idioma).replace("{max}", String(gw.maxTotalUsd)));
   if (!estaOperativa(gw, gw.creds)) throw await errorHttp(422, "pago.metodoSinConfigurar");
   if (requiereContraEntrega(gw) && !cashOnDelivery) throw await errorHttp(422, "entrega.sinContraEntrega");
   const feeUsd = comision(gw, baseUsd);
   const totalUsd = r2(baseUsd + feeUsd);
 
-  // El idioma del pedido sigue al de esta visita; si no hay cookie se usa el que
-  // el cliente guardó en su cuenta. Al comprar se sincroniza esa preferencia.
-  const idiomaVisita = await idiomaDeCookie();
-  const lang: Idioma = idiomaVisita ?? idiomaDe(me.preferredLanguage) ?? "es";
+  // El pedido sale en el idioma de esta visita; al comprar se sincroniza esa preferencia.
+  const lang: Idioma = idioma;
   if (idiomaVisita && idiomaVisita !== me.preferredLanguage) {
     await prisma.customer.update({ where: { id: me.id }, data: { preferredLanguage: idiomaVisita } }).catch(() => {});
   }
@@ -73,10 +75,10 @@ export const POST = handle(async (req: Request) => {
     for (const l of lineas) {
       if (l.variantId) { // el stock del producto es la suma de sus variantes: se descuentan ambos
         const rv = await tx.productVariant.updateMany({ where: { id: l.variantId, stock: { gte: l.qty } }, data: { stock: { decrement: l.qty } } });
-        if (rv.count === 0) throw new HttpError(409, `Sin existencias suficientes: ${l.name}`);
+        if (rv.count === 0) throw new HttpError(409, textoMensaje("msg.checkout.sinExistencias", idioma).replace("{producto}", l.name));
       }
       const r = await tx.product.updateMany({ where: { id: l.productId, stock: { gte: l.qty } }, data: { stock: { decrement: l.qty } } });
-      if (r.count === 0) throw new HttpError(409, `Sin existencias suficientes: ${l.name}`);
+      if (r.count === 0) throw new HttpError(409, textoMensaje("msg.checkout.sinExistencias", idioma).replace("{producto}", l.name));
       const after = await tx.product.findUnique({ where: { id: l.productId }, select: { stock: true, sku: true, name: true } });
       const stockAfter = after?.stock ?? 0;
       await tx.productMovement.create({

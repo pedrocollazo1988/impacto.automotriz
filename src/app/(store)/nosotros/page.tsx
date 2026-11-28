@@ -1,10 +1,15 @@
 import Link from "next/link";
 import Icon from "@/components/brand/Icon";
 import { leerSeccion } from "@/lib/contenido-server";
+import { getT } from "@/lib/i18n";
 
-export const metadata = { title: "Sobre nosotros" };
+export async function generateMetadata() {
+  const { t } = await getT();
+  return { title: t("about.metaTitle") };
+}
 
 export default async function Nosotros() {
+  const { t } = await getT();
   const [valores, cifras, cierre] = await Promise.all([leerSeccion("nosotros-valores"), leerSeccion("nosotros-cifras"), leerSeccion("nosotros-cta")]);
 
   return (
@@ -33,7 +38,7 @@ export default async function Nosotros() {
 
       {valores.visible && (
         <section className="container-x py-14">
-          <h2 className="font-display text-2xl font-extrabold text-navy">Lo que nos distingue</h2>
+          <h2 className="font-display text-2xl font-extrabold text-navy">{t("about.distinction")}</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {valores.items.map((it) => (
               <div key={it.titulo} className="card flex gap-4 p-5">

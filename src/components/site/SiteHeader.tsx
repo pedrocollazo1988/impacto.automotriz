@@ -13,7 +13,7 @@ const CLAVE_NAV: Record<string, string> = {
   "/catalogo": "nav.catalogo", "/ofertas": "nav.ofertas", "/marcas-y-modelos": "nav.marcas",
   "/despiece": "nav.despiece", "/blog": "nav.blog", "/blog#suscribirme": "nav.subscribe", "/novedades": "nav.novedades", "/contacto": "nav.contacto",
   "/nosotros": "nav.nosotros", "/testimonios": "nav.testimonios", "/preguntas-frecuentes": "nav.faq",
-  "/renta": "nav.renta",
+  "/renta": "nav.renta", "/cuenta": "header.account",
 };
 
 export default function SiteHeader({
@@ -33,8 +33,8 @@ export default function SiteHeader({
   // Un mismo destino no debe aparecer dos veces en el menú móvil.
   const navMovil = Array.from(new Map([
     ...navPrincipal, ...navEmpresa,
-    { href: "/renta", label: "Renta y leasing" },
-    { href: "/cuenta", label: "Mi cuenta" },
+    { href: "/renta", label: t("nav.renta") },
+    { href: "/cuenta", label: t("header.account") },
   ].map((l) => [l.href, l] as const)).values());
   const navEmpresaUnico = Array.from(new Map(navEmpresa.map((l) => [l.href, l] as const)).values());
   const navPrincipalUnico = Array.from(new Map(navPrincipal.map((l) => [l.href, l] as const)).values());
@@ -163,7 +163,7 @@ export default function SiteHeader({
       {/* Menú móvil */}
       <div className={`overflow-y-auto border-t border-slate-200/70 bg-white transition-[max-height,opacity] duration-300 lg:hidden ${open ? "max-h-[calc(100vh-8rem)] opacity-100" : "max-h-0 overflow-hidden opacity-0"}`}>
         <div className="container-x flex items-center justify-between border-b border-slate-100 py-2 text-slate-700">
-          <span className="text-xs font-semibold text-slate-500">Tema / Language</span>
+          <span className="text-xs font-semibold text-slate-500">{t("chrome.themeLang")}</span>
           <div className="flex items-center gap-1"><ThemeToggle /><LanguageToggle /></div>
         </div>
         <nav className="container-x flex flex-col py-2">
@@ -173,8 +173,8 @@ export default function SiteHeader({
             </Link>
           ))}
           <div className="mt-2 border-t border-slate-100 pt-2"><UserMenu variante="lista" /></div>
-          <a href={waHref("Hola, quiero hacer una consulta sobre sus productos")} target="_blank" rel="noopener" className="mt-1 flex min-h-12 items-center gap-2 rounded-lg px-2 py-3 text-sm font-semibold text-emerald-700 hover:bg-emerald-50">
-            <Icon name="whatsapp" size={18} /> Consultar por WhatsApp
+          <a href={waHref(t("chrome.waMessage"))} target="_blank" rel="noopener" className="mt-1 flex min-h-12 items-center gap-2 rounded-lg px-2 py-3 text-sm font-semibold text-emerald-700 hover:bg-emerald-50">
+            <Icon name="whatsapp" size={18} /> {t("chrome.waConsult")}
           </a>
         </nav>
       </div>

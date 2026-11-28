@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { usePreferences } from "@/components/site/Preferences";
 
 type TurnstileApi = {
   render: (el: HTMLElement, opts: Record<string, unknown>) => string;
@@ -28,6 +29,7 @@ function cargarScript() {
 
 /** Widget de Cloudflare Turnstile. Sin site key no pinta nada y el servidor omite la comprobación. */
 export default function Turnstile({ onToken, className = "" }: { onToken: (token: string) => void; className?: string }) {
+  const { t, lang } = usePreferences();
   const contenedor = useRef<HTMLDivElement>(null);
   const callback = useRef(onToken);
   callback.current = onToken;
@@ -43,7 +45,7 @@ export default function Turnstile({ onToken, className = "" }: { onToken: (token
         id = window.turnstile.render(contenedor.current, {
           sitekey: siteKey,
           theme: document.documentElement.dataset.theme === "dark" ? "dark" : "light",
-          language: "es",
+          language: lang,
           callback: (token: string) => callback.current(token),
           "expired-callback": () => callback.current(""),
           "error-callback": () => callback.current(""),
@@ -54,8 +56,8 @@ export default function Turnstile({ onToken, className = "" }: { onToken: (token
       cancelado = true;
       if (id && window.turnstile) window.turnstile.remove(id);
     };
-  }, [siteKey]);
+  }, [siteKey, lang]);
 
   if (!siteKey) return null;
-  return <div ref={contenedor} className={`min-h-[65px] ${className}`} aria-label="Verificación anti-bots" />;
+  return <div ref={contenedor} className={`min-h-[65px] ${className}`} aria-label={t("captcha.turnstileAria")} />;
 }

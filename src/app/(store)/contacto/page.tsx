@@ -1,14 +1,19 @@
 import Icon from "@/components/brand/Icon";
 import { leerSeccion } from "@/lib/contenido-server";
 import { SITE, telefono, waHref } from "@/lib/site";
+import { getT } from "@/lib/i18n";
 
-export const metadata = { title: "Contacto" };
+export async function generateMetadata() {
+  const { t } = await getT();
+  return { title: t("contact.metaTitle") };
+}
 
 // Coordenadas de la tienda en Artemisa. El mapa lleva el marcador para que la
 // dirección no quede como un recuadro vacío.
 const MAPA = { lat: 22.8128, lon: -82.7631 };
 
 export default async function Contacto() {
+  const { t } = await getT();
   // Los datos bancarios siguen en variables de entorno: son configuración
   // sensible y no deben acabar en un campo de texto editable.
   const bank = process.env.BANK_INSTRUCTIONS;
@@ -43,20 +48,20 @@ export default async function Contacto() {
             ))}
           </div>
           <div className="card p-6">
-            <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="pin" size={18} /> {mapa.title || "Nuestra tienda"}</h2>
+            <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy"><Icon name="pin" size={18} /> {mapa.title || t("contact.storeFallback")}</h2>
             <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
               <iframe
-                title="Ubicación de Impacto Automotriz en Artemisa"
+                title={t("contact.mapTitle")}
                 src={`https://www.openstreetmap.org/export/embed.html?bbox=${MAPA.lon - 0.01}%2C${MAPA.lat - 0.005}%2C${MAPA.lon + 0.01}%2C${MAPA.lat + 0.005}&layer=mapnik&marker=${MAPA.lat}%2C${MAPA.lon}`}
                 className="h-56 w-full" loading="lazy"
               />
             </div>
             <div className="mt-3 flex flex-wrap items-start justify-between gap-2">
               <p className="max-w-xs text-sm text-slate-600">{mapa.subtitle || SITE.direccion}</p>
-              <a href={`https://www.openstreetmap.org/?mlat=${MAPA.lat}&mlon=${MAPA.lon}#map=16/${MAPA.lat}/${MAPA.lon}`} target="_blank" rel="noopener" className="text-sm font-semibold text-[color:var(--color-action)] link-underline">Abrir en el mapa</a>
+              <a href={`https://www.openstreetmap.org/?mlat=${MAPA.lat}&mlon=${MAPA.lon}#map=16/${MAPA.lat}/${MAPA.lon}`} target="_blank" rel="noopener" className="text-sm font-semibold text-[color:var(--color-action)] link-underline">{t("contact.openMap")}</a>
             </div>
-            {bank && <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm"><p className="font-semibold text-navy">Datos para transferencia</p><p className="mt-1 text-slate-600">{bank}</p></div>}
-            <a href={waHref()} target="_blank" rel="noopener" className="btn btn-primary mt-4 w-full"><Icon name="whatsapp" size={18} /> Escribir por WhatsApp</a>
+            {bank && <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm"><p className="font-semibold text-navy">{t("contact.bankTitle")}</p><p className="mt-1 text-slate-600">{bank}</p></div>}
+            <a href={waHref()} target="_blank" rel="noopener" className="btn btn-primary mt-4 w-full"><Icon name="whatsapp" size={18} /> {t("contact.writeWhatsapp")}</a>
           </div>
         </div>
       </section>

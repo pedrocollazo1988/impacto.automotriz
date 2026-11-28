@@ -4,7 +4,8 @@ import Icon from "@/components/brand/Icon";
 import Modelo3D from "@/components/Modelo3D";
 import Photo360 from "@/components/Photo360";
 import ProductGallery from "@/components/ProductGallery";
-import { ETIQUETA_VISTA, type Vista } from "@/lib/viewer";
+import { CLAVE_VISTA, type Vista } from "@/lib/viewer";
+import { usePreferences } from "@/components/site/Preferences";
 import { hayGiro360 } from "@/lib/medios";
 
 type Props = {
@@ -23,6 +24,7 @@ type Props = {
 export default function ProductViewer({
   images, videos = [], name, model3dUrl, model3dVideo, frames, spin360Video, initial,
 }: Props) {
+  const { t } = usePreferences();
   // Un vídeo en el panel 3D cumple la misma función que el GLB: el visitante ve la
   // pieza girando. Por eso cualquiera de los dos habilita la pestaña.
   const fuente3d = model3dUrl || model3dVideo || null;
@@ -47,7 +49,7 @@ export default function ProductViewer({
   return (
     <div className="space-y-3">
       {disponibles.length > 1 && (
-        <div role="tablist" aria-label="Cómo ver el producto" className="flex flex-wrap gap-1.5">
+        <div role="tablist" aria-label={t("gallery.howToView")} className="flex flex-wrap gap-1.5">
           {disponibles.map((v, k) => (
             <button
               key={v}
@@ -66,7 +68,7 @@ export default function ProductViewer({
               }`}
             >
               <Icon name={v === "model3d" ? "cube" : v === "spin360" ? "refresh" : "image"} size={13} />
-              {ETIQUETA_VISTA[v]}
+              {t(CLAVE_VISTA[v])}
             </button>
           ))}
         </div>

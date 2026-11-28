@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@/components/brand/Icon";
+import { usePreferences } from "@/components/site/Preferences";
 
 export type CategoryMarqueeProps = {
   categories: { slug: string; name: string }[];
@@ -44,8 +45,9 @@ function deduplicar(categories: CategoryMarqueeProps["categories"]) {
  */
 export default function CategoryMarquee({
   categories,
-  allLabel = "Todos los productos",
+  allLabel,
 }: CategoryMarqueeProps) {
+  const { t } = usePreferences();
   const unicas = useMemo(() => deduplicar(categories), [categories]);
   const regionRef = useRef<HTMLDivElement>(null);
   const listaRef = useRef<HTMLUListElement>(null);
@@ -82,7 +84,7 @@ export default function CategoryMarquee({
 
   return (
     <nav
-      aria-label="Categorías de productos"
+      aria-label={t("marquee.title")}
       className="bg-white print:hidden"
     >
       <div className="flex items-center gap-2 py-2">
@@ -91,7 +93,7 @@ export default function CategoryMarquee({
           className="-ml-2.5 flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-bold text-navy transition hover:bg-slate-100"
         >
           <Icon name="grid" size={15} />
-          <span className="whitespace-nowrap">{allLabel}</span>
+          <span className="whitespace-nowrap">{allLabel ?? t("marquee.all")}</span>
         </Link>
 
         <span aria-hidden className="h-4 w-px shrink-0 bg-slate-200" />
@@ -99,7 +101,7 @@ export default function CategoryMarquee({
         <div
           ref={regionRef}
           role="region"
-          aria-label="Categorías"
+          aria-label={t("marquee.region")}
           className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {unicas.length > 0 && (

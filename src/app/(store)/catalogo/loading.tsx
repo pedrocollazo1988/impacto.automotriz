@@ -1,9 +1,12 @@
+import { getT } from "@/lib/i18n";
+
 // El esqueleto reserva el alto real de la página: `min-h-svh` deja el pie fuera
 // del pliegue y las tarjetas copian la proporción de la tarjeta de verdad
 // (imagen 4/3 + texto), así el contenido no empuja nada cuando llega.
-export default function CargandoCatalogo() {
+export default async function CargandoCatalogo() {
+  const { t } = await getT();
   return (
-    <div className="container-x min-h-svh py-8" aria-busy="true" aria-label="Cargando catálogo">
+    <div className="container-x min-h-svh py-8" aria-busy="true" aria-label={t("cat2.loading")}>
       <div className="mb-6 h-8 w-56 animate-pulse rounded bg-slate-200" />
       <div className="grid gap-6 lg:grid-cols-[250px_1fr]">
         <div className="hidden h-96 animate-pulse rounded-2xl bg-slate-200 lg:block" />

@@ -1,13 +1,18 @@
 import Icon from "@/components/brand/Icon";
 import GarantiaForm from "./GarantiaForm";
 import { leerSeccion } from "@/lib/contenido-server";
+import { getT } from "@/lib/i18n";
 
-export const metadata = {
-  title: "Reclamar garantía",
-  description: "Reclama la garantía de una pieza comprada en Impacto Automotriz. 30 días desde la entrega.",
-};
+export async function generateMetadata() {
+  const { t } = await getT();
+  return {
+    title: t("warranty.metaTitle"),
+    description: t("warranty.metaDescription"),
+  };
+}
 
 export default async function Garantia() {
+  const { t } = await getT();
   const [plazos, hero] = await Promise.all([leerSeccion("garantia-plazos"), leerSeccion("garantia-hero")]);
   return (
     <div>
@@ -24,7 +29,7 @@ export default async function Garantia() {
       <section className="container-x py-10">
         <div className="grid gap-8 lg:grid-cols-[1fr_1.05fr]">
           <div>
-            <h2 className="font-display text-xl font-extrabold text-navy">Qué cubre la garantía</h2>
+            <h2 className="font-display text-xl font-extrabold text-navy">{t("warranty.cubreTitle")}</h2>
             <ul className="mt-4 space-y-3">
               {plazos.visible && plazos.items.map((it) => (
                 <li key={it.titulo} className="card flex gap-3 p-4">
@@ -39,12 +44,12 @@ export default async function Garantia() {
               ))}
             </ul>
             <p className="mt-4 text-sm text-slate-500">
-              Conserva el comprobante del pedido: con el número nos basta para localizarlo.
+              {t("warranty.comprobante")}
             </p>
           </div>
 
           <div>
-            <h2 className="font-display text-xl font-extrabold text-navy">Empezar la reclamación</h2>
+            <h2 className="font-display text-xl font-extrabold text-navy">{t("warranty.empezarTitle")}</h2>
             <div className="mt-4">
               <GarantiaForm />
             </div>

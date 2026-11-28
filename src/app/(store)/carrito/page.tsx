@@ -84,8 +84,8 @@ export default function Carrito() {
       {session === "out" && (
         <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
           <Icon name="info" size={16} className="shrink-0" />
-          <span className="min-w-0 flex-1">Estás comprando como invitado. Para confirmar el pedido necesitas una cuenta; tu carrito se conserva.</span>
-          <Link href="/checkout" className="btn btn-primary btn-sm">Iniciar sesión</Link>
+          <span className="min-w-0 flex-1">{t("cart2.guestNotice")}</span>
+          <Link href="/checkout" className="btn btn-primary btn-sm">{t("cart2.signIn")}</Link>
         </div>
       )}
       {noDisponibles.length > 0 && (
@@ -144,9 +144,9 @@ export default function Carrito() {
                 {!ok && <p className="mt-1 flex items-center gap-1 text-xs font-medium text-red-600"><Icon name="info" size={13} /> {tt("cart.onlyLeft", { n: line.stock })}</p>}
               </div>
               <div className="flex items-center rounded-xl border border-slate-200">
-                <button aria-label="Menos" onClick={() => setQty(line.productId, Math.max(1, qty - 1), line.variantId, line.stock)} className="grid h-10 w-10 place-items-center text-slate-500 hover:text-navy"><Icon name="minus" size={15} /></button>
+                <button aria-label={t("cart2.qtyLess")} onClick={() => setQty(line.productId, Math.max(1, qty - 1), line.variantId, line.stock)} className="grid h-10 w-10 place-items-center text-slate-500 hover:text-navy"><Icon name="minus" size={15} /></button>
                 <span className="grid h-10 w-10 place-items-center border-x border-slate-200 text-sm font-semibold">{qty}</span>
-                <button aria-label="Más" disabled={qty >= line.stock} onClick={() => setQty(line.productId, qty + 1, line.variantId, line.stock)} className="grid h-10 w-10 place-items-center text-slate-500 hover:text-navy disabled:cursor-not-allowed disabled:opacity-30"><Icon name="plus" size={15} /></button>
+                <button aria-label={t("cart2.qtyMore")} disabled={qty >= line.stock} onClick={() => setQty(line.productId, qty + 1, line.variantId, line.stock)} className="grid h-10 w-10 place-items-center text-slate-500 hover:text-navy disabled:cursor-not-allowed disabled:opacity-30"><Icon name="plus" size={15} /></button>
               </div>
               <p className="w-24 text-right font-display font-extrabold text-navy">{(line.unitUsd * qty).toFixed(2)} <span className="text-xs font-bold text-slate-400">USD</span></p>
               {quitar(item)}
@@ -163,7 +163,7 @@ export default function Carrito() {
               <div className="flex justify-between border-t border-slate-100 pt-3 text-base"><dt className="font-semibold">{t("cart.estimatedTotal")}</dt><dd className="font-display font-extrabold text-navy">{data ? data.subtotalUsd.toFixed(2) : "0.00"} USD</dd></div>
             </dl>
             {data?.allOk ? (
-              <Link href="/checkout" className="btn btn-primary mt-5 w-full"><Icon name="check" size={18} /> {session === "out" ? "Inicia sesión para comprar" : t("cart.checkout")}</Link>
+              <Link href="/checkout" className="btn btn-primary mt-5 w-full"><Icon name="check" size={18} /> {session === "out" ? t("cart2.signInToBuy") : t("cart.checkout")}</Link>
             ) : (
               <p className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">{t("cart.adjust")}</p>
             )}

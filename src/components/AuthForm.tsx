@@ -14,7 +14,7 @@ type Modo = "login" | "register" | "forgot" | "codigo";
 type Proposito = "register" | "login" | "reset";
 
 export default function AuthForm({ google = false, telegram = "", next }: { google?: boolean; telegram?: string; next?: string }) {
-  const { t, lang } = usePreferences();
+  const { t } = usePreferences();
   const destino = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
   const [modo, setModo] = useState<Modo>("login");
   const [canal, setCanal] = useState<Canal>("email");
@@ -102,7 +102,7 @@ export default function AuthForm({ google = false, telegram = "", next }: { goog
     setCaptchaKey((k) => k + 1);
     if (!r.ok) { setMsgOk(false); setMsg(mensaje(j.error)); return; }
     irACodigo(f.phone, proposito, typeof j.retryAfter === "number" ? j.retryAfter : 60);
-    if (j.debugCode) { setMsgOk(true); setMsg(`código: ${j.debugCode}`); } // solo con SMS_MOCK_ECHO en desarrollo
+    if (j.debugCode) { setMsgOk(true); setMsg(t("auth2.debugCode").replace("{code}", j.debugCode)); } // solo con SMS_MOCK_ECHO en desarrollo
   };
 
   const verificar = async (valor: string) => {
@@ -300,7 +300,7 @@ export default function AuthForm({ google = false, telegram = "", next }: { goog
 
           {/* Campo trampa: una persona no lo ve ni lo rellena. */}
           <div className="absolute -left-[9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
-            <label>No rellenar<input tabIndex={-1} autoComplete="off" name="website" value={website} onChange={(e) => setWebsite(e.target.value)} /></label>
+            <label>{t("auth2.honeypot")}<input tabIndex={-1} autoComplete="off" name="website" value={website} onChange={(e) => setWebsite(e.target.value)} /></label>
           </div>
 
           {modo === "register" && (usaTurnstile ? <Turnstile key={captchaKey} onToken={setTurnstileToken} /> : <Captcha key={captchaKey} onChange={setCaptcha} error={intento && !captcha.ok ? t("auth.captcha") : ""} />)}
@@ -321,7 +321,7 @@ export default function AuthForm({ google = false, telegram = "", next }: { goog
           {telegram && modo !== "forgot" && (
             <div className="w-full">
               <p className="mb-2 text-center text-xs text-slate-500">{t("auth.telegram")}</p>
-              <TelegramLogin usuario={telegram} lang={lang} />
+              <TelegramLogin usuario={telegram} />
             </div>
           )}
           {msg && <p role="status" className={`rounded-lg p-3 text-sm ${msgOk ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>{msg}</p>}

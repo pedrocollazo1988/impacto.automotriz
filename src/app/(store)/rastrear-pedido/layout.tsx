@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { getT } from "@/lib/i18n";
 
-export const metadata: Metadata = {
-  title: "Rastrear mi pedido",
-  description: "Consulta el estado de tu pedido de Impacto Automotriz con el número de pedido y el contacto de la compra.",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return {
+    title: t("track.metaTitle"),
+    description: t("track.metaDescription"),
+    robots: { index: false },
+  };
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return children;
