@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
  * script no se puede cargar con next/script sin perder los atributos data-*.
  * Sin dominio configurado en @BotFather el widget no dibuja nada.
  */
-export default function TelegramLogin({ usuario }: { usuario: string }) {
+export default function TelegramLogin({ usuario, lang = "es" }: { usuario: string; lang?: "es" | "en" }) {
   const caja = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -20,10 +20,11 @@ export default function TelegramLogin({ usuario }: { usuario: string }) {
     script.setAttribute("data-size", "large");
     script.setAttribute("data-radius", "12");
     script.setAttribute("data-userpic", "false");
+    script.setAttribute("data-lang", lang);
     script.setAttribute("data-auth-url", `${window.location.origin}/api/account/telegram/callback`);
     contenedor.appendChild(script);
     return () => { contenedor.replaceChildren(); };
-  }, [usuario]);
+  }, [usuario, lang]);
 
   return <div ref={caja} className="flex justify-center" />;
 }

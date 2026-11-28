@@ -14,7 +14,7 @@ type Modo = "login" | "register" | "forgot" | "codigo";
 type Proposito = "register" | "login" | "reset";
 
 export default function AuthForm({ google = false, telegram = "", next }: { google?: boolean; telegram?: string; next?: string }) {
-  const { t } = usePreferences();
+  const { t, lang } = usePreferences();
   const destino = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
   const [modo, setModo] = useState<Modo>("login");
   const [canal, setCanal] = useState<Canal>("email");
@@ -321,7 +321,7 @@ export default function AuthForm({ google = false, telegram = "", next }: { goog
           {telegram && modo !== "forgot" && (
             <div className="w-full">
               <p className="mb-2 text-center text-xs text-slate-500">{t("auth.telegram")}</p>
-              <TelegramLogin usuario={telegram} />
+              <TelegramLogin usuario={telegram} lang={lang} />
             </div>
           )}
           {msg && <p role="status" className={`rounded-lg p-3 text-sm ${msgOk ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>{msg}</p>}
